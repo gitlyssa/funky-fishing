@@ -113,6 +113,7 @@ public class PondManager : MonoBehaviour
             fishList.Remove(fish);
             Destroy(fish);
             Debug.Log("Fish caught!");
+            playerBobber.GetComponent<BobberScript>().Reset();
         }
         else
         {

@@ -43,4 +43,10 @@ public class BobberScript : MonoBehaviour
     {
         bobber = this.gameObject;
     }
+
+    public void Reset()
+    {
+        isFloating = false;
+        bobber.transform.position = new Vector3(bobber.transform.position.x, waterHeight + 10f, bobber.transform.position.z);
+    }
 }

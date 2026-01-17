@@ -20,24 +20,23 @@ public class GameManager : MonoBehaviour
         
     }
 
-    void HookFish()
-    {
-        bool
+    // void HookFish()
+    // {
 
-        fishCaught += 1;
-        Debug.Log("Fish Caught! Total: " + fishCaught);
-    }
+    //     fishCaught += 1;
+    //     Debug.Log("Fish Caught! Total: " + fishCaught);
+    // }
 
-    void FinishRhythmGame(bool success)
-    {
-        inRhythmMode = false;
-        if (success)
-        {
-            CaughtFish();
-        }
-        else
-        {
-            Debug.Log("Missed the fish!");
-        }
-    }
+    // void FinishRhythmGame(bool success)
+    // {
+    //     inRhythmMode = false;
+    //     if (success)
+    //     {
+    //         CaughtFish();
+    //     }
+    //     else
+    //     {
+    //         Debug.Log("Missed the fish!");
+    //     }
+    // }
 }
