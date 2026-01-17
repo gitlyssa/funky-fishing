@@ -11,6 +11,8 @@ public class PondManager : MonoBehaviour
 
     public int radius = 30;
     public int waterlevel = 0;
+
+    public GameObject playerBobber;
     Vector3 pondCenter;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -55,6 +57,11 @@ public class PondManager : MonoBehaviour
                 RemoveFish(randomIndex);
             }
         }
+
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            CatchFish(playerBobber);
+        }
     }
     void SpawnFish(int fishIndex, Vector3 position)
     {
@@ -73,5 +80,43 @@ public class PondManager : MonoBehaviour
     {
         Destroy(fishList[fishIndex]);
         fishList.RemoveAt(fishIndex);
+    }
+
+    GameObject closestFish(GameObject bobber)
+    {
+        // find closest fish to bobber that intersects with bobber collider
+        GameObject closestFish = null;
+
+        Collider bobberCollider = bobber.GetComponent<Collider>();
+        float closestDistance = Mathf.Infinity;
+        foreach (GameObject fish in fishList)
+        {
+            Collider fishCollider = fish.GetComponent<Collider>();
+            if (bobberCollider.bounds.Intersects(fishCollider.bounds))
+            {
+                float distance = Vector3.Distance(bobber.transform.position, fish.transform.position);
+                if (distance < closestDistance)
+                {
+                    closestDistance = distance;
+                    closestFish = fish;
+                }
+            }
+        }
+        return closestFish;
+    }
+
+    void CatchFish(GameObject bobber)
+    {
+        GameObject fish = closestFish(bobber);
+        if (fish != null)
+        {
+            fishList.Remove(fish);
+            Destroy(fish);
+            Debug.Log("Fish caught!");
+        }
+        else
+        {
+            Debug.Log("No fish caught.");
+        }
     }
 }
