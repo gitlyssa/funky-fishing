@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using UnityEngine.InputSystem;
+using UnityEngine.Audio;
 
 public class PondManager : MonoBehaviour
 {
@@ -16,14 +17,18 @@ public class PondManager : MonoBehaviour
     public GameManager gameManager;
     Vector3 pondCenter;
 
+    public AudioSource bobberSound;
+    public AudioResource bobberSplashClip;
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
-    {
+    {   
+        bobberSound.resource = bobberSplashClip;
         gameManager = FindObjectOfType<GameManager>();
         pondCenter = transform.position;
         fishList = new List<GameObject>();
         // spawn 10 random fish at random position in pond
-        for (int i = 0; i < 5; i++)
+        for (int i = 0; i < 10; i++)
         {   
 
             // x^2 + z^2 < radius^2
@@ -113,18 +118,18 @@ public class PondManager : MonoBehaviour
         GameObject fish = closestFish(bobber);
         if (fish != null)
         {   
-            // add force throwing fish upwards
-            Rigidbody fishRb = fish.GetComponent<Rigidbody>();
-            if (fishRb != null)
-            {   
-                // fishRb.isKinematic = true;
-                fishRb.useGravity = true;
-                fishRb.AddForce(Vector3.up * 15f, ForceMode.Impulse);
-            }
+            // // add force throwing fish upwards
+            // Rigidbody fishRb = fish.GetComponent<Rigidbody>();
+            // if (fishRb != null)
+            // {   
+            //     // fishRb.isKinematic = true;
+            //     fishRb.useGravity = true;
+            //     fishRb.AddForce(Vector3.up * 15f, ForceMode.Impulse);
+            // }
 
 
             fishList.Remove(fish);
-            Destroy(fish, 2f);
+            Destroy(fish);
             Debug.Log("Fish caught!");
             playerBobber.GetComponent<BobberScript>().Reset();
             gameManager.HookFish();

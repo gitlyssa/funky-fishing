@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Audio;
 
 public class GameManager : MonoBehaviour
 {
@@ -13,6 +14,9 @@ public class GameManager : MonoBehaviour
 
     public Camera mainCamera;
 
+    public AudioSource ambientMusic;
+    public AudioResource ambientMusicClip;
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -21,6 +25,10 @@ public class GameManager : MonoBehaviour
         beatSpawner = FindObjectOfType<BeatSpawner>().gameObject;
         beatSpawner.SetActive(false);
         inRhythmMode = false;
+
+        ambientMusic.resource = ambientMusicClip;
+        ambientMusic.volume = 2.0f;
+        ambientMusic.Play();
     }
 
     // Update is called once per frame

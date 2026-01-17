@@ -192,8 +192,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BeatSpawner
   beat: {fileID: 7663214538283060097, guid: ee91d063c5ee6f24d8cd32ff5a6bac47, type: 3}
   beatSpeed: 6
-  hitLineX: -5
-  laneZ: 0
+  hitLineOffsetX: -5
+  useCameraRelativeLane: 1
+  cameraDepthOffset: 10
+  cameraVerticalOffset: 0
   beatMapSong: {fileID: 5469022933917550023}
   songOne: {fileID: 8300000, guid: a8f7952f0dbd3744e96e9d66a9963011, type: 3}
 --- !u!82 &5469022933917550023

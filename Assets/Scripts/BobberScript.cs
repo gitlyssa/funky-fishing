@@ -1,15 +1,17 @@
 using UnityEngine;
-
+using UnityEngine.Audio;
 public class BobberScript : MonoBehaviour
 {
     public GameObject bobber;
-    
+
     public float waterHeight = 6f;
     public float fallSpeed = 8f;
     public float bobAmplitude = 0.9f;
     public float bobFrequency = 10f;
 
     private bool isFloating = false;
+
+
 
     void Update()
     {

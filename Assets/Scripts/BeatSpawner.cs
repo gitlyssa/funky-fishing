@@ -32,6 +32,7 @@ public class BeatSpawner : MonoBehaviour
 
     void Start()
     {
+        gameManager = FindObjectOfType<GameManager>();
         cam = Camera.main;
 
         if (useCameraRelativeLane && cam != null)
@@ -95,6 +96,18 @@ public class BeatSpawner : MonoBehaviour
             SpawnBeat();
             nextBeatIndex++;
         }
+
+        // after 7 seconds reset the game
+        if (songTime >= 7f)
+        {
+            reset();
+        }
+
+        if (Input.GetKeyDown(KeyCode.Q))
+        {
+            reset();
+        }
+        
     }
 
     void SpawnBeat()
