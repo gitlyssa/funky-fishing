@@ -7,6 +7,9 @@ public class BeatSpawner : MonoBehaviour
     [SerializeField] private GameObject beat;
     [SerializeField] private float beatSpeed = 6f;
     [SerializeField] private float hitLineOffsetX = -5f;
+    [SerializeField] private bool useCameraRelativeLane = true;
+    [SerializeField] private float cameraDepthOffset = 10f;
+    [SerializeField] private float cameraVerticalOffset = 0f;
 
     private float songTime = 0f;
     public AudioSource beatMapSong;
@@ -19,33 +22,58 @@ public class BeatSpawner : MonoBehaviour
 
     private int nextBeatIndex = 0;
     private float travelTime;
+    private Camera cam;
     private float spawnX;
     private float hitLineX;
     private float laneY;
     private float laneZ;
-
     private List<GameObject> activeBeats = new List<GameObject>();
-
-    public GameManager gameManager;
+    private GameManager gameManager;
 
     void Start()
     {
-        gameManager = FindObjectOfType<GameManager>();
-        Camera cam = Camera.main;
+        cam = Camera.main;
 
-        laneY = transform.position.y;
-        laneZ = transform.position.z;
-        hitLineX = transform.position.x + hitLineOffsetX;
+        if (useCameraRelativeLane && cam != null)
+        {
+            Vector3 lanePoint = cam.transform.position + cam.transform.forward * cameraDepthOffset
+                + cam.transform.up * cameraVerticalOffset;
+            laneY = lanePoint.y;
+            laneZ = lanePoint.z;
+            hitLineX = lanePoint.x + hitLineOffsetX;
+        }
+        else
+        {
+            laneY = transform.position.y;
+            laneZ = transform.position.z;
+            hitLineX = transform.position.x + hitLineOffsetX;
+        }
 
         // Distance from camera to lane plane
-        float depth = Mathf.Abs(cam.transform.position.z - laneZ);
+        float depth = cam != null ? Mathf.Abs(cam.transform.position.z - laneZ) : Mathf.Abs(laneZ);
+        if (useCameraRelativeLane)
+        {
+            depth = cameraDepthOffset;
+        }
 
         // Right edge of screen in world space
-        Vector3 rightEdge = cam.ViewportToWorldPoint(
-            new Vector3(1f, 0.5f, depth)
-        );
+        Vector3 rightEdge;
+        if (cam != null)
+        {
+            rightEdge = cam.ViewportToWorldPoint(new Vector3(1f, 0.5f, depth));
+            if (useCameraRelativeLane)
+            {
+                rightEdge += cam.transform.up * cameraVerticalOffset;
+            }
+        }
+        else
+        {
+            rightEdge = new Vector3(transform.position.x, laneY, laneZ);
+        }
 
         spawnX = rightEdge.x;
+        laneY = rightEdge.y;
+        laneZ = rightEdge.z;
 
         float distance = Mathf.Abs(spawnX - hitLineX);
         travelTime = distance / beatSpeed;
@@ -67,21 +95,23 @@ public class BeatSpawner : MonoBehaviour
             SpawnBeat();
             nextBeatIndex++;
         }
-
-        // if ()
     }
 
     void SpawnBeat()
     {
         GameObject newBeat = Instantiate(beat);
         newBeat.transform.position = new Vector3(spawnX, laneY, laneZ);
+        if (cam != null)
+        {
+            newBeat.transform.rotation = cam.transform.rotation;
+        }
 
         BeatMovement bm = newBeat.GetComponent<BeatMovement>();
         if (bm != null)
             bm.speed = beatSpeed;
         activeBeats.Add(newBeat);
     }
-
+    
     void reset()
     {
         nextBeatIndex = 0;
