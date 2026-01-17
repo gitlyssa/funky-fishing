@@ -605,7 +605,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2819236874334940118, guid: a1e2b324434800744baa741dd9326064, type: 3}
       propertyPath: m_Radius
-      value: 2
+      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 2819236874334940118, guid: a1e2b324434800744baa741dd9326064, type: 3}
       propertyPath: m_IsTrigger
@@ -617,7 +617,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7419678388637098981, guid: a1e2b324434800744baa741dd9326064, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 31.82
+      value: 32.3
       objectReference: {fileID: 0}
     - target: {fileID: 7419678388637098981, guid: a1e2b324434800744baa741dd9326064, type: 3}
       propertyPath: m_LocalPosition.y
@@ -625,7 +625,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7419678388637098981, guid: a1e2b324434800744baa741dd9326064, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 23.41014
+      value: 27.6
       objectReference: {fileID: 0}
     - target: {fileID: 7419678388637098981, guid: a1e2b324434800744baa741dd9326064, type: 3}
       propertyPath: m_LocalRotation.w
@@ -929,8 +929,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PondManager
   fishPrefabs:
-  - {fileID: 5005776583172640285, guid: c7a09f84110b4e74da5e590bf9a0c930, type: 3}
-  - {fileID: 866152488494774785, guid: 9b67fb6314d3fe44b8447e657ce6a56f, type: 3}
+  - {fileID: 7196154191263375292, guid: 83e8391f15bad734ab3208fc4c46d905, type: 3}
+  - {fileID: 7196154191263375292, guid: 5653e2282b255bd468ef71503ebbb22e, type: 3}
   fishList: []
   radius: 14
   waterlevel: 0

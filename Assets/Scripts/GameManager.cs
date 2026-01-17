@@ -8,10 +8,15 @@ public class GameManager : MonoBehaviour
 
     public PondManager pondManager;
     public GameObject playerBobber;
+
+    public GameObject RhythmGameUI;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
+        pondManager = FindObjectOfType<PondManager>();
         
+        RhythmGameUI.SetActive(false);
+        inRhythmMode = false;
     }
 
     // Update is called once per frame

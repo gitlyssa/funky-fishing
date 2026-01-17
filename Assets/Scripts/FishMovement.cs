@@ -28,8 +28,11 @@ public class FishMovement : MonoBehaviour
     private float attractionTurnSign = 1f;
     private float logTimer;
 
+    public PondManager pondManager;
+
     private void Awake()
-    {
+    {   
+        
         rb = GetComponent<Rigidbody>();
         rb.useGravity = false;
         rb.constraints = RigidbodyConstraints.FreezeRotation;
@@ -40,7 +43,8 @@ public class FishMovement : MonoBehaviour
     }
 
     private void Start()
-    {
+    {   
+        attractionTarget = pondManager.playerBobber.transform;
         attractionTurnSign = Random.value < 0.5f ? -1f : 1f;
         PickRandomDirection();
         if (useAttraction && logAttractionState)
