@@ -13,11 +13,13 @@ public class PondManager : MonoBehaviour
     public int waterlevel = 0;
 
     public GameObject playerBobber;
+    public GameManager gameManager;
     Vector3 pondCenter;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
+        gameManager = FindObjectOfType<GameManager>();
         pondCenter = transform.position;
         fishList = new List<GameObject>();
         // spawn 10 random fish at random position in pond
@@ -114,15 +116,18 @@ public class PondManager : MonoBehaviour
             // add force throwing fish upwards
             Rigidbody fishRb = fish.GetComponent<Rigidbody>();
             if (fishRb != null)
-            {
-                fishRb.AddForce(Vector3.up * 5f, ForceMode.Impulse);
+            {   
+                // fishRb.isKinematic = true;
+                fishRb.useGravity = true;
+                fishRb.AddForce(Vector3.up * 15f, ForceMode.Impulse);
             }
 
 
-            // fishList.Remove(fish);
-            // Destroy(fish);
+            fishList.Remove(fish);
+            Destroy(fish, 2f);
             Debug.Log("Fish caught!");
             playerBobber.GetComponent<BobberScript>().Reset();
+            gameManager.HookFish();
         }
         else
         {

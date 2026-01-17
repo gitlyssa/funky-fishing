@@ -9,13 +9,17 @@ public class GameManager : MonoBehaviour
     public PondManager pondManager;
     public GameObject playerBobber;
 
-    public GameObject RhythmGameUI;
+    public GameObject beatSpawner;
+
+    public Camera mainCamera;
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         pondManager = FindObjectOfType<PondManager>();
-        
-        RhythmGameUI.SetActive(false);
+
+        beatSpawner = FindObjectOfType<BeatSpawner>().gameObject;
+        beatSpawner.SetActive(false);
         inRhythmMode = false;
     }
 
@@ -25,23 +29,18 @@ public class GameManager : MonoBehaviour
         
     }
 
-    // void HookFish()
-    // {
+    public void HookFish()
+    {
+        inRhythmMode = true;
+        beatSpawner.SetActive(true);
+        fishCaught += 1;
+        Debug.Log("Fish Caught! Total: " + fishCaught);
+    }
 
-    //     fishCaught += 1;
-    //     Debug.Log("Fish Caught! Total: " + fishCaught);
-    // }
-
-    // void FinishRhythmGame(bool success)
-    // {
-    //     inRhythmMode = false;
-    //     if (success)
-    //     {
-    //         CaughtFish();
-    //     }
-    //     else
-    //     {
-    //         Debug.Log("Missed the fish!");
-    //     }
-    // }
+    public void FinishRhythmGame(bool success)
+    {
+        inRhythmMode = false;
+        beatSpawner.SetActive(false);
+        Debug.Log("Rhythm Game Finished! Success: " + success);
+    }
 }

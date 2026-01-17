@@ -6,13 +6,7 @@ public class BeatSpawner : MonoBehaviour
 {
     [SerializeField] private GameObject beat;
     [SerializeField] private float beatSpeed = 6f;
-    [SerializeField] private float hitLineX = -5f;
-
-    // Fixed 2D plane in 3D world
-    [SerializeField] private float laneZ = 0f;
-
-    private float spawnX;
-    private float laneY = 1f;
+    [SerializeField] private float hitLineOffsetX = -5f;
 
     private float songTime = 0f;
     public AudioSource beatMapSong;
@@ -25,12 +19,25 @@ public class BeatSpawner : MonoBehaviour
 
     private int nextBeatIndex = 0;
     private float travelTime;
+    private float spawnX;
+    private float hitLineX;
+    private float laneY;
+    private float laneZ;
+
+    private List<GameObject> activeBeats = new List<GameObject>();
+
+    public GameManager gameManager;
 
     void Start()
     {
+        gameManager = FindObjectOfType<GameManager>();
         Camera cam = Camera.main;
 
-        // Distance from camera to 2D plane
+        laneY = transform.position.y;
+        laneZ = transform.position.z;
+        hitLineX = transform.position.x + hitLineOffsetX;
+
+        // Distance from camera to lane plane
         float depth = Mathf.Abs(cam.transform.position.z - laneZ);
 
         // Right edge of screen in world space
@@ -60,6 +67,8 @@ public class BeatSpawner : MonoBehaviour
             SpawnBeat();
             nextBeatIndex++;
         }
+
+        // if ()
     }
 
     void SpawnBeat()
@@ -70,5 +79,20 @@ public class BeatSpawner : MonoBehaviour
         BeatMovement bm = newBeat.GetComponent<BeatMovement>();
         if (bm != null)
             bm.speed = beatSpeed;
+        activeBeats.Add(newBeat);
+    }
+
+    void reset()
+    {
+        nextBeatIndex = 0;
+        songTime = 0f;
+        beatMapSong.Stop();
+        beatMapSong.Play();
+        foreach (GameObject beat in activeBeats)
+        {
+            Destroy(beat);
+        }
+        activeBeats.Clear();
+        gameManager.FinishRhythmGame(true);
     }
 }
