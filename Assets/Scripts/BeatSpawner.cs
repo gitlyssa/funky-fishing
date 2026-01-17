@@ -1,32 +1,26 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Audio;
 
 public class BeatSpawner : MonoBehaviour
 {
     [SerializeField] private GameObject beat;
-
-    [Header("Timing")]
     [SerializeField] private float beatSpeed = 6f;
     [SerializeField] private float hitLineX = -5f;
 
-    [Header("Spawn Position")]
-    [SerializeField] private float spawnPadding = 0.5f;
+    // Fixed 2D plane in 3D world
+    [SerializeField] private float laneZ = 0f;
 
     private float spawnX;
-    private float laneY = 0f;
+    private float laneY = 1f;
 
-    // Song timer
     private float songTime = 0f;
+    public AudioSource beatMapSong;
+    public AudioResource songOne;
 
     private List<float> beatTimes = new List<float>()
     {
-        1.0f,
-        1.5f,
-        2.0f,
-        2.5f,
-        3.0f,
-        4.0f,
-        7.0f
+        2f, 4f, 6f, 8f, 10f, 12f, 14f, 16f
     };
 
     private int nextBeatIndex = 0;
@@ -35,21 +29,32 @@ public class BeatSpawner : MonoBehaviour
     void Start()
     {
         Camera cam = Camera.main;
-        float halfWidth = cam.orthographicSize * cam.aspect;
-        spawnX = halfWidth - spawnPadding;
+
+        // Distance from camera to 2D plane
+        float depth = Mathf.Abs(cam.transform.position.z - laneZ);
+
+        // Right edge of screen in world space
+        Vector3 rightEdge = cam.ViewportToWorldPoint(
+            new Vector3(1f, 0.5f, depth)
+        );
+
+        spawnX = rightEdge.x;
 
         float distance = Mathf.Abs(spawnX - hitLineX);
         travelTime = distance / beatSpeed;
+
+        // Play song
+        beatMapSong.resource = songOne;
+        beatMapSong.Play();
     }
 
     void Update()
     {
-        songTime += Time.deltaTime;
+        songTime = beatMapSong.time;
 
         if (nextBeatIndex >= beatTimes.Count)
             return;
 
-        // Spawn early so it reaches hit line at the beat time
         if (songTime >= beatTimes[nextBeatIndex] - travelTime)
         {
             SpawnBeat();
@@ -60,12 +65,10 @@ public class BeatSpawner : MonoBehaviour
     void SpawnBeat()
     {
         GameObject newBeat = Instantiate(beat);
-        newBeat.transform.position = new Vector3(spawnX, laneY, 0f);
+        newBeat.transform.position = new Vector3(spawnX, laneY, laneZ);
 
-        BeatMovement movement = newBeat.GetComponent<BeatMovement>();
-        if (movement != null)
-        {
-            movement.speed = beatSpeed;
-        }
+        BeatMovement bm = newBeat.GetComponent<BeatMovement>();
+        if (bm != null)
+            bm.speed = beatSpeed;
     }
 }

@@ -6,7 +6,7 @@ public class BeatMovement : MonoBehaviour
 
     void Update()
     {
-        transform.Translate(Vector2.left * speed * Time.deltaTime);
+        transform.Translate(Vector3.left * speed * Time.deltaTime, Space.World);
     }
 }
 

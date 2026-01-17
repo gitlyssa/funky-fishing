@@ -101,7 +101,6 @@ GameObject:
   m_Component:
   - component: {fileID: 7665432004968185767}
   - component: {fileID: 4168926971433857223}
-  - component: {fileID: -6818088123573348289}
   - component: {fileID: -8422966746348933905}
   m_Layer: 0
   m_Name: Beat
@@ -173,7 +172,7 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 10
   m_MaskInteraction: 1
   m_Sprite: {fileID: -2413806693520163455, guid: a86470a33a6bf42c4b3595704624658b, type: 3}
   m_Color: {r: 0.43867922, g: 0.8616671, b: 1, a: 1}
@@ -185,26 +184,6 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
---- !u!114 &-6818088123573348289
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7663214538283060097}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3b2e997568fd38e429b36a107883f115, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Hit
-  beatBorder: {fileID: 4773922330308144897}
-  fill: {fileID: 4168926971433857223}
-  OriginalColor: {r: 0.43439722, g: 1, b: 0, a: 0}
-  FadedColor: {r: 1, g: 0, b: 0, a: 0}
-  fillColor: {r: 0.25943398, g: 1, b: 0.9637659, a: 0}
-  fillFade: {r: 0.43867922, g: 0.8909596, b: 1, a: 0}
-  startScale: {x: 0, y: 0, z: 0}
-  endScale: {x: 0, y: 0, z: 0}
 --- !u!114 &-8422966746348933905
 MonoBehaviour:
   m_ObjectHideFlags: 0
