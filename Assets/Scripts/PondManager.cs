@@ -21,7 +21,7 @@ public class PondManager : MonoBehaviour
         pondCenter = transform.position;
         fishList = new List<GameObject>();
         // spawn 10 random fish at random position in pond
-        for (int i = 0; i < 20; i++)
+        for (int i = 0; i < 5; i++)
         {   
 
             // x^2 + z^2 < radius^2
@@ -73,6 +73,7 @@ public class PondManager : MonoBehaviour
         }
         GameObject fish = Instantiate(fishPrefabs[fishIndex], position, Quaternion.identity);
         //append to fish list
+        fish.GetComponent<FishMovement>().pondManager = this;
         fishList.Add(fish);
     }
 
@@ -109,9 +110,17 @@ public class PondManager : MonoBehaviour
     {
         GameObject fish = closestFish(bobber);
         if (fish != null)
-        {
-            fishList.Remove(fish);
-            Destroy(fish);
+        {   
+            // add force throwing fish upwards
+            Rigidbody fishRb = fish.GetComponent<Rigidbody>();
+            if (fishRb != null)
+            {
+                fishRb.AddForce(Vector3.up * 5f, ForceMode.Impulse);
+            }
+
+
+            // fishList.Remove(fish);
+            // Destroy(fish);
             Debug.Log("Fish caught!");
             playerBobber.GetComponent<BobberScript>().Reset();
         }
