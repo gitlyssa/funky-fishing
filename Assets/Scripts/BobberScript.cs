@@ -3,7 +3,7 @@ using UnityEngine;
 public class BobberScript : MonoBehaviour
 {
     public GameObject bobber;
-
+    
     public float waterHeight = 6f;
     public float fallSpeed = 8f;
     public float bobAmplitude = 0.9f;
