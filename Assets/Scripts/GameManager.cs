@@ -16,6 +16,7 @@ public class GameManager : MonoBehaviour
 
     public AudioSource ambientMusic;
     public AudioResource ambientMusicClip;
+    [SerializeField, Range(0f, 2f)] private float ambientVolume = 1.5f;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -27,7 +28,8 @@ public class GameManager : MonoBehaviour
         inRhythmMode = false;
 
         ambientMusic.resource = ambientMusicClip;
-        ambientMusic.volume = 2.0f;
+        ambientMusic.spatialBlend = 0f;
+        ambientMusic.volume = ambientVolume;
         ambientMusic.Play();
     }
 

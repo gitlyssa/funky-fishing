@@ -524,6 +524,7 @@ MonoBehaviour:
   mainCamera: {fileID: 0}
   ambientMusic: {fileID: 906899466}
   ambientMusicClip: {fileID: 8300000, guid: 70007bc367c023744b82c661bd4bbe6a, type: 3}
+  ambientVolume: 2
 --- !u!82 &906899466
 AudioSource:
   m_ObjectHideFlags: 0
@@ -639,7 +640,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2819236874334940118, guid: a1e2b324434800744baa741dd9326064, type: 3}
       propertyPath: m_Radius
-      value: 4
+      value: 1.5
       objectReference: {fileID: 0}
     - target: {fileID: 2819236874334940118, guid: a1e2b324434800744baa741dd9326064, type: 3}
       propertyPath: m_IsTrigger
@@ -816,8 +817,6 @@ MonoBehaviour:
   waterlevel: 0
   playerBobber: {fileID: 903304927}
   gameManager: {fileID: 0}
-  bobberSound: {fileID: 0}
-  bobberSplashClip: {fileID: 0}
 --- !u!4 &2072139296
 Transform:
   m_ObjectHideFlags: 0

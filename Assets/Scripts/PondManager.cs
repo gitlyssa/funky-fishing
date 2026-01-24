@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using UnityEngine.InputSystem;
-using UnityEngine.Audio;
+// using UnityEngine.Audio;/
 
 public class PondManager : MonoBehaviour
 {
@@ -17,18 +17,18 @@ public class PondManager : MonoBehaviour
     public GameManager gameManager;
     Vector3 pondCenter;
 
-    public AudioSource bobberSound;
-    public AudioResource bobberSplashClip;
+    // public AudioSource bobberSound;
+    // public AudioResource bobberSplashClip
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {   
-        bobberSound.resource = bobberSplashClip;
+        // bobberSound.resource = bobberSplashClip;
         gameManager = FindObjectOfType<GameManager>();
         pondCenter = transform.position;
         fishList = new List<GameObject>();
         // spawn 10 random fish at random position in pond
-        for (int i = 0; i < 10; i++)
+        for (int i = 0; i < 5; i++)
         {   
 
             // x^2 + z^2 < radius^2
