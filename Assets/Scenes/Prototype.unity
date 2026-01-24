@@ -377,7 +377,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 313144667}
-  - component: {fileID: 313144666}
+  - component: {fileID: 313144668}
   m_Layer: 0
   m_Name: InputVisualizer
   m_TagString: Untagged
@@ -385,36 +385,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &313144666
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 313144665}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 70223fa0ed9378141bc68e9d317ef9c7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BallVisualizer
-  inputSource: {fileID: 492688570}
-  idleMaterial: {fileID: 2100000, guid: 9fc2e1cf03758a344b1c60fc5433c5ec, type: 2}
-  activteMaterial: {fileID: 2100000, guid: 36f0bb15f29bb8340a29550e3dbd50df, type: 2}
-  flickMaterial: {fileID: 2100000, guid: 2ff39dea642c4e24baef49a40401a85e, type: 2}
-  flickFlashDuration: 0.1
-  directionSpheres:
-  - {fileID: 1451430286}
-  - {fileID: 339475478}
-  - {fileID: 1486267007}
-  - {fileID: 1224243868}
-  - {fileID: 1951843722}
-  - {fileID: 1921502415}
-  - {fileID: 834942803}
-  - {fileID: 1112529855}
-  reelSphere: {fileID: 152172741}
-  flickSizeMultiplier: 0.8
-  holdSizeMultiplier: 0.6
-  idleSizeMultiplier: 0.5
 --- !u!4 &313144667
 Transform:
   m_ObjectHideFlags: 0
@@ -439,6 +409,36 @@ Transform:
   - {fileID: 152172745}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &313144668
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 313144665}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4030ac27f76934a4788dda7e5477349f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BallVisualizer
+  inputSource: {fileID: 492688574}
+  idleMaterial: {fileID: 2100000, guid: f722633d59a002b4481b6a50487a3630, type: 2}
+  activteMaterial: {fileID: 2100000, guid: 6f489ac645e9b054ea0099656fa2a164, type: 2}
+  flickMaterial: {fileID: 2100000, guid: fd6ba6b5cffd4a64d8b6206427f2866c, type: 2}
+  flickFlashDuration: 0.1
+  directionSpheres:
+  - {fileID: 1451430286}
+  - {fileID: 339475478}
+  - {fileID: 1486267007}
+  - {fileID: 1224243868}
+  - {fileID: 1951843722}
+  - {fileID: 1921502415}
+  - {fileID: 834942803}
+  - {fileID: 1112529855}
+  reelSphere: {fileID: 152172741}
+  flickSizeMultiplier: 0.8
+  holdSizeMultiplier: 0.6
+  idleSizeMultiplier: 0.5
 --- !u!1 &339475478
 GameObject:
   m_ObjectHideFlags: 0
@@ -560,7 +560,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 347981813}
-  - component: {fileID: 347981812}
+  - component: {fileID: 347981814}
   m_Layer: 0
   m_Name: NoteSpawner
   m_TagString: Untagged
@@ -568,21 +568,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &347981812
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 347981811}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0477f9fb6c8c23141b700220f9ff17ac, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::NoteSpawner
-  notePrefab: {fileID: 8163130827068027638, guid: 41f351f8204bd0049b29e31cdc7c44cf, type: 3}
-  globalScrollSpeed: 30
-  spawnZ: 50
 --- !u!4 &347981813
 Transform:
   m_ObjectHideFlags: 0
@@ -598,6 +583,21 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &347981814
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 347981811}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c1a00f83e4ff08f428964e93606c76f4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NoteSpawner
+  notePrefab: {fileID: 8163130827068027638, guid: 94a872f98bb99a64c8ac671b3fe1371f, type: 3}
+  globalScrollSpeed: 10
+  spawnZ: 30
 --- !u!1 &492688569
 GameObject:
   m_ObjectHideFlags: 0
@@ -607,11 +607,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 492688572}
-  - component: {fileID: 492688571}
-  - component: {fileID: 492688570}
-  - component: {fileID: 492688573}
-  - component: {fileID: 492688575}
   - component: {fileID: 492688574}
+  - component: {fileID: 492688573}
   m_Layer: 0
   m_Name: InputManager
   m_TagString: Untagged
@@ -619,33 +616,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &492688570
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 492688569}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b9eb80e284fba45438505b2d7a2d311a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::RhythmInputProcessor
-  velocityThreshold: 15
-  positionThreshold: 0.4
-  deadzone: 0.15
---- !u!114 &492688571
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 492688569}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 553a44936db7c16418a135bbf28a269f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::NewMonoBehaviourScript
 --- !u!4 &492688572
 Transform:
   m_ObjectHideFlags: 0
@@ -670,7 +640,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 492688569}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ec2bd1ca0da14cc4498d1f97001b6f89, type: 3}
+  m_Script: {fileID: 11500000, guid: 0c628b6a851cbc04f887d6dab5203806, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MouseHardwareReader
   maxRadius: 300
@@ -683,30 +653,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 492688569}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: eb5aff131c3a27b44839eb3092cc709f, type: 3}
+  m_Script: {fileID: 11500000, guid: 2b43e80ed979cc44eacdda3f85274b51, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::JoyconGestureHardwareReader
-  stick: []
-  gyro: {x: 0, y: 0, z: 0}
-  accel: {x: 0, y: 0, z: 0}
-  jc_ind: 0
-  orientation: {x: 0, y: 0, z: 0, w: 0}
-  sensitivity: 2
-  jIndex: 0
---- !u!114 &492688575
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 492688569}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 405bad29b2b998c408059182c189d9e9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::JoyconManager
-  EnableIMU: 1
-  EnableLocalize: 1
+  m_EditorClassIdentifier: Assembly-CSharp::RhythmInputProcessor
+  velocityThreshold: 2
+  positionThreshold: 0.4
+  deadzone: 0.15
 --- !u!1 &834942803
 GameObject:
   m_ObjectHideFlags: 0
