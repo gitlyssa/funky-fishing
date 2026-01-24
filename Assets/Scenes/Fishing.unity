@@ -359,6 +359,58 @@ MonoBehaviour:
   m_ShadowLayerMask: 1
   m_RenderingLayers: 1
   m_ShadowRenderingLayers: 1
+--- !u!1 &379140846
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 379140848}
+  - component: {fileID: 379140847}
+  m_Layer: 0
+  m_Name: FishingManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &379140847
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 379140846}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2f6cb47b751d34ce7b22d40f152ac711, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: '::'
+  mainCamera: {fileID: 1549314561}
+  bobberPrefab: {fileID: 5894710004296649383, guid: a1e2b324434800744baa741dd9326064, type: 3}
+  pondY: 1
+  bobberSpawned: 0
+  minMouseY: 300
+  maxMouseY: 600
+  maxCastDistance: 20
+  rod: {fileID: 416478983}
+--- !u!4 &379140848
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 379140846}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 41.40906, y: 0, z: 67.89257}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &416478983
 GameObject:
   m_ObjectHideFlags: 0
@@ -487,6 +539,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   mainCamera: {fileID: 1549314561}
+  bobberSpawner: {fileID: 379140847}
 --- !u!1 &1180103773
 GameObject:
   m_ObjectHideFlags: 0
@@ -1148,3 +1201,4 @@ SceneRoots:
   - {fileID: 327279339}
   - {fileID: 1417382051}
   - {fileID: 1837776017}
+  - {fileID: 379140848}

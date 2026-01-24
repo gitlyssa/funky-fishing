@@ -106,7 +106,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BobberScript
   bobber: {fileID: 0}
   waterHeight: 6
-  fallSpeed: 2
+  fallSpeed: 10
   bobAmplitude: 0.9
   bobFrequency: 5
 --- !u!135 &2819236874334940118
