@@ -40,7 +40,13 @@ public class RhythmNote : MonoBehaviour
 
         //if tail passes camera location and some buffer, destroy
         if (tTail > 1.3f) 
-        {
+        {   
+            // find parent list
+            NoteSpawner spawner = FindObjectOfType<NoteSpawner>();
+            if (spawner != null)
+            {
+                spawner.activeNotes.Remove(this);
+            }
             Destroy(gameObject);
             return;
         }

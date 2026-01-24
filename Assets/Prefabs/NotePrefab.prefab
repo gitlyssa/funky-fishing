@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 7244522993730731540}
   - component: {fileID: 2570395968869604994}
   - component: {fileID: 5299397936631394787}
-  - component: {fileID: 7818668496267021070}
+  - component: {fileID: -1984424805411227710}
   m_Layer: 0
   m_Name: NotePrefab
   m_TagString: Untagged
@@ -67,7 +67,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 83b1bc1e2ccb6d840bb979dd14014f46, type: 2}
+  - {fileID: 2100000, guid: 26c3778993039da4783074af8553f553, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -91,7 +91,7 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!114 &7818668496267021070
+--- !u!114 &-1984424805411227710
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -100,7 +100,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 8163130827068027638}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ede044737373bdc4884e15113202dc5e, type: 3}
+  m_Script: {fileID: 11500000, guid: c6803b9a14793874f9e1b5f1f88ed6b3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RhythmNote
   targetHitTime: 0
