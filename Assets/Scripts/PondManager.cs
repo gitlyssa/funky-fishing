@@ -17,13 +17,13 @@ public class PondManager : MonoBehaviour
     public GameManager gameManager;
     Vector3 pondCenter;
 
-    public AudioSource bobberSound;
-    public AudioResource bobberSplashClip;
+    // public AudioSource bobberSound;
+    // public AudioResource bobberSplashClip;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {   
-        bobberSound.resource = bobberSplashClip;
+        // bobberSound.resource = bobberSplashClip;
         gameManager = FindObjectOfType<GameManager>();
         pondCenter = transform.position;
         fishList = new List<GameObject>();
