@@ -15,7 +15,7 @@ GameObject:
   - component: {fileID: 2819236874334940118}
   m_Layer: 0
   m_Name: Bobber
-  m_TagString: Untagged
+  m_TagString: Bobber
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -108,7 +108,7 @@ MonoBehaviour:
   waterHeight: 6
   fallSpeed: 2
   bobAmplitude: 0.9
-  bobFrequency: 10
+  bobFrequency: 5
 --- !u!135 &2819236874334940118
 SphereCollider:
   m_ObjectHideFlags: 0
