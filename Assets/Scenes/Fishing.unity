@@ -392,9 +392,9 @@ MonoBehaviour:
   bobberPrefab: {fileID: 5894710004296649383, guid: a1e2b324434800744baa741dd9326064, type: 3}
   pondY: 1
   bobberSpawned: 0
-  minMouseY: 300
-  maxMouseY: 600
-  maxCastDistance: 20
+  minMouseY: 200
+  maxMouseY: 1000
+  maxCastDistance: 50
   rod: {fileID: 416478983}
 --- !u!4 &379140848
 Transform:
