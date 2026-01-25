@@ -699,6 +699,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::NoteScorer
   noteSpawner: {fileID: 347981814}
   inputProcessor: {fileID: 492688574}
+  feedback: {fileID: 0}
   perfectWindow: 0.1
   goodWindow: 0.25
   missWindow: 0.5

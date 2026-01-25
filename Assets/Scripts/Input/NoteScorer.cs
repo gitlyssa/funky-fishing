@@ -5,6 +5,9 @@ public class NoteScorer : MonoBehaviour
     [Header("References")]
     public NoteSpawner noteSpawner;
     public RhythmInputProcessor inputProcessor;
+    public HitFeedbackManager feedback; 
+
+    public float ringRadius = 5f;
 
     [Header("Timing Windows (in seconds)")]
     public float perfectWindow = 0.1f;
@@ -39,6 +42,8 @@ public class NoteScorer : MonoBehaviour
             if (timeDiff > missWindow)
             {
                 Debug.Log("Missed Note!");
+                Vector3 missPos = GetPositionFromAngle(note.startAngle);
+                feedback.TriggerFeedback(missPos, "MISS");
                 RemoveNote(i);
             }
         }
@@ -69,18 +74,22 @@ public class NoteScorer : MonoBehaviour
 
     private void EvaluateHit(int index, float diff)
     {
-        string rating = "Poor";
+        string rating = "MISS";
         if (diff <= perfectWindow)
         {
-            rating = "Perfect";
+            rating = "PERFECT";
         }
         else if (diff <= goodWindow)
         {
-            rating = "Good";
+            rating = "GOOD";
         }
 
         Debug.Log($"{rating}! Timing Error: {diff * 1000:F0}ms");
         
+        RhythmNote note = noteSpawner.activeNotes[index];
+        Vector3 hitPos = GetPositionFromAngle(note.startAngle);
+        feedback.TriggerFeedback(hitPos, rating);
+    
         RemoveNote(index);
         // maybe spawn some particles?
     }
@@ -117,6 +126,16 @@ public class NoteScorer : MonoBehaviour
             case FlickDirection.DownRight: return 315f;
             default: return -1f; // None
         }
+    }
+
+    private Vector3 GetPositionFromAngle(float angleDegrees)
+    {
+        float rad = angleDegrees * Mathf.Deg2Rad;
+        float x = Mathf.Cos(rad) * ringRadius;
+        float y = Mathf.Sin(rad) * ringRadius;
+        
+        // Z is 0 because the scoring plane is at Z=0
+        return new Vector3(x, y, 0f);
     }
 
     
