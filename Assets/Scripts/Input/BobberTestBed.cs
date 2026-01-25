@@ -1,6 +1,8 @@
 using System.Collections;
 using UnityEngine;
 
+// Simple harness to move a bobber between two points so input/gesture work can be tested
+// without needing full fishing gameplay systems online.
 public class BobberTestBed : MonoBehaviour
 {
     [Header("References")]
@@ -27,19 +29,19 @@ public class BobberTestBed : MonoBehaviour
 
     void Update()
     {
-        // Temporary controls to test the bed (we'll replace with Joy-Con later)
+        // Temporary keyboard controls to exercise the motion logic.
         if (Input.GetKeyDown(castKey)) Cast();
         if (Input.GetKeyDown(yankKey)) Yank();
     }
 
-    // Call this when a forward-cast gesture is detected
+    // Call this when a forward-cast gesture is detected.
     public void Cast()
     {
         if (bobber == null || targetPoint == null) return;
         StartMove(targetPoint.position, castDuration);
     }
 
-    // Call this when a yank-back gesture is detected
+    // Call this when a yank-back gesture is detected.
     public void Yank()
     {
         if (bobber == null || startPoint == null) return;
@@ -73,6 +75,7 @@ public class BobberTestBed : MonoBehaviour
 
     void OnDrawGizmos()
     {
+        // Visualize the cast path in the editor.
         if (startPoint == null || targetPoint == null) return;
         Gizmos.DrawLine(startPoint.position, targetPoint.position);
         Gizmos.DrawWireSphere(startPoint.position, 0.15f);

@@ -3,6 +3,8 @@ using System.Runtime.InteropServices;
 using UnityEngine;
 using UnityEngine.Events;
 
+// Reads Joy-Con IMU data via JoyShockLibrary and fires cast/yank events based on
+// linear-accel + gyro thresholds.
 public class JoyConGestureDetector : MonoBehaviour
 {
     private const string DLL = "JoyShockLibrary";
@@ -69,6 +71,7 @@ public class JoyConGestureDetector : MonoBehaviour
 
     void Start()
     {
+        // Discover and select a Joy-Con device to read IMU data from.
         int count = JslConnectDevices();
         _handles = new int[Mathf.Max(0, count)];
         if (count > 0) JslGetConnectedDeviceHandles(_handles, _handles.Length);
@@ -94,20 +97,22 @@ public class JoyConGestureDetector : MonoBehaviour
         var accelG = new Vector3(imu.accelX, imu.accelY, imu.accelZ);
         var gyroDps = new Vector3(imu.gyroX, imu.gyroY, imu.gyroZ);
 
-        // gravity removal => linear acceleration
+        // Estimate gravity and remove it to get linear acceleration.
         _gravity = Vector3.Lerp(_gravity, accelG, 1f - Mathf.Exp(-gravityFollow * dt));
         var lin = accelG - _gravity;
 
+        // Smooth noisy signals before thresholding.
         _linAccel = Vector3.Lerp(_linAccel, lin, 1f - Mathf.Exp(-linAccelSmooth * dt));
         _gyro = Vector3.Lerp(_gyro, gyroDps, 1f - Mathf.Exp(-gyroSmooth * dt));
 
+        // Project onto the configured axes and normalize sign.
         float forwardLin = forwardSign * GetAxis(_linAccel, forwardAxis);
         float swingGyro  = gyroSign * GetAxis(_gyro, swingGyroAxis);
 
         switch (_state)
         {
             case State.Idle:
-                // CAST: both positive
+                // CAST gesture = forward linear accel + swing gyro in the positive direction.
                 if (forwardLin > castForwardLinG && swingGyro > castGyroDps)
                 {
                     if (logTriggers) Debug.Log($"CAST! lin={forwardLin:F2}g gyro={swingGyro:F0}dps");
@@ -121,7 +126,7 @@ public class JoyConGestureDetector : MonoBehaviour
             case State.Casted:
                 if (Time.time - _castTime < minTimeBetweenCastAndYank) break;
 
-                // YANK: both negative
+                // YANK gesture = pull back linear accel + opposite swing gyro.
                 if (forwardLin < -yankBackLinG && swingGyro < -yankGyroDps)
                 {
                     if (logTriggers) Debug.Log($"YANK! lin={forwardLin:F2}g gyro={swingGyro:F0}dps");
@@ -132,6 +137,7 @@ public class JoyConGestureDetector : MonoBehaviour
                 break;
 
             case State.Cooldown:
+                // One-frame reset so we can re-arm after the cooldown window.
                 _state = State.Idle;
                 break;
         }

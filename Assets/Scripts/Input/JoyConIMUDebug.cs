@@ -2,6 +2,7 @@ using System;
 using System.Runtime.InteropServices;
 using UnityEngine;
 
+// Minimal IMU logger for verifying Joy-Con sensor data and filtering values.
 public class JoyConIMUDebug : MonoBehaviour
 {
     private const string DLL = "JoyShockLibrary";
@@ -43,6 +44,7 @@ public class JoyConIMUDebug : MonoBehaviour
 
     void Start()
     {
+        // Discover and select a Joy-Con device to read IMU data from.
         int count = JslConnectDevices();
         _handles = new int[Mathf.Max(0, count)];
         if (count > 0) JslGetConnectedDeviceHandles(_handles, _handles.Length);
@@ -66,14 +68,14 @@ public class JoyConIMUDebug : MonoBehaviour
         var accelG = new Vector3(imu.accelX, imu.accelY, imu.accelZ);
         var gyroDps = new Vector3(imu.gyroX, imu.gyroY, imu.gyroZ);
 
-        // Estimate gravity and remove it
+        // Estimate gravity and remove it.
         _gravity = Vector3.Lerp(_gravity, accelG, 1f - Mathf.Exp(-gravityFollow * dt));
         var lin = accelG - _gravity;
 
-        // Smooth linear accel a bit
+        // Smooth linear accel a bit.
         _linAccelFilt = Vector3.Lerp(_linAccelFilt, lin, 1f - Mathf.Exp(-linAccelSmooth * dt));
 
-        // Log at logHz so the console doesn't spam
+        // Log at logHz so the console doesn't spam.
         if (logToConsole && Time.time >= _nextLogTime)
         {
             _nextLogTime = Time.time + (1f / Mathf.Max(1f, logHz));
