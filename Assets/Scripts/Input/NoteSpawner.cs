@@ -8,6 +8,10 @@ public class NoteSpawner : MonoBehaviour
     public float globalScrollSpeed = 10f;
     public float spawnZ = 30f;
 
+    [Header("Materials")]
+    public Material holdMaterial;
+    public Material flickMaterial; 
+
     public List<RhythmNote> activeNotes = new List<RhythmNote>();
     
     // hit time is time when note should be hit
@@ -20,14 +24,21 @@ public class NoteSpawner : MonoBehaviour
         GameObject go = Instantiate(notePrefab);
         RhythmNote note = go.GetComponent<RhythmNote>();
         
-        note.Initialize(hitTime, duration, travelTime, sAngle, eAngle);
+        note.Initialize(hitTime, duration, travelTime, sAngle, eAngle, holdMaterial, flickMaterial);
         activeNotes.Add(note);
+    }
+
+    public void RemoveNote(int index)
+    {
+        RhythmNote note = activeNotes[index];
+        activeNotes.RemoveAt(index);
+        Destroy(note.gameObject);
     }
 
     // Update is called once per frame
     void Update()
     {   
-
+        activeNotes.RemoveAll(n => n == null);
         // press z, x, c, v for a flick note in left, up, right, down
         if (Keyboard.current.zKey.wasPressedThisFrame)
         {
@@ -44,6 +55,20 @@ public class NoteSpawner : MonoBehaviour
         if (Keyboard.current.vKey.wasPressedThisFrame)
         {
             SpawnNote(Time.time + 2f, 0f, 270f, 270f); // Down
+        }
+
+        // b n m for hold notes in left, up, right
+        if (Keyboard.current.bKey.wasPressedThisFrame)
+        {
+            SpawnNote(Time.time + 2f, 1f, 180f, 180f); // Left
+        }
+        if (Keyboard.current.nKey.wasPressedThisFrame)
+        {
+            SpawnNote(Time.time + 2f, 1f, 90f, 90f); // Up
+        }
+        if (Keyboard.current.mKey.wasPressedThisFrame)
+        {
+            SpawnNote(Time.time + 2f, 1f, 0f, 0f); // Right
         }
     }
 }

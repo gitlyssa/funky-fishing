@@ -10,17 +10,26 @@ public class RhythmNote : MonoBehaviour
     public float startAngle;
     public float endAngle;
 
+    public bool isFlickNote;
+
+    private Renderer _renderer;
+
+
     private float ringRadius = 5f;
     private float spawnZ = 30f;
     // private float scoringZ = 0f;
 
-    public void Initialize(float hitTime, float duration, float travelT, float sAng, float eAng)
+    public void Initialize(float hitTime, float duration, float travelT, float sAng, float eAng, Material holdMat, Material flickMat)
     {
         targetHitTime = hitTime;
         noteDuration = duration;
         travelTime = travelT;
         startAngle = sAng;
         endAngle = eAng;
+        isFlickNote = duration <= 0.01f;
+
+        _renderer = GetComponent<Renderer>();
+        _renderer.material = isFlickNote ? flickMat : holdMat;
 
         GenerateRibbonMesh();
     }
@@ -42,11 +51,6 @@ public class RhythmNote : MonoBehaviour
         if (tTail > 1.3f) 
         {   
             // find parent list
-            NoteSpawner spawner = FindObjectOfType<NoteSpawner>();
-            if (spawner != null)
-            {
-                spawner.activeNotes.Remove(this);
-            }
             Destroy(gameObject);
             return;
         }

@@ -108,3 +108,6 @@ MonoBehaviour:
   travelTime: 0
   startAngle: 0
   endAngle: 0
+  isFlickNote: 0
+  holdMaterial: {fileID: 2100000, guid: 26c3778993039da4783074af8553f553, type: 2}
+  flickMaterial: {fileID: 2100000, guid: 2f0cedc9b3ff58e4a8cd52e18d709565, type: 2}
