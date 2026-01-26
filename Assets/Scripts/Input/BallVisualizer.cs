@@ -14,12 +14,13 @@ public class BallVisualizer : MonoBehaviour
     public float flickFlashDuration = 0.1f;
 
     [Header("Spheres (R, UR, U, UL, L, DL, D, DR)")]
+    // Defined in Unity locally
     public List<GameObject> directionSpheres;
-    public GameObject reelSphere;
+    public GameObject reelSphere;   // Sphere at the center of the circle
 
-    public float flickSizeMultiplier = 0.8f;
-    public float holdSizeMultiplier = 0.6f;
-    public float idleSizeMultiplier = 0.5f;
+    public float flickSizeMultiplier = 0.8f;    // How much the ball expands when flicking
+    public float holdSizeMultiplier = 0.6f;     // How much the ball expands when holding position (not moving mouse)
+    public float idleSizeMultiplier = 0.5f;     // Size of ball when neither held nor flicked (at rest)
 
     private Dictionary<FlickDirection, GameObject> directionToSphere;
     private Dictionary<FlickDirection, float> flickTimers = new Dictionary<FlickDirection, float>();
