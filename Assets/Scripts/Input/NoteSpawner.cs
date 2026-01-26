@@ -42,8 +42,6 @@ public class NoteSpawner : MonoBehaviour
     void Update()
     {   
 
-        // randomly spawn a note every second in one of the 8 directions
-
         spawnTimer += Time.deltaTime;
         if (spawnTimer >= spawnInterval)
         {
