@@ -35,6 +35,10 @@ public class JslStickInput : MonoBehaviour
     [Range(0f, 0.5f)] public float deadzone = 0.15f;
     public bool invertY = false;
 
+    [Header("Debug")]
+    public bool showDebugOverlay = true;
+    public KeyCode toggleDebugKey = KeyCode.F3;
+
     public Vector2 Stick { get; private set; }  // -1..1 (approx)
     public bool Connected { get; private set; }
 
@@ -48,6 +52,11 @@ public class JslStickInput : MonoBehaviour
 
     void Update()
     {
+        if (toggleDebugKey != KeyCode.None && Input.GetKeyDown(toggleDebugKey))
+        {
+            showDebugOverlay = !showDebugOverlay;
+        }
+
         if (!Connected || !JslStillConnected(_id))
         {
             Connected = false;
@@ -95,6 +104,8 @@ public class JslStickInput : MonoBehaviour
     void OnGUI()
     {
         // quick visual debug (optional)
+        if (!showDebugOverlay) return;
+
         GUI.Label(new Rect(10, 10, 400, 22), $"JSL Connected={Connected} Stick={Stick}");
     }
 }

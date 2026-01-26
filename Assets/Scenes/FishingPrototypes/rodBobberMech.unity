@@ -168,7 +168,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RodLineVisualizer
   rodTip: {fileID: 313052229}
   bobber: {fileID: 1169190394}
-  line: {fileID: 177524797}
+  waterSurface: {fileID: 1343573677}
+  preventUnderWater: 1
+  waterClearance: 0.02
+  segments: 20
+  slack: 0.08
+  slackInFlight: 0.15
+  maxSag: 2
+  reduceSagWhenMoving: 1
+  movingSpeedForTightLine: 6
 --- !u!120 &177524797
 LineRenderer:
   serializedVersion: 3
@@ -307,7 +315,8 @@ Transform:
   m_LocalPosition: {x: 0, y: 0.5828, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 804047174}
   m_Father: {fileID: 177524795}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &472076522
@@ -320,6 +329,7 @@ GameObject:
   m_Component:
   - component: {fileID: 472076524}
   - component: {fileID: 472076523}
+  - component: {fileID: 472076525}
   m_Layer: 0
   m_Name: BobberController
   m_TagString: Untagged
@@ -341,8 +351,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BobberArcCaster
   rodTip: {fileID: 313052229}
   bobber: {fileID: 1169190394}
+  bobberHangPoint: {fileID: 804047174}
   targetMarker: {fileID: 499574650}
-  cursorTargeting: {fileID: 0}
   castDuration: 0.75
   arcHeight: 3
   arcEase:
@@ -394,8 +404,6 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  castKey: 99
-  yankKey: 121
 --- !u!4 &472076524
 Transform:
   m_ObjectHideFlags: 0
@@ -411,6 +419,21 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &472076525
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 472076522}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: da085e9366430e14d908468cb248389d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BobberButtonInput
+  caster: {fileID: 472076523}
+  castKey: 99
+  yankKey: 121
 --- !u!1 &499574646
 GameObject:
   m_ObjectHideFlags: 0
@@ -556,6 +579,8 @@ MonoBehaviour:
   useRightStick: 0
   deadzone: 0.15
   invertY: 0
+  showDebugOverlay: 0
+  toggleDebugKey: 284
 --- !u!4 &525467670
 Transform:
   m_ObjectHideFlags: 0
@@ -698,6 +723,86 @@ MonoBehaviour:
   m_ShadowLayerMask: 1
   m_RenderingLayers: 1
   m_ShadowRenderingLayers: 1
+--- !u!1 &775436423
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 775436425}
+  - component: {fileID: 775436424}
+  m_Layer: 0
+  m_Name: JoyConIMUVisualizer
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &775436424
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 775436423}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 28c9f9fcbc2d56d459f346f8d6d724bd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::JoyConIMUVisualizer
+  deviceIndex: 0
+  gravityFollow: 12
+  linAccelSmooth: 25
+  barScaleG: 1.2
+  barScaleDps: 500
+--- !u!4 &775436425
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 775436423}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.33677, y: -0.13614, z: -6.55582}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &804047173
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 804047174}
+  m_Layer: 0
+  m_Name: BobberHangPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &804047174
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 804047173}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.13, y: -0.484, z: 0.248}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 313052229}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &993262942
 GameObject:
   m_ObjectHideFlags: 0
@@ -748,7 +853,7 @@ MonoBehaviour:
     m_Bits: 16
   castMarker: {fileID: 499574650}
   waterCollider: {fileID: 1343573674}
-  useJoyCon: 1
+  useJoyCon: 0
   jslInput: {fileID: 525467669}
   cursorSpeed: 1200
   worldMoveSpeed: 6
@@ -765,6 +870,7 @@ GameObject:
   - component: {fileID: 1169190393}
   - component: {fileID: 1169190392}
   - component: {fileID: 1169190391}
+  - component: {fileID: 1169190395}
   m_Layer: 0
   m_Name: Bobber
   m_TagString: Untagged
@@ -865,6 +971,27 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1169190395
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1169190390}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4b72608acbf300848a3dfa577fe092cc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BobberIdleSway
+  hangPoint: {fileID: 804047174}
+  bobberArcCaster: {fileID: 472076523}
+  swayEnabled: 1
+  toggleKey: 116
+  amplitude: 0.06
+  speed: 1.2
+  smooth: 12
+  verticalBob: 0.01
+  forwardMultiplier: 0.5
 --- !u!1 &1343573673
 GameObject:
   m_ObjectHideFlags: 0
@@ -1114,6 +1241,95 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1400736040}
   m_Mesh: {fileID: 10206, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &1771354106
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1771354108}
+  - component: {fileID: 1771354107}
+  m_Layer: 0
+  m_Name: JoyConGestures
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1771354107
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1771354106}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a9cd08864a6e1b34cba77e867d52bb70, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::JoyConGestureDetector
+  deviceIndex: 0
+  forwardAxis: 2
+  forwardSign: -1
+  swingGyroAxis: 0
+  gyroSign: -1
+  gravityFollow: 12
+  linAccelSmooth: 25
+  gyroSmooth: 20
+  castForwardLinG: 0.6
+  castGyroDps: 220
+  yankBackLinG: 0.6
+  yankGyroDps: 220
+  minTimeBetweenCastAndYank: 0.25
+  cooldownAfterTrigger: 0.25
+  onCast:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 472076523}
+        m_TargetAssemblyTypeName: BobberArcCaster, Assembly-CSharp
+        m_MethodName: Cast
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  onYank:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 472076523}
+        m_TargetAssemblyTypeName: BobberArcCaster, Assembly-CSharp
+        m_MethodName: Yank
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  logTriggers: 1
+--- !u!4 &1771354108
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1771354106}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.33677, y: -0.13614, z: -6.55582}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2015526332
 GameObject:
   m_ObjectHideFlags: 0
@@ -1264,3 +1480,5 @@ SceneRoots:
   - {fileID: 993262944}
   - {fileID: 525467670}
   - {fileID: 472076524}
+  - {fileID: 1771354108}
+  - {fileID: 775436425}

@@ -7,89 +7,78 @@ public class BobberArcCaster : MonoBehaviour
     public Transform rodTip;
     public Transform bobber;
 
-    // Use either one of these ways to get the target point:
-    public Transform targetMarker;                 // simplest: use marker position
-    public CursorCastTargeting cursorTargeting;    // optional: your targeting script (if you use it)
+    // Where the bobber rests when idle (hangs from the tip)
+    public Transform bobberHangPoint;
+
+    // We will cast to this (your CastMarker transform)
+    public Transform targetMarker;
 
     [Header("Cast Arc")]
     public float castDuration = 0.75f;
-    public float arcHeight = 3.0f;                 // extra height above straight line
+    public float arcHeight = 3.0f; // extra height above straight line
     public AnimationCurve arcEase = AnimationCurve.EaseInOut(0, 0, 1, 1);
 
     [Header("Yank / Retract")]
     public float yankDuration = 0.25f;
     public AnimationCurve yankEase = AnimationCurve.EaseInOut(0, 0, 1, 1);
 
-    [Header("Testing Keys")]
-    public KeyCode castKey = KeyCode.C;
-    public KeyCode yankKey = KeyCode.Y;
-
     public enum State { Idle, InFlight, Landed, Retracting }
     public State CurrentState { get; private set; } = State.Idle;
 
-    Coroutine _moveRoutine;
+    private Coroutine _moveRoutine;
 
     void Start()
     {
-        // start bobber at rod tip
-        if (rodTip && bobber)
-            bobber.position = rodTip.position;
+        // Start bobber at hang point (preferred), otherwise at rod tip
+        if (bobber != null)
+        {
+            if (bobberHangPoint != null) bobber.position = bobberHangPoint.position;
+            else if (rodTip != null) bobber.position = rodTip.position;
+        }
     }
 
-    void Update()
-    {
-        // keyboard test first
-        if (Input.GetKeyDown(castKey)) Cast();
-        if (Input.GetKeyDown(yankKey)) Yank();
-    }
-
+    // Call this from your JoyCon gesture event
     public void Cast()
     {
-        if (!rodTip || !bobber) return;
+        if (!rodTip || !bobber || !targetMarker) return;
 
-        Vector3 target = GetTargetPoint();
-        // Keep it on the water plane height (marker is already there, but just in case)
-        // target.y is fine as-is.
+        // Guard: don't cast again while moving
+        if (CurrentState == State.InFlight || CurrentState == State.Retracting) return;
 
-        StartArcMove(rodTip.position, target, castDuration, arcHeight, arcEase);
+        Vector3 from = bobber.position;            // launch from current (hanging) position
+        Vector3 to = targetMarker.position;        // land on the marker
+
+        StartArcMove(from, to, castDuration, arcHeight, arcEase);
         CurrentState = State.InFlight;
     }
 
+    // Call this from your JoyCon gesture event
     public void Yank()
     {
         if (!rodTip || !bobber) return;
 
-        StartLinearMove(bobber.position, rodTip.position, yankDuration, yankEase);
+        // Guard: don't yank if already idle/hanging
+        if (CurrentState == State.Idle) return;
+
+        Vector3 to = bobberHangPoint ? bobberHangPoint.position : rodTip.position;
+
+        StartLinearMove(bobber.position, to, yankDuration, yankEase);
         CurrentState = State.Retracting;
     }
 
-    Vector3 GetTargetPoint()
-    {
-        // Prefer cursorTargeting if assigned and has a target
-        if (cursorTargeting != null && cursorTargeting.HasTarget)
-            return cursorTargeting.CurrentTargetPoint;
-
-        // Otherwise use the marker
-        if (targetMarker != null)
-            return targetMarker.position;
-
-        // Fallback: straight ahead
-        return rodTip.position + rodTip.forward * 8f;
-    }
-
-    void StartArcMove(Vector3 from, Vector3 to, float duration, float height, AnimationCurve ease)
+    private void StartArcMove(Vector3 from, Vector3 to, float duration, float height, AnimationCurve ease)
     {
         if (_moveRoutine != null) StopCoroutine(_moveRoutine);
         _moveRoutine = StartCoroutine(ArcMove(from, to, duration, height, ease));
     }
 
-    void StartLinearMove(Vector3 from, Vector3 to, float duration, AnimationCurve ease)
+    private void StartLinearMove(Vector3 from, Vector3 to, float duration, AnimationCurve ease)
     {
         if (_moveRoutine != null) StopCoroutine(_moveRoutine);
         _moveRoutine = StartCoroutine(LinearMove(from, to, duration, ease));
     }
 
-    IEnumerator ArcMove(Vector3 from, Vector3 to, float duration, float height, AnimationCurve ease)
+    private IEnumerator ArcMove(Vector3 from, Vector3 to, float duration, float height, AnimationCurve ease)
     {
         duration = Mathf.Max(0.01f, duration);
         float t = 0f;
@@ -99,10 +88,9 @@ public class BobberArcCaster : MonoBehaviour
             t += Time.deltaTime / duration;
             float u = ease.Evaluate(Mathf.Clamp01(t));
 
-            // Base lerp along the line
             Vector3 p = Vector3.Lerp(from, to, u);
 
-            // Add a parabolic "up" offset that peaks at u=0.5
+            // Parabolic "up" offset peaking at u=0.5
             float parabola = 4f * u * (1f - u); // 0..1..0
             p += Vector3.up * (parabola * height);
 
@@ -115,7 +103,7 @@ public class BobberArcCaster : MonoBehaviour
         _moveRoutine = null;
     }
 
-    IEnumerator LinearMove(Vector3 from, Vector3 to, float duration, AnimationCurve ease)
+    private IEnumerator LinearMove(Vector3 from, Vector3 to, float duration, AnimationCurve ease)
     {
         duration = Mathf.Max(0.01f, duration);
         float t = 0f;
