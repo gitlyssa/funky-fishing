@@ -13,6 +13,9 @@ public class BobberArcCaster : MonoBehaviour
     // We will cast to this (your CastMarker transform)
     public Transform targetMarker;
 
+    [Header("Cast Target Offset")]
+    public float castTargetYOffset = 0f;
+
     [Header("Cast Arc")]
     public float castDuration = 0.75f;
     public float arcHeight = 3.0f; // extra height above straight line
@@ -46,7 +49,7 @@ public class BobberArcCaster : MonoBehaviour
         if (CurrentState == State.InFlight || CurrentState == State.Retracting) return;
 
         Vector3 from = bobber.position;            // launch from current (hanging) position
-        Vector3 to = targetMarker.position;        // land on the marker
+        Vector3 to = targetMarker.position + Vector3.up * castTargetYOffset;
 
         StartArcMove(from, to, castDuration, arcHeight, arcEase);
         CurrentState = State.InFlight;
@@ -60,8 +63,12 @@ public class BobberArcCaster : MonoBehaviour
         // Guard: don't yank if already idle/hanging
         if (CurrentState == State.Idle) return;
 
-        Vector3 to = bobberHangPoint ? bobberHangPoint.position : rodTip.position;
+        StartYank();
+    }
 
+    private void StartYank()
+    {
+        Vector3 to = bobberHangPoint ? bobberHangPoint.position : rodTip.position;
         StartLinearMove(bobber.position, to, yankDuration, yankEase);
         CurrentState = State.Retracting;
     }

@@ -19,8 +19,21 @@ public class BobberIdleSway : MonoBehaviour
     [Header("Shape")]
     public float forwardMultiplier = 0.5f;      // less forward/back than side sway
 
+    [Header("Water Drift")]
+    public bool waterMotionEnabled = true;
+    public float waterSwayAmplitude = 0.06f;
+    public float waterSwaySpeed = 0.8f;
+    public float waterBob = 0.025f;
+    public float waterSmooth = 6f;
+    public Vector3 waterCurrentDirection = new Vector3(1f, 0f, 0.25f);
+    public float waterCurrentSpeed = 0.005f;     // units per second
+    public float waterSinkOffset = -0.02f;      // negative sinks lower
+
     private float phaseA;
     private float phaseB;
+    private Vector3 landedAnchor;
+    private Vector3 currentDrift;
+    private BobberArcCaster.State lastState = BobberArcCaster.State.Idle;
 
     void Start()
     {
@@ -36,25 +49,50 @@ public class BobberIdleSway : MonoBehaviour
 
     void LateUpdate()
     {
-        if (!hangPoint) return;
-
-        // Only sway when the bobber is "idle/hanging"
-        if (bobberArcCaster != null && bobberArcCaster.CurrentState != BobberArcCaster.State.Idle)
-            return;
+        if (!hangPoint && bobberArcCaster == null) return;
 
         // If sway is off, gently return to hang point
         if (!swayEnabled)
         {
-            transform.position = Vector3.Lerp(transform.position, hangPoint.position, 1f - Mathf.Exp(-smooth * Time.deltaTime));
+            if (hangPoint != null)
+                transform.position = Vector3.Lerp(transform.position, hangPoint.position, 1f - Mathf.Exp(-smooth * Time.deltaTime));
             return;
         }
+
+        if (bobberArcCaster != null)
+        {
+            if (bobberArcCaster.CurrentState == BobberArcCaster.State.Idle)
+            {
+                ApplyIdleSway();
+            }
+            else if (bobberArcCaster.CurrentState == BobberArcCaster.State.Landed)
+            {
+                if (lastState != BobberArcCaster.State.Landed)
+                {
+                    landedAnchor = transform.position;
+                    currentDrift = Vector3.zero;
+                }
+                ApplyWaterMotion();
+            }
+        }
+        else
+        {
+            ApplyIdleSway();
+        }
+
+        lastState = bobberArcCaster != null ? bobberArcCaster.CurrentState : lastState;
+    }
+
+    private void ApplyIdleSway()
+    {
+        if (!hangPoint) return;
 
         float t = Time.time * speed;
 
         // Sway in the hangPoint's local right/forward directions (so it moves with the rod)
         float side = Mathf.Sin(t + phaseA) * amplitude;
-        float fwd  = Mathf.Cos(t * 0.8f + phaseB) * amplitude * forwardMultiplier;
-        float up   = Mathf.Sin(t * 1.3f + phaseB) * verticalBob;
+        float fwd = Mathf.Cos(t * 0.8f + phaseB) * amplitude * forwardMultiplier;
+        float up = Mathf.Sin(t * 1.3f + phaseB) * verticalBob;
 
         Vector3 target =
             hangPoint.position +
@@ -63,5 +101,34 @@ public class BobberIdleSway : MonoBehaviour
             hangPoint.up * up;
 
         transform.position = Vector3.Lerp(transform.position, target, 1f - Mathf.Exp(-smooth * Time.deltaTime));
+    }
+
+    private void ApplyWaterMotion()
+    {
+        if (!waterMotionEnabled) return;
+
+        Vector3 currentDir = waterCurrentDirection;
+        currentDir.y = 0f;
+        if (currentDir.sqrMagnitude < 0.0001f)
+            currentDir = Vector3.forward;
+        currentDir.Normalize();
+
+        Vector3 right = Vector3.Cross(Vector3.up, currentDir).normalized;
+
+        float t = Time.time * waterSwaySpeed;
+        float side = Mathf.Sin(t + phaseA) * waterSwayAmplitude;
+        float fwd = Mathf.Cos(t * 0.7f + phaseB) * waterSwayAmplitude * forwardMultiplier;
+        float up = Mathf.Sin(t * 1.1f + phaseB) * waterBob;
+
+        currentDrift += currentDir * waterCurrentSpeed * Time.deltaTime;
+
+        Vector3 target =
+            landedAnchor +
+            currentDrift +
+            right * side +
+            currentDir * fwd +
+            Vector3.up * (up + waterSinkOffset);
+
+        transform.position = Vector3.Lerp(transform.position, target, 1f - Mathf.Exp(-waterSmooth * Time.deltaTime));
     }
 }

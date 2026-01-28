@@ -11,6 +11,7 @@ public class CursorCastTargeting : MonoBehaviour
     public LayerMask waterMask;
     public Transform castMarker;
     public Collider waterCollider;
+    public BobberArcCaster bobberArcCaster;
 
     [Header("Input Mode")]
     public bool useJoyCon = false;
@@ -32,6 +33,9 @@ public class CursorCastTargeting : MonoBehaviour
     public Vector2 CursorPixel { get; private set; }
 
     private bool _warnedMissingJsl;
+    private BobberArcCaster.State _lastCasterState = BobberArcCaster.State.Idle;
+    private Vector3 _lastTargetPoint;
+    private bool _hasLastTarget;
 
     void Reset()
     {
@@ -41,6 +45,8 @@ public class CursorCastTargeting : MonoBehaviour
     void Start()
     {
         if (!cam) cam = Camera.main;
+        if (bobberArcCaster == null)
+            bobberArcCaster = FindObjectOfType<BobberArcCaster>();
 
         // start centered
         CursorPixel = new Vector2(Screen.width * 0.5f, Screen.height * 0.5f);
@@ -54,6 +60,36 @@ public class CursorCastTargeting : MonoBehaviour
     void Update()
     {
         if (!cam) { HasTarget = false; return; }
+
+        if (bobberArcCaster != null && bobberArcCaster.CurrentState != BobberArcCaster.State.Idle)
+        {
+            if (castMarker) castMarker.gameObject.SetActive(false);
+            if (HasTarget)
+            {
+                _lastTargetPoint = CurrentTargetPoint;
+                _hasLastTarget = true;
+            }
+            _lastCasterState = bobberArcCaster.CurrentState;
+            return;
+        }
+        else if (bobberArcCaster != null && _lastCasterState != BobberArcCaster.State.Idle)
+        {
+            _lastCasterState = BobberArcCaster.State.Idle;
+            if (_hasLastTarget)
+            {
+                CurrentTargetPoint = _lastTargetPoint;
+                HasTarget = true;
+                if (castMarker)
+                {
+                    castMarker.gameObject.SetActive(true);
+                    castMarker.position = CurrentTargetPoint + Vector3.up * 0.02f;
+                }
+            }
+            else
+            {
+                InitializeTargetOnWater();
+            }
+        }
 
         if (useJoyCon)
             UpdateTargetFromStick();
