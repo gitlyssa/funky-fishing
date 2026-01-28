@@ -12,4 +12,31 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b5d2f2ada7fbfe249b8f50d1ced31fcf, type: 3}
   m_Name: TestBeatmap
   m_EditorClassIdentifier: Assembly-CSharp::Beatmap
-  events: []
+  events:
+  - beat: 1
+    sAngle: 180
+    eAngle: 180
+  - beat: 2
+    sAngle: 180
+    eAngle: 180
+  - beat: 3
+    sAngle: 180
+    eAngle: 180
+  - beat: 4
+    sAngle: 180
+    eAngle: 180
+  - beat: 5
+    sAngle: 180
+    eAngle: 180
+  - beat: 6
+    sAngle: 180
+    eAngle: 180
+  - beat: 7
+    sAngle: 180
+    eAngle: 180
+  - beat: 8
+    sAngle: 180
+    eAngle: 180
+  - beat: 9
+    sAngle: 180
+    eAngle: 180

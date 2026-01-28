@@ -12,7 +12,6 @@ public class NoteSpawner : MonoBehaviour
 
     public float globalScrollSpeed = 10f;
     public float spawnZ = 30f;
-    public float beatsAheadToSpawn = 4f;
 
     public List<RhythmNote> activeNotes = new List<RhythmNote>();
     
@@ -21,7 +20,8 @@ public class NoteSpawner : MonoBehaviour
     // starting angle and ending angle
     public void SpawnNote(float hitTime, float duration, float sAngle, float eAngle)
     {
-        float travelTime = spawnZ / globalScrollSpeed;
+        // float travelTime = spawnZ / globalScrollSpeed;
+        float travelTime = 2f * (60f / metronome.bpm);
         
         GameObject go = Instantiate(notePrefab);
         RhythmNote note = go.GetComponent<RhythmNote>();
@@ -33,39 +33,25 @@ public class NoteSpawner : MonoBehaviour
     // Update is called once per frame
     void Update()
     {   
-        // // press z, x, c, v for a flick note in left, up, right, down
-        // if (Keyboard.current.zKey.wasPressedThisFrame)
-        // {
-        //     SpawnNote(Time.time + 2f, 0f, 180f, 180f); // Left
-        // }
-        // if (Keyboard.current.xKey.wasPressedThisFrame)
-        // {
-        //     SpawnNote(Time.time + 2f, 0f, 90f, 90f); // Up
-        // }
-        // if (Keyboard.current.cKey.wasPressedThisFrame)
-        // {
-        //     SpawnNote(Time.time + 2f, 0f, 0f, 0f); // Right
-        // }
-        // if (Keyboard.current.vKey.wasPressedThisFrame)
-        // {
-        //     SpawnNote(Time.time + 2f, 0f, 270f, 270f); // Down
-        // }
+        float secondsPerBeat = 60f / metronome.bpm;
+        float beatsAhead = 2f;
+        float travelTime = beatsAhead * secondsPerBeat;
 
-        while (currentEventIndex < beatmap.events.Count) 
+        while (currentEventIndex < beatmap.events.Count)
         {
-            var currentEvent = beatmap.events[currentEventIndex];
+            var e = beatmap.events[currentEventIndex];
+            float hitTime = metronome.GetTimeForBeat(e.beat);
 
-            // Check if the current song beat matches the event's beat
-            if (metronome.lastBeat >= currentEvent.beat)
+            if (Time.time >= hitTime - travelTime)
             {
-                SpawnNote(Time.time + 2f, 0f, currentEvent.sAngle, currentEvent.eAngle);
-                currentEventIndex++; // Move to the next event
+                SpawnNote(hitTime, 0f, e.sAngle, e.eAngle);
+                currentEventIndex++;
             }
             else
             {
-                // If the current beat is less than the event's beat, stop checking
                 break;
             }
         }
+
     }
 }

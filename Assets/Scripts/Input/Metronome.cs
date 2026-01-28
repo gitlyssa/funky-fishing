@@ -3,10 +3,11 @@ using UnityEngine;
 public class Metronome : MonoBehaviour
 {
     private MusicPlayer musicPlayer;
-    private float bpm = 100f;    /// Specifically for jamBeatMap
-    private float beatDurationMs;
+    public float bpm = 100f;    /// Specifically for jamBeatMap
+    public float beatDurationMs;
     public float lastBeat;
     private float nextBeatPosition;
+    private float songStartTime;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -19,7 +20,8 @@ public class Metronome : MonoBehaviour
             Debug.LogError("Metronome: No MusicPlayer found in the scene.");
         }
 
-        beatDurationMs = 60 / bpm * 1000;   // Duration of a quarter note
+        songStartTime = Time.time;
+        beatDurationMs = 60 / bpm * 1000 / 4;   // Duration of a quarter note
         lastBeat = 0;   // Tracks the number of beats
         nextBeatPosition = beatDurationMs;  // Initialize first beat position
     }
@@ -52,5 +54,11 @@ public class Metronome : MonoBehaviour
             float secondsPerBeat = 60f / bpm;
             return (musicPlayer.timePositionMs / 1000f) / secondsPerBeat;
         }
+    }
+
+    public float GetTimeForBeat(float beat)
+    {
+        float secondsPerBeat = 60f / bpm;
+        return songStartTime + beat * secondsPerBeat;
     }
 }

@@ -611,7 +611,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NoteSpawner
   notePrefab: {fileID: 8163130827068027638, guid: 94a872f98bb99a64c8ac671b3fe1371f, type: 3}
-  beatmap: {fileID: 11400000, guid: d03ed780d378dff419f720e6ba091189, type: 2}
+  beatmap: {fileID: 11400000, guid: 7bb72c8e71cfc2a42acad3be770e3aff, type: 2}
   metronome: {fileID: 872731563}
   globalScrollSpeed: 10
   spawnZ: 30
@@ -818,6 +818,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c97d223ef6f072443a1cc29485705017, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Metronome
+  bpm: 100
+  beatDurationMs: 0
   lastBeat: 0
 --- !u!4 &872731564
 Transform:
