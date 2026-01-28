@@ -67,6 +67,7 @@ public class PondManager : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.Space))
         {
+            Debug.Log("Attempting to catch fish...");
             CatchFish(playerBobber);
         }
     }
