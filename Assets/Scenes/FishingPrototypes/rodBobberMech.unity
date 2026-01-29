@@ -1626,9 +1626,10 @@ MonoBehaviour:
   - {fileID: 7196154191263375292, guid: 83e8391f15bad734ab3208fc4c46d905, type: 3}
   - {fileID: 7196154191263375292, guid: 5653e2282b255bd468ef71503ebbb22e, type: 3}
   fishList: []
-  radius: 7
+  radius: 3
   waterlevel: -2
   FishCaughtText: {fileID: 982525172}
+  catchRadius: 1
   playerBobber: {fileID: 1027225219}
   gameManager: {fileID: 0}
 --- !u!4 &1703229929
