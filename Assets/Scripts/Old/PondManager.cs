@@ -2,6 +2,8 @@ using UnityEngine;
 using System.Collections.Generic;
 using UnityEngine.InputSystem;
 using UnityEngine.Audio;
+using TMPro;
+using UnityEngine.UI;
 
 public class PondManager : MonoBehaviour
 {
@@ -12,6 +14,8 @@ public class PondManager : MonoBehaviour
 
     public int radius = 30;
     public int waterlevel = 0;
+    public TextMeshProUGUI FishCaughtText;
+    private bool fishCaughtTextActive = false;
 
     public GameObject playerBobber;
     public GameManager gameManager;
@@ -34,7 +38,7 @@ public class PondManager : MonoBehaviour
             // x^2 + z^2 < radius^2
             Vector2 randomCircle = Random.insideUnitCircle * radius;
             Vector3 randomPosition = new Vector3(pondCenter.x + randomCircle.x, 
-            waterlevel + Random.Range(1, 5), 
+            waterlevel, 
             pondCenter.z + randomCircle.y);
 
             SpawnFish(-1, randomPosition);
@@ -68,6 +72,11 @@ public class PondManager : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Space))
         {
             Debug.Log("Attempting to catch fish...");
+            if (fishCaughtTextActive)
+            {
+                FishCaughtText.gameObject.SetActive(false);
+                fishCaughtTextActive = false;
+            }
             CatchFish(playerBobber);
         }
     }
@@ -97,6 +106,7 @@ public class PondManager : MonoBehaviour
         GameObject closestFish = null;
 
         Collider bobberCollider = bobber.GetComponent<Collider>();
+        Debug.Log("Bobber Collider Bounds: " + bobberCollider.bounds);
         float closestDistance = Mathf.Infinity;
         foreach (GameObject fish in fishList)
         {
@@ -131,9 +141,14 @@ public class PondManager : MonoBehaviour
 
             fishList.Remove(fish);
             Destroy(fish);
+
+            FishCaughtText.gameObject.SetActive(true);
+            fishCaughtTextActive = true;
+
             Debug.Log("Fish caught!");
-            playerBobber.GetComponent<BobberScript>().Reset();
-            gameManager.HookFish();
+
+            // playerBobber.GetComponent<BobberScript>().Reset();
+            // gameManager.HookFish();
         }
         else
         {
