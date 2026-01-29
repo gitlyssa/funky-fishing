@@ -5,6 +5,11 @@ public class NoteSpawner : MonoBehaviour
 {
 
     public GameObject notePrefab;
+    public Beatmap beatmap;
+    public Metronome metronome;
+
+    private int currentEventIndex = 0;
+
     public float globalScrollSpeed = 10f;
     public float spawnZ = 30f;
 
@@ -22,7 +27,8 @@ public class NoteSpawner : MonoBehaviour
     // starting angle and ending angle
     public void SpawnNote(float hitTime, float duration, float sAngle, float eAngle)
     {
-        float travelTime = spawnZ / globalScrollSpeed;
+        // float travelTime = spawnZ / globalScrollSpeed;
+        float travelTime = 2f * (60f / metronome.bpm);
         
         GameObject go = Instantiate(notePrefab);
         RhythmNote note = go.GetComponent<RhythmNote>();
@@ -41,49 +47,35 @@ public class NoteSpawner : MonoBehaviour
     // Update is called once per frame
     void Update()
     {   
+        float secondsPerBeat = 60f / metronome.bpm;
+        float beatsAhead = 2f;
+        float travelTime = beatsAhead * secondsPerBeat;
 
-        spawnTimer += Time.deltaTime;
-        if (spawnTimer >= spawnInterval)
+        // spawnTimer += Time.deltaTime;
+        // if (spawnTimer >= spawnInterval)
+        // {
+        //     spawnTimer -= spawnInterval;
+
+        //     float angle = Random.Range(0, 8) * 45f; // 0, 45, 90, ..., 315
+
+        //     SpawnNote(Time.time + (spawnZ / globalScrollSpeed), 0f, angle, angle);
+        // }
+
+        while (currentEventIndex < beatmap.events.Count)
         {
-            spawnTimer -= spawnInterval;
+            var e = beatmap.events[currentEventIndex];
+            float hitTime = metronome.GetTimeForBeat(e.beat);
 
-            float angle = Random.Range(0, 8) * 45f; // 0, 45, 90, ..., 315
-
-            SpawnNote(Time.time + (spawnZ / globalScrollSpeed), 0f, angle, angle);
+            if (Time.time >= hitTime - travelTime)
+            {
+                SpawnNote(hitTime, 0f, e.sAngle, e.eAngle);
+                currentEventIndex++;
+            }
+            else
+            {
+                break;
+            }
         }
 
-
-        // activeNotes.RemoveAll(n => n == null);
-        // // press z, x, c, v for a flick note in left, up, right, down
-        // if (Keyboard.current.zKey.wasPressedThisFrame)
-        // {
-        //     SpawnNote(Time.time + 2f, 0f, 180f, 180f); // Left
-        // }
-        // if (Keyboard.current.xKey.wasPressedThisFrame)
-        // {
-        //     SpawnNote(Time.time + 2f, 0f, 90f, 90f); // Up
-        // }
-        // if (Keyboard.current.cKey.wasPressedThisFrame)
-        // {
-        //     SpawnNote(Time.time + 2f, 0f, 0f, 0f); // Right
-        // }
-        // if (Keyboard.current.vKey.wasPressedThisFrame)
-        // {
-        //     SpawnNote(Time.time + 2f, 0f, 270f, 270f); // Down
-        // }
-
-        // // b n m for hold notes in left, up, right
-        // if (Keyboard.current.bKey.wasPressedThisFrame)
-        // {
-        //     SpawnNote(Time.time + 2f, 1f, 180f, 180f); // Left
-        // }
-        // if (Keyboard.current.nKey.wasPressedThisFrame)
-        // {
-        //     SpawnNote(Time.time + 2f, 1f, 90f, 90f); // Up
-        // }
-        // if (Keyboard.current.mKey.wasPressedThisFrame)
-        // {
-        //     SpawnNote(Time.time + 2f, 1f, 0f, 0f); // Right
-        // }
     }
 }
