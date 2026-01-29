@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.03.00">
+	<object class="AudioFile" id="{f8acf07a-6cc8-4cc0-b163-1cf17305de8b}">
+		<property name="assetPath">
+			<value>sfx_tension_01_nl.flac</value>
+		</property>
+		<property name="frequencyInKHz">
+			<value>44.0999985</value>
+		</property>
+		<property name="channelCount">
+			<value>2</value>
+		</property>
+		<property name="length">
+			<value>0.46875283446712018</value>
+		</property>
+		<relationship name="masterAssetFolder">
+			<destination>{d7daaab9-113a-46f3-bf62-c34718fa5848}</destination>
+		</relationship>
+	</object>
+</objects>
