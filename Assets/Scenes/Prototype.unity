@@ -602,6 +602,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NoteSpawner
   notePrefab: {fileID: 8163130827068027638, guid: 94a872f98bb99a64c8ac671b3fe1371f, type: 3}
+  beatmap: {fileID: 0}
+  metronome: {fileID: 1608597331}
   globalScrollSpeed: 10
   spawnZ: 30
   holdMaterial: {fileID: 2100000, guid: 26c3778993039da4783074af8553f553, type: 2}
@@ -1623,6 +1625,53 @@ Transform:
   m_Children: []
   m_Father: {fileID: 313144667}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1608597330
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1608597332}
+  - component: {fileID: 1608597331}
+  m_Layer: 0
+  m_Name: Metronome
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1608597331
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1608597330}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c97d223ef6f072443a1cc29485705017, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Metronome
+  bpm: 100
+  beatDurationMs: 0
+  lastBeat: 0
+--- !u!4 &1608597332
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1608597330}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -2.21688, y: 0, z: 2.12017}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1921502415
 GameObject:
   m_ObjectHideFlags: 0
@@ -1930,3 +1979,4 @@ SceneRoots:
   - {fileID: 781305953}
   - {fileID: 1003970089}
   - {fileID: 1211504778}
+  - {fileID: 1608597332}

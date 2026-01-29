@@ -51,15 +51,15 @@ public class NoteSpawner : MonoBehaviour
         float beatsAhead = 2f;
         float travelTime = beatsAhead * secondsPerBeat;
 
-        // spawnTimer += Time.deltaTime;
-        // if (spawnTimer >= spawnInterval)
-        // {
-        //     spawnTimer -= spawnInterval;
+        spawnTimer += Time.deltaTime;
+        if (spawnTimer >= spawnInterval)
+        {
+            spawnTimer -= spawnInterval;
 
-        //     float angle = Random.Range(0, 8) * 45f; // 0, 45, 90, ..., 315
+            float angle = Random.Range(0, 8) * 45f; // 0, 45, 90, ..., 315
 
-        //     SpawnNote(Time.time + (spawnZ / globalScrollSpeed), 0f, angle, angle);
-        // }
+            SpawnNote(Time.time + (spawnZ / globalScrollSpeed), 0f, angle, angle);
+        }
 
         while (currentEventIndex < beatmap.events.Count)
         {
