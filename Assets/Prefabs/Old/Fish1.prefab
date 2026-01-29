@@ -74,7 +74,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2e665f92dd6ed45f8957118ff83aa0ab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FishMovement
-  speed: 2
+  speed: 0.7
   directionChangeInterval: 2.5
   constrainToXZ: 1
   wallDeflectBlend: 0.6
@@ -108,7 +108,7 @@ CapsuleCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Radius: 1.55
+  m_Radius: 1
   m_Height: 4.5
   m_Direction: 2
   m_Center: {x: 0, y: 0, z: 0}

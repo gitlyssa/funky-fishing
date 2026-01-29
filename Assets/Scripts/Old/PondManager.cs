@@ -17,6 +17,8 @@ public class PondManager : MonoBehaviour
     public TextMeshProUGUI FishCaughtText;
     private bool fishCaughtTextActive = false;
 
+    public float catchRadius = 1.5f;
+
     public GameObject playerBobber;
     public GameManager gameManager;
     Vector3 pondCenter;
@@ -100,29 +102,36 @@ public class PondManager : MonoBehaviour
         fishList.RemoveAt(fishIndex);
     }
 
-    GameObject closestFish(GameObject bobber)
-    {
-        // find closest fish to bobber that intersects with bobber collider
-        GameObject closestFish = null;
+GameObject closestFish(GameObject bobber)
+{
+    GameObject closestFish = null;
+    float closestDistance = Mathf.Infinity;
+    Vector3 bobberPos = bobber.transform.position;
 
-        Collider bobberCollider = bobber.GetComponent<Collider>();
-        Debug.Log("Bobber Collider Bounds: " + bobberCollider.bounds);
-        float closestDistance = Mathf.Infinity;
-        foreach (GameObject fish in fishList)
+    foreach (GameObject fish in fishList)
+    {
+        Collider fishCollider = fish.GetComponent<Collider>();
+        if (fishCollider == null) continue;
+
+        // Closest point on fish collider to bobber
+        Vector3 closestPoint = fishCollider.ClosestPoint(bobberPos);
+
+        // 2D distance (ignore Y)
+        float distance = Vector2.Distance(
+            new Vector2(bobberPos.x, bobberPos.z),
+            new Vector2(closestPoint.x, closestPoint.z)
+        );
+
+        // Only fish inside cast radius
+        if (distance <= catchRadius && distance < closestDistance)
         {
-            Collider fishCollider = fish.GetComponent<Collider>();
-            if (bobberCollider.bounds.Intersects(fishCollider.bounds))
-            {
-                float distance = Vector3.Distance(bobber.transform.position, fish.transform.position);
-                if (distance < closestDistance)
-                {
-                    closestDistance = distance;
-                    closestFish = fish;
-                }
-            }
+            closestDistance = distance;
+            closestFish = fish;
         }
-        return closestFish;
     }
+
+    return closestFish;
+}
 
     void CatchFish(GameObject bobber)
     {
