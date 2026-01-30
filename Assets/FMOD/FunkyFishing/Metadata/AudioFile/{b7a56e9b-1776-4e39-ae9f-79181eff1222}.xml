@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.03.00">
+	<object class="AudioFile" id="{b7a56e9b-1776-4e39-ae9f-79181eff1222}">
+		<property name="assetPath">
+			<value>sfx_splash_01_nl.flac</value>
+		</property>
+		<property name="frequencyInKHz">
+			<value>44.0999985</value>
+		</property>
+		<property name="channelCount">
+			<value>2</value>
+		</property>
+		<property name="length">
+			<value>1.8917460317460317</value>
+		</property>
+		<relationship name="masterAssetFolder">
+			<destination>{d7daaab9-113a-46f3-bf62-c34718fa5848}</destination>
+		</relationship>
+	</object>
+</objects>
