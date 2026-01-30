@@ -36,7 +36,7 @@ public class Metronome : MonoBehaviour
             if (position >= nextBeatPosition)
             {
                 lastBeat += 1;
-                Debug.Log($"beat: {lastBeat}");
+                // Debug.Log($"beat: {lastBeat}");
                 nextBeatPosition += beatDurationMs;
             }
 
