@@ -57,6 +57,21 @@ public static class JSL
         public float gyroZ;
     }
 
+    [StructLayout(LayoutKind.Sequential)]
+    public struct MOTION_STATE
+    {
+        public float quatW;
+        public float quatX;
+        public float quatY;
+        public float quatZ;
+        public float accelX;
+        public float accelY;
+        public float accelZ;
+        public float gravX;
+        public float gravY;
+        public float gravZ;
+    }
+
     public delegate void EventCallback(int handle, JOY_SHOCK_STATE state, JOY_SHOCK_STATE lastState,
         IMU_STATE imuState, IMU_STATE lastImuState, float deltaTime);
 
@@ -105,4 +120,12 @@ public static class JSL
     public static extern void JslSetRumble(int deviceId, int smallRumble, int bigRumble);
     [DllImport("JoyShockLibrary")]
     public static extern void JslSetPlayerNumber(int deviceId, int number);
+
+
+    [DllImport("JoyShockLibrary")]
+    public static extern void JslGetAndFlushAccumulatedGyro(int deviceId, ref float gX, ref float gY, ref float gZ);
+
+    [DllImport("JoyShockLibrary")]
+    public static extern MOTION_STATE JslGetMotionState(int deviceId);
+
 }

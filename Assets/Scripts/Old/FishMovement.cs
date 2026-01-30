@@ -4,7 +4,7 @@ using UnityEngine;
 public class FishMovement : MonoBehaviour
 {
     [Header("Movement")]
-    [SerializeField] private float speed = 0.3f;
+    [SerializeField] private float speed = 2f;
     [SerializeField] private float directionChangeInterval = 2.5f;
     [SerializeField] private bool constrainToXZ = true;
     [SerializeField, Range(0f, 1f)] private float wallDeflectBlend = 0.6f;
