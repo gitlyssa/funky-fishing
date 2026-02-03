@@ -76,17 +76,24 @@ public class JoyconGestureReader : MonoBehaviour
 
         JSL.JOY_SHOCK_STATE state = JSL.JslGetSimpleState(deviceId);
 
-        // North Button (Bitmask 15 in your wrapper = 1 << 15)
-        if ((state.buttons & (1 << JSL.ButtonMaskN)) != 0)
+        if (deviceId == -1) return; 
+
+
+        bool northPressed = (state.buttons & (1 << JSL.ButtonMaskN)) != 0;
+        bool upPressed = (state.buttons & (1 << JSL.ButtonMaskUp)) != 0;
+
+        if (northPressed || upPressed)
         {
             JSL.JslResetContinuousCalibration(deviceId); 
             JSL.JslStartContinuousCalibration(deviceId);
-            Debug.Log("JSL: Drift Recalibrated & Recentered");
-
+        
+            Debug.Log("JSL: Orientation & Drift Reset");
         }
-        // South Button (Bitmask 13 = 1 << 13) for Reel
-        processor.RawReelButton = (state.buttons & (1 << JSL.ButtonMaskS)) != 0;
 
+        bool southPressed = (state.buttons & (1 << JSL.ButtonMaskS)) != 0;
+        bool downPressed = (state.buttons & (1 << JSL.ButtonMaskDown)) != 0;
+
+        processor.RawReelButton = southPressed || downPressed;
 
     }
 }
