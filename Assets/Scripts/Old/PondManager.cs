@@ -2,6 +2,8 @@ using UnityEngine;
 using System.Collections.Generic;
 using UnityEngine.InputSystem;
 using UnityEngine.Audio;
+using TMPro;
+using UnityEngine.UI;
 
 public class PondManager : MonoBehaviour
 {
@@ -12,6 +14,10 @@ public class PondManager : MonoBehaviour
 
     public int radius = 30;
     public int waterlevel = 0;
+    public TextMeshProUGUI FishCaughtText;
+    private bool fishCaughtTextActive = false;
+
+    public float catchRadius = 1.5f;
 
     public GameObject playerBobber;
     public GameManager gameManager;
@@ -34,7 +40,7 @@ public class PondManager : MonoBehaviour
             // x^2 + z^2 < radius^2
             Vector2 randomCircle = Random.insideUnitCircle * radius;
             Vector3 randomPosition = new Vector3(pondCenter.x + randomCircle.x, 
-            waterlevel + Random.Range(1, 5), 
+            waterlevel, 
             pondCenter.z + randomCircle.y);
 
             SpawnFish(-1, randomPosition);
@@ -67,6 +73,12 @@ public class PondManager : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.Space))
         {
+            Debug.Log("Attempting to catch fish...");
+            if (fishCaughtTextActive)
+            {
+                FishCaughtText.gameObject.SetActive(false);
+                fishCaughtTextActive = false;
+            }
             CatchFish(playerBobber);
         }
     }
@@ -90,28 +102,36 @@ public class PondManager : MonoBehaviour
         fishList.RemoveAt(fishIndex);
     }
 
-    GameObject closestFish(GameObject bobber)
-    {
-        // find closest fish to bobber that intersects with bobber collider
-        GameObject closestFish = null;
+GameObject closestFish(GameObject bobber)
+{
+    GameObject closestFish = null;
+    float closestDistance = Mathf.Infinity;
+    Vector3 bobberPos = bobber.transform.position;
 
-        Collider bobberCollider = bobber.GetComponent<Collider>();
-        float closestDistance = Mathf.Infinity;
-        foreach (GameObject fish in fishList)
+    foreach (GameObject fish in fishList)
+    {
+        Collider fishCollider = fish.GetComponent<Collider>();
+        if (fishCollider == null) continue;
+
+        // Closest point on fish collider to bobber
+        Vector3 closestPoint = fishCollider.ClosestPoint(bobberPos);
+
+        // 2D distance (ignore Y)
+        float distance = Vector2.Distance(
+            new Vector2(bobberPos.x, bobberPos.z),
+            new Vector2(closestPoint.x, closestPoint.z)
+        );
+
+        // Only fish inside cast radius
+        if (distance <= catchRadius && distance < closestDistance)
         {
-            Collider fishCollider = fish.GetComponent<Collider>();
-            if (bobberCollider.bounds.Intersects(fishCollider.bounds))
-            {
-                float distance = Vector3.Distance(bobber.transform.position, fish.transform.position);
-                if (distance < closestDistance)
-                {
-                    closestDistance = distance;
-                    closestFish = fish;
-                }
-            }
+            closestDistance = distance;
+            closestFish = fish;
         }
-        return closestFish;
     }
+
+    return closestFish;
+}
 
     void CatchFish(GameObject bobber)
     {
@@ -130,9 +150,14 @@ public class PondManager : MonoBehaviour
 
             fishList.Remove(fish);
             Destroy(fish);
+
+            FishCaughtText.gameObject.SetActive(true);
+            fishCaughtTextActive = true;
+
             Debug.Log("Fish caught!");
-            playerBobber.GetComponent<BobberScript>().Reset();
-            gameManager.HookFish();
+
+            // playerBobber.GetComponent<BobberScript>().Reset();
+            // gameManager.HookFish();
         }
         else
         {
