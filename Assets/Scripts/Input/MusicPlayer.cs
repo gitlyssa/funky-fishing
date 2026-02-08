@@ -1,12 +1,15 @@
 // Temporary, will replace with FMOD
 
 using UnityEngine;
+using FMODUnity;
 
 [RequireComponent(typeof(AudioSource))]
 public class MusicPlayer : MonoBehaviour
 {
     public AudioClip musicClip; // Assign jamBeatMap.flac in the Inspector
     private AudioSource audioSource;
+    public StudioEventEmitter studioEventEmitter;
+
 
     // Public property to expose the current time position in milliseconds
     public float timePositionMs { get; private set; }
