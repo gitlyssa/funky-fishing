@@ -7,20 +7,34 @@ public class RhythmInputProcessor : MonoBehaviour, IRhythmInput
     public float positionThreshold = 0.4f; // Minimum stick push distance
     public float deadzone = 0.15f; // Deadzone 
 
+    public Vector2 RodInput { get; set; }
+
+    [Header("Flick Logic")]
     private Vector2 lastInput;
     private bool hasTriggeredFlick = false;
-    private float lastAngle;
     private Vector2 currentVelocity;
     private bool isFlickFrame = false;
-    public Vector2 RawInput { get; set; }
+    
+
+    [Header("Spin Logic")]
+    public float minSpinVelocity = 360f; // degrees per second
+    public float spinResetTime = 0.5f; 
+    private float totalSpinAngle = 0f;
+    private float lastFrameAngle;
+    private float spinTimer;
+    private float currentAngularVelocity;
+    private int spinDirection; // 1 for clockwise, -1 for counterclockwise, 0 for no spin
+    public float GetTotalSpinAngle() => totalSpinAngle;
     public bool RawReelButton { get; set; }
+
+    public Vector2 SpinInput { get; set; }
 
 
     void Update()
     {
-        currentVelocity = (RawInput - lastInput) / Time.deltaTime;
+        currentVelocity = (RodInput - lastInput) / Time.deltaTime;
 
-        if (currentVelocity.magnitude > velocityThreshold && RawInput.magnitude > positionThreshold)
+        if (currentVelocity.magnitude > velocityThreshold && RodInput.magnitude > positionThreshold)
         {
             if (!hasTriggeredFlick)
             {
@@ -37,22 +51,25 @@ public class RhythmInputProcessor : MonoBehaviour, IRhythmInput
             isFlickFrame = false;
         }
 
-        if (currentVelocity.magnitude < velocityThreshold * 0.4f || RawInput.magnitude < deadzone) 
+        if (currentVelocity.magnitude < velocityThreshold * 0.4f || RodInput.magnitude < deadzone) 
         {
             hasTriggeredFlick = false;
         }
+
+        UpdateSpin();
+        Debug.Log($"RodInput: {RodInput}, Velocity: {currentVelocity.magnitude}, FlickFrame: {isFlickFrame}, TotalSpin: {totalSpinAngle * spinDirection}, AngularVelocity: {currentAngularVelocity}");
     }
 
     void LateUpdate()
     {
-        lastInput = RawInput;
+        lastInput = RodInput;
     }
 
 
 
     public bool GetFlick(FlickDirection direction)
     {   
-        if (isFlickFrame && IsAngleInDirectionZone(RawInput, direction))
+        if (isFlickFrame && IsAngleInDirectionZone(RodInput, direction))
         {
             return true;
         }
@@ -61,17 +78,68 @@ public class RhythmInputProcessor : MonoBehaviour, IRhythmInput
 
     public bool IsHolding(FlickDirection direction)
     {
-        return RawInput.magnitude > positionThreshold && IsAngleInDirectionZone(RawInput, direction);
+        return RodInput.magnitude > positionThreshold && IsAngleInDirectionZone(RodInput, direction);
     }
     public float GetSpinVelocity()
     {
-        if (RawInput.magnitude < deadzone) return 0f;
+        if (RodInput.magnitude < deadzone) return 0f;
 
-        float currentAngle = Mathf.Atan2(RawInput.y, RawInput.x) * Mathf.Rad2Deg;
-        float delta = Mathf.Abs(Mathf.DeltaAngle(currentAngle, lastAngle));
-        lastAngle = currentAngle;
+        float currentAngle = Mathf.Atan2(RodInput.y, RodInput.x) * Mathf.Rad2Deg;
+        float delta = Mathf.Abs(Mathf.DeltaAngle(currentAngle, lastFrameAngle));
+        lastFrameAngle = currentAngle;
 
         return delta / Time.deltaTime;
+    }
+
+    public void ResetSpin()
+    {
+        totalSpinAngle = 0;
+        spinDirection = 0;
+    }
+
+    private void UpdateSpin()
+    {
+
+        float currentAngle = Mathf.Atan2(SpinInput.y, SpinInput.x) * Mathf.Rad2Deg;
+        float delta = Mathf.Abs(Mathf.DeltaAngle(currentAngle, lastFrameAngle));
+        lastFrameAngle = currentAngle;
+
+        currentAngularVelocity = Mathf.Abs(delta) / Time.deltaTime;
+
+        int newDirection = (int)Mathf.Sign(delta);
+
+        // spinning and changing direction
+        if (Mathf.Abs(delta) > 0.1f && newDirection != spinDirection && spinDirection != 0)
+        {
+            // reset variables
+            totalSpinAngle = 0;
+            spinDirection = newDirection;
+            spinTimer = spinResetTime; 
+        }
+
+        // increment spin
+        if (currentAngularVelocity > minSpinVelocity)
+        {
+            totalSpinAngle += Mathf.Abs(delta);
+            spinTimer = spinResetTime; 
+            
+            if (spinDirection == 0) spinDirection = newDirection;
+        }
+        else //under threshold
+        {
+            spinTimer -= Time.deltaTime;
+            if (spinTimer <= 0)
+            {
+                totalSpinAngle = 0;
+                spinDirection = 0;
+            }
+        }
+    }
+        
+    public void ConsumeFlick()
+    {
+        hasTriggeredFlick = true;
+        isFlickFrame = false;
     }
 
     private bool IsAngleInDirectionZone(Vector2 input, FlickDirection targetDir)
