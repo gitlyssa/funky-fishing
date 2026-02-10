@@ -30,7 +30,7 @@ public class NoteSpawner : MonoBehaviour
         // float travelTime = spawnZ / globalScrollSpeed;
         float travelTime = 2f * (60f / metronome.bpm);
         
-        GameObject go = Instantiate(notePrefab);
+        GameObject go = Instantiate(notePrefab, this.transform);
         RhythmNote note = go.GetComponent<RhythmNote>();
         
         note.Initialize(hitTime, duration, travelTime, sAngle, eAngle, holdMaterial, flickMaterial);
@@ -68,7 +68,7 @@ public class NoteSpawner : MonoBehaviour
 
             if (Time.time >= hitTime - travelTime)
             {
-                SpawnNote(hitTime, 0f, e.sAngle, e.eAngle);
+                SpawnNote(hitTime, 4f, e.sAngle, e.eAngle);
                 currentEventIndex++;
             }
             else

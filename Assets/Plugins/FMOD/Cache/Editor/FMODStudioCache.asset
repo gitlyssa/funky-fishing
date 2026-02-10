@@ -1,5 +1,32 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-5433348670595436514
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Sfx/tension
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Sfx/tension
+  Guid:
+    Data1: 1543134618
+    Data2: 1326211156
+    Data3: 1569104060
+    Data4: -1769358581
+  Banks:
+  - {fileID: -2648038191006552393}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 0
 --- !u!114 &-3217896682293650524
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -15,10 +42,10 @@ MonoBehaviour:
   Path: Assets/FMOD/Desktop/Master.strings.bank
   Name: Master.strings
   StudioPath: bank:/Master.strings
-  lastModified: 639053203327032572
+  lastModified: 639061584656068030
   FileSizes:
   - Name: 
-    Value: 724
+    Value: 884
   Exists: 1
 --- !u!114 &-2648038191006552393
 MonoBehaviour:
@@ -35,7 +62,7 @@ MonoBehaviour:
   Path: Assets/FMOD/Desktop/Master.bank
   Name: Master
   StudioPath: bank:/Master
-  lastModified: 639053203327022697
+  lastModified: 639061584655783000
   FileSizes: []
   Exists: 1
 --- !u!114 &11400000
@@ -53,12 +80,75 @@ MonoBehaviour:
   EditorBanks:
   - {fileID: -3217896682293650524}
   - {fileID: -2648038191006552393}
-  EditorEvents: []
+  EditorEvents:
+  - {fileID: 6422150454138313803}
+  - {fileID: -5433348670595436514}
+  - {fileID: 2825564593025372683}
   EditorParameters: []
   MasterBanks:
   - {fileID: -2648038191006552393}
   StringsBanks:
   - {fileID: -3217896682293650524}
   cacheVersion: 131858
-  cacheTime: 639053203327032572
-  SerializableEventsDict: []
+  cacheTime: 639061584656068030
+  SerializableEventsDict:
+  - key: event:/Music/TestMusic
+    index: 0
+  - key: event:/Sfx/tension
+    index: 1
+  - key: event:/Music/TutorialMus
+    index: 2
+--- !u!114 &2825564593025372683
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Music/TutorialMus
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Music/TutorialMus
+  Guid:
+    Data1: -1955223079
+    Data2: 1075447096
+    Data3: 806467002
+    Data4: -1794960074
+  Banks:
+  - {fileID: -2648038191006552393}
+  IsStream: 1
+  Is3D: 0
+  IsOneShot: 0
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 21818
+--- !u!114 &6422150454138313803
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Music/TestMusic
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Music/TestMusic
+  Guid:
+    Data1: -1233211620
+    Data2: 1195024357
+    Data3: -255170375
+    Data4: -1468407509
+  Banks:
+  - {fileID: -2648038191006552393}
+  IsStream: 1
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 27260

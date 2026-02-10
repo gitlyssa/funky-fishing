@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 2570395968869604994}
   - component: {fileID: 5299397936631394787}
   - component: {fileID: -1984424805411227710}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: NotePrefab
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -109,5 +109,3 @@ MonoBehaviour:
   startAngle: 0
   endAngle: 0
   isFlickNote: 0
-  holdMaterial: {fileID: 2100000, guid: 26c3778993039da4783074af8553f553, type: 2}
-  flickMaterial: {fileID: 2100000, guid: 2f0cedc9b3ff58e4a8cd52e18d709565, type: 2}
