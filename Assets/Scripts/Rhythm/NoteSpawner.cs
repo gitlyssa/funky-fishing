@@ -68,7 +68,7 @@ public class NoteSpawner : MonoBehaviour
 
             if (Time.time >= hitTime - travelTime)
             {
-                SpawnNote(hitTime, 4f, e.sAngle, e.eAngle);
+                SpawnNote(hitTime, 0f, e.sAngle, e.eAngle);
                 currentEventIndex++;
             }
             else

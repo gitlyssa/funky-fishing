@@ -23,8 +23,9 @@ public class RhythmInputProcessor : MonoBehaviour, IRhythmInput
     private float lastFrameAngle;
     private float spinTimer;
     private float currentAngularVelocity;
-    private int spinDirection; // 1 for clockwise, -1 for counterclockwise, 0 for no spin
+    public int spinDirection; // 1 for clockwise, -1 for counterclockwise, 0 for no spin
     public float GetTotalSpinAngle() => totalSpinAngle;
+    
     public bool RawReelButton { get; set; }
 
     public Vector2 SpinInput { get; set; }
@@ -101,7 +102,7 @@ public class RhythmInputProcessor : MonoBehaviour, IRhythmInput
     {
 
         float currentAngle = Mathf.Atan2(SpinInput.y, SpinInput.x) * Mathf.Rad2Deg;
-        float delta = Mathf.Abs(Mathf.DeltaAngle(currentAngle, lastFrameAngle));
+        float delta = Mathf.DeltaAngle(currentAngle, lastFrameAngle);
         lastFrameAngle = currentAngle;
 
         currentAngularVelocity = Mathf.Abs(delta) / Time.deltaTime;
@@ -112,7 +113,7 @@ public class RhythmInputProcessor : MonoBehaviour, IRhythmInput
         if (Mathf.Abs(delta) > 0.1f && newDirection != spinDirection && spinDirection != 0)
         {
             // reset variables
-            totalSpinAngle = 0;
+            ResetSpin();
             spinDirection = newDirection;
             spinTimer = spinResetTime; 
         }
@@ -130,8 +131,7 @@ public class RhythmInputProcessor : MonoBehaviour, IRhythmInput
             spinTimer -= Time.deltaTime;
             if (spinTimer <= 0)
             {
-                totalSpinAngle = 0;
-                spinDirection = 0;
+                ResetSpin();
             }
         }
     }
