@@ -5,17 +5,17 @@ public class URPStacker : MonoBehaviour
 {
     void Start()
     {
-        Camera baseCam = Camera.main; // Make sure your Fishing Cam is tagged 'MainCamera'
+        Camera baseCam = Camera.main; 
         
         if (baseCam == null) return;
 
-        // 2. Get the URP-specific data for the base camera
+        //get base camera
         var cameraData = baseCam.GetUniversalAdditionalCameraData();
 
-        // 3. Get this camera
+        //this camera
         Camera overlayCam = GetComponent<Camera>();
 
-        // 4. Add this camera to the 'Stack' so it renders on top
+        // add to stack
         if (!cameraData.cameraStack.Contains(overlayCam))
         {
             cameraData.cameraStack.Add(overlayCam);
@@ -30,7 +30,7 @@ public class URPStacker : MonoBehaviour
             var cameraData = baseCam.GetUniversalAdditionalCameraData();
             Camera overlayCam = GetComponent<Camera>();
             
-            // Remove this camera from the stack so the Fishing Cam stops looking for it
+            // Remove this camera from the stack
             if (cameraData.cameraStack.Contains(overlayCam))
             {
                 cameraData.cameraStack.Remove(overlayCam);

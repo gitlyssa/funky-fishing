@@ -10,13 +10,13 @@ public class SceneManager : MonoBehaviour
     private bool isRhythmLoaded = false;
     void Update()
     {
-        // RESET: Reloads the base fishing scene (wipes everything)
+        // press 1 to reload the scene, might break everything not sure
         if (Keyboard.current.digit1Key.wasPressedThisFrame)
         {
             UnityEngine.SceneManagement.SceneManager.LoadScene(fishingSceneName);
         }
 
-        // TOGGLE ADDITIVE: Press 3 to start, press 4 to end/unload
+        // 3 to load overlay, 4 to unload
         if (Keyboard.current.digit3Key.wasPressedThisFrame && !isRhythmLoaded)
         {
             StartRhythmEncounter();
@@ -30,7 +30,6 @@ public class SceneManager : MonoBehaviour
 
     public void StartRhythmEncounter()
     {
-        // Start the additive load
         StartCoroutine(LoadRhythmAdditive());
     }
 
@@ -38,7 +37,6 @@ public class SceneManager : MonoBehaviour
     {
         if (isRhythmLoaded)
         {
-            // This is the "Cleanup" phase
             StartCoroutine(UnloadRhythm());
         }
     }
@@ -49,18 +47,16 @@ public class SceneManager : MonoBehaviour
         AsyncOperation op = UnityEngine.SceneManagement.SceneManager.LoadSceneAsync(rhythmSceneName, LoadSceneMode.Additive);
         yield return op;
         
-        Debug.Log("Rhythm Scene Overlay Active.");
+        Debug.Log("Rhythm Overlay ON.");
     }
 
     private IEnumerator UnloadRhythm()
     {
-        // 1. Remove the camera from the stack before unloading (Recommended)
-        // You could also handle this inside the URPStacker's OnDestroy()
         
         AsyncOperation op = UnityEngine.SceneManagement.SceneManager.UnloadSceneAsync(rhythmSceneName);
         yield return op;
 
         isRhythmLoaded = false;
-        Debug.Log("Rhythm Scene Unloaded. Back to pure fishing.");
+        Debug.Log("Rhythm Unloaded");
     }
 }
