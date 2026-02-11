@@ -2,7 +2,7 @@ using UnityEngine;
 using System.Collections;
 using UnityEngine.SceneManagement;
 using UnityEngine.InputSystem;
-public class SceneManager : MonoBehaviour
+public class SceneLoading : MonoBehaviour
 {
     public string rhythmSceneName = "RhythmHittable";
     public string fishingSceneName = "rodBobberMech";
