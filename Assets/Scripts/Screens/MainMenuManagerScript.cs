@@ -7,6 +7,6 @@ public class MainMenuManagerScript : MonoBehaviour
     public void StartGame()
     {
         Debug.Log("Start Game");
-        SceneManager.LoadScene("RodBobberMech");
+        SceneManager.LoadScene("PondSelect");
     }
 }
