@@ -16,9 +16,10 @@ public class RhythmIntroAnimation : MonoBehaviour
     public Vector3 startRotationOffset = new Vector3(0, 0, -720);
     public Vector3 startScale = Vector3.one * 0.3f;
 
-    [Header("Fish Animation")]
-    [SerializeField] private GameObject fishModel;
-    public Vector3 fishWindUpRotation = new Vector3(0, 1080, 0); 
+   [Header("Fish Animation")]
+    [SerializeField] private Vector3 fishTargetWorldPos = new Vector3(0, 0, -3f);
+    [SerializeField] private Vector3 fishWindUpRotation = new Vector3(0, 1080, 0); 
+    [SerializeField] private float fishRestingYRotation = 270f; // Your +270 offset
     public float fishFadeOutSpeed = 2f;
 
     [Header("UI Text")]
@@ -43,10 +44,6 @@ public class RhythmIntroAnimation : MonoBehaviour
         rhythmContainer.transform.localRotation = Quaternion.Euler(startRotationOffset);
         rhythmContainer.transform.localScale = startScale;
 
-        // Init Fish State (Spinning at center)
-        fishModel.transform.localRotation = Quaternion.Euler(fishWindUpRotation);
-        fishModel.transform.localScale = Vector3.zero;
-
         // Init Text
         readyText.gameObject.SetActive(false);
         goText.gameObject.SetActive(false);
@@ -62,15 +59,29 @@ public class RhythmIntroAnimation : MonoBehaviour
     {
         // BACKGROUND AND FISH
         float fadeElapsed = 0f;
+        GameObject fish = SceneLoading.MigratedFish;
+        Vector3 fishStartPos = Vector3.zero;
+        Quaternion fishStartRot = Quaternion.identity;
+        if (fish != null) 
+        {
+            fishStartPos = fish.transform.position;
+            fishStartRot = fish.transform.rotation;
+        }
+
+        
         while (fadeElapsed < fadeDuration)
         {
             fadeElapsed += Time.deltaTime;
             float t = fadeElapsed / fadeDuration;
             float easedT = t * t * (3f - 2f * t); // Smoothstep function
 
-            float fishSpin = Mathf.Lerp(1f, 0f, easedT) * fishWindUpRotation.y; 
-            fishModel.transform.localRotation = Quaternion.Euler(0, fishSpin + 270, 0);
-            fishModel.transform.localScale = Vector3.Lerp(Vector3.zero, Vector3.one * 0.4f, easedT);
+            if (fish != null)
+            {
+                fish.transform.position = Vector3.Lerp(fishStartPos, fishTargetWorldPos, easedT);
+
+                float currentSpinY = Mathf.Lerp(fishWindUpRotation.y, 0, easedT);
+                fish.transform.rotation = Quaternion.Euler(0, currentSpinY + fishRestingYRotation, 0);
+            }
 
             _bgMaterial.color = new Color(_initialColor.r, _initialColor.g, _initialColor.b, Mathf.Lerp(0, targetAlpha, easedT));
             yield return null;

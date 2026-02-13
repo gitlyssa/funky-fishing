@@ -149,12 +149,14 @@ GameObject closestFish(GameObject bobber)
 
 
             fishList.Remove(fish);
-            Destroy(fish);
-
+            // Destroy(fish);
+            
             FishCaughtText.gameObject.SetActive(true);
             fishCaughtTextActive = true;
 
             Debug.Log("Fish caught!");
+            
+            SceneLoading.Instance.StartRhythmEncounter(fish);
 
             // playerBobber.GetComponent<BobberScript>().Reset();
             // gameManager.HookFish();
