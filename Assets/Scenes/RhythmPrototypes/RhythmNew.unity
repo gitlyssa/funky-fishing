@@ -1593,7 +1593,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 68, y: -78}
+  m_AnchoredPosition: {x: 150, y: -78}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &691041666
@@ -6966,8 +6966,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1173819258}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -0, z: 0}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -6975,7 +6975,7 @@ Transform:
   - {fileID: 728557104}
   - {fileID: 1030752681}
   - {fileID: 1506493916}
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 1761328189}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &1176625932 stripped
 Transform:
@@ -19025,10 +19025,11 @@ Transform:
   m_GameObject: {fileID: 1761328188}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 163.90817, y: -0, z: 2237.8967}
+  m_LocalPosition: {x: 0, y: -0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 1173819259}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1829985049
@@ -19267,8 +19268,8 @@ GameObject:
   - component: {fileID: 1949879679}
   - component: {fileID: 1949879683}
   - component: {fileID: 1949879684}
-  - component: {fileID: 1949879680}
   - component: {fileID: 1949879681}
+  - component: {fileID: 1949879680}
   m_Layer: 0
   m_Name: InputManager
   m_TagString: Untagged
@@ -19312,7 +19313,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1949879678}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 23c5872e046245a45bc4f7382d31d413, type: 3}
   m_Name: 
@@ -19699,4 +19700,3 @@ SceneRoots:
   - {fileID: 1980199574}
   - {fileID: 1694095531}
   - {fileID: 1761328189}
-  - {fileID: 1173819259}
