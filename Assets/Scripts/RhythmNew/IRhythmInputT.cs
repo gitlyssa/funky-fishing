@@ -23,23 +23,16 @@ public struct FlickEventArgs
 
 public interface IRhythmInputT
 {
-    // Returns true the moment a flick is detected
-    bool GetFlick(FlickDirection direction);
-    
-    // Returns true as long as the direction is being held
-    bool IsHolding(FlickDirection direction);
-    
-    // Returns the current rotation speed
-    float GetSpinVelocity();
-}
-
-public interface IRhythmInputT
-{
-    // Events allow other classes to "Subscribe"
+    // Discrete Events
     event System.Action<FlickDirection> OnFlick;
-    event System.Action<float> OnReelUpdate; 
+    event System.Action<int> OnButtonDown;
+
+    // Continuous States 
+    bool IsHoldingDirection(FlickDirection direction);
+    float GetSpinVelocity(); // Returns degrees per second (positive/negative for direction)
+    bool GetButton(int index);
     
-    // Still useful for continuous checks (like reeling)
-    bool IsHoldingDirection(FlickDirection dir);
-    bool IsButtonDown(int buttonIndex); // Support for those 10 extra buttons
+    // float GetTotalAccumulatedSpin(); 
+    // void ResetAccumulatedSpin();
+    // Vector2 GetReelStickDirection();
 }
