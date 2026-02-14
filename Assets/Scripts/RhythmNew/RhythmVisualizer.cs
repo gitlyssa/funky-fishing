@@ -95,15 +95,13 @@ public class RhythmVisualizer : MonoBehaviour
 
     private void UpdateReelVisuals()
     {
-        // Check if the provider reports we are in a reeling state (e.g., LMB down)
-        // You can check the spin velocity to animate a rotation
-        float spinVel = provider.GetSpinVelocity();
-        
-        if (Mathf.Abs(spinVel) > 0.1f)
+        Vector2 reelDir = provider.GetReelStickDirection();
+    
+        if (reelDir.magnitude > 0.1f)
         {
+            float angle = Mathf.Atan2(reelDir.y, reelDir.x) * Mathf.Rad2Deg;
+            reelCenter.transform.localRotation = Quaternion.Euler(0, 0, angle - 90f); 
             reelCenter.color = holdColor;
-            // Rotate the UI element to show spinning
-            reelCenter.transform.Rotate(0, 0, spinVel * Time.deltaTime);
         }
         else
         {

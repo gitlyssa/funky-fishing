@@ -32,7 +32,7 @@ public interface IRhythmInputT
     float GetSpinVelocity(); // Returns degrees per second (positive/negative for direction)
     bool GetButton(int index);
     
-    // float GetTotalAccumulatedSpin(); 
-    // void ResetAccumulatedSpin();
-    // Vector2 GetReelStickDirection();
+    float GetTotalAccumulatedSpin(); 
+    void ResetAccumulatedSpin();
+    Vector2 GetReelStickDirection();
 }

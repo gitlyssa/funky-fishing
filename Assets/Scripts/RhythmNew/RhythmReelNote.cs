@@ -72,7 +72,7 @@ public class RhythmReelNote : MonoBehaviour
     private void ResolveNote()
     {
         _isActive = false;
-        float total = Mathf.Abs(_provider.GetAccumulatedSpin());
+        float total = Mathf.Abs(_provider.GetTotalAccumulatedSpin());
         
         if (total >= targetDegrees) {
             Debug.Log("<color=green>REEL SUCCESS!</color>");

@@ -18,6 +18,11 @@ public class KeyboardRhythmProvider : MonoBehaviour, IRhythmInputT
 
     public float reelLerpSpeed = 15f; 
     private Vector2 _virtualReelStick;
+    private float _accumulatedSpin;
+
+    public float GetTotalAccumulatedSpin() => _accumulatedSpin;
+    public void ResetAccumulatedSpin() => _accumulatedSpin = 0f;
+    public Vector2 GetReelStickDirection() => _virtualReelStick;
 
     // Interface Properties/Methods
     public Vector2 DirectionalInput => _virtualStick;
@@ -81,6 +86,8 @@ public class KeyboardRhythmProvider : MonoBehaviour, IRhythmInputT
             _lastAngle = currentAngle;
             
             _currentSpinVelocity = delta / Time.deltaTime;
+
+            _accumulatedSpin += delta;
         }
         else
         {  

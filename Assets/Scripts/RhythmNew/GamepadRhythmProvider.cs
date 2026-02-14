@@ -15,6 +15,10 @@ public class GamepadRhythmProvider : MonoBehaviour, IRhythmInputT
     private float _currentSpinVelocity;
     private float _lastRightAngle;
     private bool _hasTriggeredFlick;
+    private float _accumulatedSpin;
+    public float GetTotalAccumulatedSpin() => _accumulatedSpin;
+    public void ResetAccumulatedSpin() => _accumulatedSpin = 0f;
+    public Vector2 GetReelStickDirection() => Gamepad.current.rightStick.ReadValue();
 
     // Interface Implementation
     public Vector2 DirectionalInput => _leftStick;
@@ -65,6 +69,7 @@ public class GamepadRhythmProvider : MonoBehaviour, IRhythmInputT
             
             _currentSpinVelocity = delta / Time.deltaTime;
             _lastRightAngle = currentAngle;
+            _accumulatedSpin += delta;
         }
         else
         {

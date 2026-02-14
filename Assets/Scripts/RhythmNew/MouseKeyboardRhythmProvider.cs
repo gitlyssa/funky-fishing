@@ -18,6 +18,10 @@ public class MouseKeyboardRhythmProvider : MonoBehaviour, IRhythmInputT
     private bool _hasTriggeredFlick;
     private bool _isReeling;
 
+    public Vector2 GetReelStickDirection() => _virtualStick;
+    public float GetTotalAccumulatedSpin() => _currentSpinVelocity;
+    public void ResetAccumulatedSpin() => _currentSpinVelocity = 0f;
+
     public Vector2 DirectionalInput => _virtualStick;
 
     void Update()
