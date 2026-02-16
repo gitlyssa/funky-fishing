@@ -7,11 +7,10 @@ public static class SolidTerrainTextureGenerator
     // Change these whenever you want, then re-run the menu command.
     // GrassGreen -> RGB(100, 140, 79), Hex #648C4F, A=255
     static readonly Color32 GrassGreen = new Color32(100, 140, 79, 255); 
-    // DirtBrown: (0.45f, 0.32f, 0.22f, 1f) -> RGB(115, 82, 56), Hex #735238, A=255
-    static readonly Color32 DirtBrown = new Color32(115, 82, 56, 255);
+    // TanSand darker (~-20 each) -> RGB(190, 160, 120), Hex #BEA078
+    static readonly Color32 DirtBrown = new Color32(190, 160, 120, 255);
     // RockGray: (0.45f, 0.45f, 0.45f, 1f) -> RGB(115, 115, 115), Hex #737373, A=255
     static readonly Color32 RockGray  = new Color32(115, 115, 115, 255);
-
 
     const int Size = 8; // 4, 8, or 16. Tiny is fine.
 
