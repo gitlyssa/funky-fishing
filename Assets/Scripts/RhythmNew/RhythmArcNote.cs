@@ -4,90 +4,110 @@ public class RhythmArcNote : MonoBehaviour
 {
     public enum NoteType { Flick, Slide }
 
-    [Header("Note Data")]
-    public NoteType type;
-    public FlickDirection direction;
-    public float targetHitTime;
-    public float travelDuration; // How long it takes to go from center to ring
 
-    [Header("Visuals")]
-    public AnimationCurve scaleCurve; // Growth from center to ring
-    public float outerRingRadius = 500f; // UI pixels or world units
+    [Header("State (Debug Visible)")]
+    [SerializeField] private NoteType type;
+    [SerializeField] private FlickDirection direction;
+    [SerializeField] private float targetHitTime;
 
+    public NoteType Type => type;
+    public FlickDirection Direction => direction;
+    public float TargetHitTime => targetHitTime;
+
+    [Header("Visual Config")]
+    public float noteThickness = 0.2f;
+    public float laneAngle = 90f;
+    public int meshSegments = 16; // Lower = Faster
+
+
+    private float _travelDuration;
     private float _spawnTime;
     private bool _isInitialized = false;
-    private bool _wasHit = false;
 
-    public void Initialize(float hitTime, NoteType noteType, FlickDirection dir, float duration)
+    private float _spawnRadius;
+    private float _outerRingRadius;
+     private AnimationCurve _scaleCurve;
+    
+    [Header("Visuals")]
+        [SerializeField] private DynamicArc _visuals;
+        [SerializeField] private MeshRenderer _renderer;
+        [SerializeField] private Material flickMaterial;
+        [SerializeField] private Material slideMaterial;
+
+    public void Initialize(NoteData data, float duration, float sRadius, float oRadius, AnimationCurve sCurve)
     {
-        targetHitTime = hitTime;
-        type = noteType;
-        direction = dir;
-        travelDuration = duration;
+        targetHitTime = data.hitTime;
+        type = data.type;
+        direction = data.direction;
+        _travelDuration = duration;
         
-        _spawnTime = targetHitTime - travelDuration;
+        // Configuration from Conductor
+        _spawnRadius = sRadius;
+        _outerRingRadius = oRadius;
+        _scaleCurve = sCurve;
         
-        transform.localRotation = Quaternion.Euler(0, 0, GetRotationFromDirection(dir));
+        _spawnTime = targetHitTime - _travelDuration;
         
-        _isInitialized = true;
+        // Orientation
+        transform.localRotation = Quaternion.Euler(0, 0, GetRotationFromDirection(direction));
+        
+        // Appearance
+        _renderer = GetComponent<MeshRenderer>();
+        if (_renderer != null)
+        {
+            _renderer.sharedMaterial = (type == NoteType.Flick) ? flickMaterial : slideMaterial;
+        }
+
+        _visuals = GetComponent<DynamicArc>();
+        _visuals.Setup(meshSegments);
+        _visuals.SetMaterial(_renderer.sharedMaterial);
+
+         _isInitialized = true;
     }
 
     void Update()
     {
-        if (!_isInitialized || _wasHit) return;
+        if (!_isInitialized) return;
 
-        float currentTime = Time.time; // This should eventually be synced to your Song Manager
-        float t = (currentTime - _spawnTime) / travelDuration;
+        // Use the Conductor's song time for perfect sync
+        float elapsed = RhythmConductor.Instance.songTime - _spawnTime;
+        float linearT = Mathf.Clamp01(elapsed / _travelDuration);
 
-        // 1. Position & Scaling
-        // t = 0 (Spawn/Center), t = 1 (Hit Line/Ring)
-        UpdatePositionAndScale(t);
-
-        // 2. Logic: Automatic Miss
-        // If the note passes the line by more than 150ms, it's a miss
-        if (t > 1.0f && (currentTime - targetHitTime) > 0.15f)
-        {
-            OnMiss();
-        }
+        float curvedT = _scaleCurve.Evaluate(linearT);
+        
+        UpdatePositionAndScale(curvedT);
     }
 
     private void UpdatePositionAndScale(float t)
     {
-        // Calculate radius: move outwards from center
-        float currentRadius = t * outerRingRadius;
-        
-        // Use the rotation of the note to determine its 2D vector
-        // We use transform.up because we rotated the note to face its lane in Initialize
-        transform.localPosition = transform.up * currentRadius;
+        // 1. Move Radius
+        float currentRadius = Mathf.Lerp(_spawnRadius, _outerRingRadius, t);
+        Debug.Log($"Updating Note Position: t={t:F2}, radius={currentRadius:F2}");
+        // transform.localPosition = transform.up * currentRadius;  
 
-        // Apply scale curve (makes notes "approach" the player)
-        float s = scaleCurve.Evaluate(t);
-        transform.localScale = new Vector3(s, s, 1);
+        _visuals.Redraw(currentRadius, noteThickness, laneAngle, meshSegments);
     }
 
     public void OnHit()
     {
-        _wasHit = true;
-        // Trigger VFX, animations, etc.
+        // 1. Play Hit Sound
+        // 2. Spawn "Perfect!" particles
+        // 3. Play "Pop" animation
         Destroy(gameObject); 
     }
 
-    private void OnMiss()
+    public void OnMiss()
     {
-        Debug.Log($"Missed {type} at {direction}");
+        // 1. Play "Fade Out" or "Gray out" animation
+        // 2. Tell the UI to break the combo
         Destroy(gameObject);
     }
 
-    private float GetRotationFromDirection(FlickDirection dir)
-    {
-        return dir switch
-        {
-            FlickDirection.Right => -90f,
-            FlickDirection.Up => 0f,
-            FlickDirection.Left => 90f,
-            FlickDirection.Down => 180f,
-            // Add diagonals if you end up using them
-            _ => 0f
-        };
-    }
+    private float GetRotationFromDirection(FlickDirection dir) => dir switch {
+        FlickDirection.Right => -90f,
+        FlickDirection.Up => 0f,
+        FlickDirection.Left => 90f,
+        FlickDirection.Down => 180f,
+        _ => 0f
+    };
 }

@@ -39,6 +39,12 @@ public class RhythmInputProcessorT : MonoBehaviour
         }
     }
 
+    public bool IsHoldingDirection(FlickDirection dir)
+    {
+        if (_currentHardware == null) return false;
+        return _currentHardware.IsHoldingDirection(dir);
+    }
+
     private void Update()
     {
         if (_currentHardware == null) return;

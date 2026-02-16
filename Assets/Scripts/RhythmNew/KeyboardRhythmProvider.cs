@@ -1,10 +1,12 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using FMODUnity;
 
 public class KeyboardRhythmProvider : MonoBehaviour, IRhythmInputT
 {
     public event System.Action<FlickDirection> OnFlick;
     public event System.Action<int> OnButtonDown;
+    public EventReference flickSoundEvent;
 
     [Header("Simulation Settings")]
     public float lerpSpeed = 50f; // how quickly the virtual stick moves for both reeling and flicking
@@ -55,6 +57,7 @@ public class KeyboardRhythmProvider : MonoBehaviour, IRhythmInputT
                 OnFlick?.Invoke(dir);
                 _hasTriggeredFlick = true;
                 Debug.Log($"Flick Detected: {dir} with velocity {velocity}");
+                    RuntimeManager.PlayOneShot(flickSoundEvent, transform.position);
             }
         }
 
