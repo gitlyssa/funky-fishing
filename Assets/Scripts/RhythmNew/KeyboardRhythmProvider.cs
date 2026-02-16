@@ -56,8 +56,8 @@ public class KeyboardRhythmProvider : MonoBehaviour, IRhythmInputT
             {
                 OnFlick?.Invoke(dir);
                 _hasTriggeredFlick = true;
-                Debug.Log($"Flick Detected: {dir} with velocity {velocity}");
-                    RuntimeManager.PlayOneShot(flickSoundEvent, transform.position);
+                // Debug.Log($"Flick Detected: {dir} with velocity {velocity}");
+                RuntimeManager.PlayOneShot(flickSoundEvent, transform.position);
             }
         }
 

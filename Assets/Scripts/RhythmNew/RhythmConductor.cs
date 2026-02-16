@@ -2,9 +2,12 @@ using UnityEngine;
 using System.Collections.Generic;
 
 public class RhythmConductor : MonoBehaviour
-{
+{   
     public static RhythmConductor Instance; 
     public List<RhythmArcNote> activeNotes = new List<RhythmArcNote>();
+
+    [Header("Current Reel State")]
+    public RhythmReelNote activeReel; 
 
     [Header("Global Wheel Config")]
     public float spawnRadius = 1f; 
@@ -18,6 +21,8 @@ public class RhythmConductor : MonoBehaviour
     [Header("Note Styles")]
     public Material flickMaterial;
     public Material slideMaterial;
+
+    
 
     public float songTime => Time.time; // To be replaced by AudioSource.timeSamples
     public float noteTravelTime = 2.0f; //global speed setting for notes
@@ -42,28 +47,52 @@ public class RhythmConductor : MonoBehaviour
             _chart.RemoveAt(0);
         }
 
+        if (reelQueue.Count > 0 && songTime >= reelQueue[0].startTime - reelQueue[0].leadInTime)
+        {
+            SpawnReel(reelQueue[0]);
+        }
+
         // on pressing space, spawn a random direction note for testing
         if (Input.GetKeyDown(KeyCode.Space))
         {
+            int randomDir = Random.Range(0, 4);
+            FlickDirection dir = FlickDirection.Right;
+            if (randomDir == 0)
+            {
+                dir = FlickDirection.Right;
+            }
+            else if (randomDir == 1)
+            {
+                dir = FlickDirection.Up;
+            }
+            else if (randomDir == 2)
+            {
+                dir = FlickDirection.Left;
+            }
+            else if (randomDir == 3)
+            {
+                dir = FlickDirection.Down;
+            }
+
             NoteData testData = new NoteData
             {
                 hitTime = songTime + noteTravelTime,
                 type = (Random.value > 0.5f) ? RhythmArcNote.NoteType.Flick : RhythmArcNote.NoteType.Slide,
-                direction = (FlickDirection)(Random.Range(0, 4)) // Random direction
+                direction = dir
+
             };
             SpawnNote(testData);
         }
+
         
-        // Cleanup: If a note is way past the hit window, remove it from our list
-        for (int i = activeNotes.Count - 1; i >= 0; i--)
-        {
-            if (songTime > activeNotes[i].TargetHitTime + 0.2f) 
-            {
-                var note = activeNotes[i];
-                activeNotes.RemoveAt(i);
-                note.OnMiss(); // The note handles its own destruction
-            }
-        }
+        
+    }
+
+    void SpawnReel(ReelData data)
+    {
+        GameObject go = new GameObject("ReelLogic");
+        activeReel = go.AddComponent<RhythmReelNote>();
+        activeReel.Initialize(data);
     }
 
     void SpawnNote(NoteData data)

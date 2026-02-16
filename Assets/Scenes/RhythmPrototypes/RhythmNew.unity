@@ -18479,9 +18479,9 @@ MonoBehaviour:
   slideMaterial: {fileID: 0}
   noteTravelTime: 2
   _chart:
-  - hitTime: 4
+  - hitTime: 2
     type: 0
-    direction: 1
+    direction: 4
 --- !u!114 &1610214993
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -18489,14 +18489,16 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1610214991}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 855f63665d9b6964b8e333bfccb9ad76, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RhythmJudge
-  conductor: {fileID: 0}
-  processor: {fileID: 0}
-  hitWindow: 0.12
+  conductor: {fileID: 1610214992}
+  processor: {fileID: 1949879679}
+  perfectWindow: 0.1
+  goodWindow: 0.3
+  badWindow: 0.5
 --- !u!4 &1610214995
 Transform:
   m_ObjectHideFlags: 0
@@ -19069,7 +19071,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1949879678}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f4b493a8697268e4fbf8e24d7cb8fa75, type: 3}
   m_Name: 

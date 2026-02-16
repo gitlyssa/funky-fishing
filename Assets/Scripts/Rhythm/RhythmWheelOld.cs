@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class RhythmWheel : MonoBehaviour
+public class RhythmWheelOld : MonoBehaviour
 {
 
     [Header("Movement Properties")]

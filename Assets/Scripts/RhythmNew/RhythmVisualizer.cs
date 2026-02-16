@@ -56,7 +56,7 @@ public class RhythmVisualizer : MonoBehaviour
     {
         // Set the timer to "flash" the color
         _flickTimers[dir] = Time.time + flickFlashDuration;
-        Debug.Log($"[Visualizer] Flick Flash for {dir} started at {Time.time}");
+        // Debug.Log($"[Visualizer] Flick Flash for {dir} started at {Time.time}");
     }
 
     void Update()

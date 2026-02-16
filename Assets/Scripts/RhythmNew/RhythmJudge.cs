@@ -3,74 +3,174 @@ using System.Collections.Generic;
 
 public class RhythmJudge : MonoBehaviour
 {
+
+    public enum JudgeRating { Perfect, Good, Bad, Miss }
+    [Header("References")]
     public RhythmConductor conductor;
     public RhythmInputProcessorT processor;
-    public float hitWindow = 0.12f; // +/- seconds
+
+    [Header("Timing Windows (Seconds)")]
+    public float perfectWindow = 0.1f;
+    public float goodWindow = 0.3f;
+    public float badWindow = 0.5f; // Beyond this is an automatic Miss
 
     void Start()
     {
-        // The Judge listens to the Processor
         processor.OnValidFlick += HandleFlick;
     }
 
     void Update()
     {
-        // SLIDE NOTES: Checked every frame because they are "State" based
+        // 1. Process State-based notes (Slides)
         CheckSlideNotes();
+
+        // 2. Process Auto-Miss for notes that fly past the bad window
+        CheckAutoMiss();
     }
 
     private void HandleFlick(FlickDirection dir)
-    {
-        // 1. Find the oldest Flick note in that direction
-        RhythmArcNote target = null;
-        float bestDiff = float.MaxValue;
+{
+    RhythmArcNote target = null;
+    float oldestHitTime = float.MaxValue;
 
-        foreach (var note in conductor.activeNotes)
+    foreach (var note in conductor.activeNotes)
+    {
+        // 1. flick or first slide note 
+        if (note.Direction == dir)
         {
-            if (note.Type == RhythmArcNote.NoteType.Flick && note.Direction == dir)
+            float songTime = conductor.songTime;
+            float diff = songTime - note.TargetHitTime; // Negative = Early, Positive = Late
+
+            // 2. Is this note within the judging window (-0.5s to +0.5s)?
+            if (Mathf.Abs(diff) <= badWindow)
             {
-                float diff = Mathf.Abs(conductor.songTime - note.TargetHitTime);
-                if (diff < hitWindow && diff < bestDiff)
+                // 3. PRIORITY: Is this the oldest note we've found so far?
+                // By checking 'targetHitTime' instead of 'Abs(diff)', we ensure 
+                // we always try to hit the note that's been on screen the longest.
+                if (note.TargetHitTime < oldestHitTime)
                 {
                     target = note;
-                    bestDiff = diff;
+                    oldestHitTime = note.TargetHitTime;
                 }
             }
         }
-
-        // 2. Score it
-        if (target != null)
-        {
-            conductor.activeNotes.Remove(target);
-            target.OnHit();
-            Debug.Log($"<color=cyan>Flick Hit! Accuracy: {bestDiff}</color>");
-        }
     }
 
+    if (target != null)
+    {
+        float finalDiff = Mathf.Abs(conductor.songTime - target.TargetHitTime);
+        JudgeRating rating = GetRating(finalDiff);
+        ResolveNote(target, rating);
+    }
+}
+
     private void CheckSlideNotes()
+{
+    for (int i = conductor.activeNotes.Count - 1; i >= 0; i--)
+    {
+        var note = conductor.activeNotes[i];
+        if (note.Type == RhythmArcNote.NoteType.Slide)
+        {
+            float songTime = conductor.songTime;
+            float rawDiff = songTime - note.TargetHitTime; // Negative = Early, Positive = Late
+            // For slides, we want to allow the player to hit early and then hold through the perfect window.
+            if (rawDiff >= 0 && rawDiff <= badWindow)
+            {
+                if (processor.IsHoldingDirection(note.Direction))
+                {
+                    JudgeRating rating = GetRating(Mathf.Abs(rawDiff));
+                    ResolveNote(note, rating);
+                }
+            }
+        }
+    }
+}
+
+    private void CheckAutoMiss()
     {
         for (int i = conductor.activeNotes.Count - 1; i >= 0; i--)
         {
             var note = conductor.activeNotes[i];
-            if (note.Type == RhythmArcNote.NoteType.Slide)
+            
+            // If the current time is beyond the bad window on the LATE side
+            if (conductor.songTime > note.TargetHitTime + badWindow)
             {
-                float diff = conductor.songTime - note.TargetHitTime;
-                 
-                // If the player is holding the right direction exactly as it passes
-                if (Mathf.Abs(diff) < hitWindow && processor.IsHoldingDirection(note.Direction))
-                {
-                    conductor.activeNotes.RemoveAt(i);
-                    note.OnHit();
-                    Debug.Log("<color=white>Slide Hit!</color>");
-                }
+                ResolveNote(note, JudgeRating.Miss);
             }
         }
     }
 
-    private void CheckReelNotes() 
+    private JudgeRating GetRating(float absDiff)
     {
-        // If activeNotes contains a ReelNote, 
-        // ask the processor for accumulated spin.
-        // If spin > goal, call note.OnHit().
+        if (absDiff <= perfectWindow) return JudgeRating.Perfect;
+        if (absDiff <= goodWindow)    return JudgeRating.Good;
+        return JudgeRating.Bad; // If it's within 0.5 but past 0.3
+    }
+
+    private void ResolveNote(RhythmArcNote note, JudgeRating rating)
+    {
+        conductor.activeNotes.Remove(note);
+        Debug.Log($"Resolving Note: Type={note.Type}, Direction={note.Direction}, Rating={rating} (diff={conductor.songTime - note.TargetHitTime:F2})");
+        switch (rating)
+        {
+            case JudgeRating.Perfect:
+                note.OnHit();
+                break;
+            case JudgeRating.Good:
+                note.OnHit();
+                break;
+            case JudgeRating.Bad:
+                note.OnMiss();
+                break;
+            case JudgeRating.Miss:
+                note.OnMiss();
+                break;
+        }
+    }
+
+    private void CheckReelNotes()
+    {
+        RhythmReelNote reel = conductor.activeReel;
+        if (reel == null) return;
+
+        float songTime = conductor.songTime;
+
+        // 1. Feeding Input (Active Phase)
+        if (reel.CurrentPhase == ReelPhase.Active)
+        {
+            float spinVelocity = processor.GetSmoothedSpinVelocity(); // Get the current smoothed spin velocity
+            float delta = spinVelocity * Time.deltaTime; // Convert velocity to delta for this frame
+            reel.AddSpin(delta);
+        }
+        
+        // 2. Final Evaluation (Resolution Phase)
+        if (songTime >= reel.EndTime)
+        {
+            // We look at the total progress (unclamped)
+            float finalProgress = reel.Progress; // Assuming you remove Clamp01 from the property
+
+            if (finalProgress >= 1.0f)
+            {
+                // Award base score
+                // AddScore(1000); 
+                Debug.Log("<color=green>REEL CLEARED!</color>");
+                // Calculate Bonus (up to 200% total)
+                if (finalProgress > 1.0f)
+                {
+                    float bonus = Mathf.Min(finalProgress - 1.0f, 1.0f); // Cap bonus at 1.0 (100%)
+                    // AddScore((int)(1000 * bonus)); 
+                    Debug.Log($"<color=gold>BONUS REACHED: {bonus * 100:F0}%</color>");
+                }
+
+                reel.OnClear();
+            }
+            else
+            {
+                reel.OnFail();
+            }
+
+            // Clear the reference in the conductor so visuals stop
+            conductor.activeReel = null;
+        }
     }
 }

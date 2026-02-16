@@ -82,7 +82,6 @@ public class RhythmArcNote : MonoBehaviour
     {
         // 1. Move Radius
         float currentRadius = Mathf.Lerp(_spawnRadius, _outerRingRadius, t);
-        Debug.Log($"Updating Note Position: t={t:F2}, radius={currentRadius:F2}");
         // transform.localPosition = transform.up * currentRadius;  
 
         _visuals.Redraw(currentRadius, noteThickness, laneAngle, meshSegments);

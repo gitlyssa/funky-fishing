@@ -58,6 +58,5 @@ public class DynamicArc : MonoBehaviour
         _mesh.uv = _uvs;
         _mesh.RecalculateBounds(); 
         _mesh.RecalculateNormals();
-        // We skip RecalculateNormals for speed since it's 2D
     }
 }

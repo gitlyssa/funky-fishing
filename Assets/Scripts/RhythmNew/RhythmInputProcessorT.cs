@@ -31,10 +31,10 @@ public class RhythmInputProcessorT : MonoBehaviour
 
     private void HandleHardwareFlick(FlickDirection dir)
     {
-        Debug.Log($"[Processor] Received Flick from Hardware: {dir}"); // STEP 1
+        // Debug.Log($"[Processor] Received Flick from Hardware: {dir}"); // STEP 1
         if (CanPlayerAct())
         {
-            Debug.Log($"[Processor] Relaying Valid Flick: {dir}"); // STEP 2
+            // Debug.Log($"[Processor] Relaying Valid Flick: {dir}"); // STEP 2
             OnValidFlick?.Invoke(dir);
         }
     }

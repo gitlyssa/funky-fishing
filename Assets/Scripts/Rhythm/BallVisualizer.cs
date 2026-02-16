@@ -14,7 +14,7 @@ public class BallVisualizer : MonoBehaviour
     public float flickFlashDuration = 0.1f;
 
     [Header("Wheel")]
-    public RhythmWheel rhythmWheel;
+    public RhythmWheelOld rhythmWheel;
 
     [Header("Spheres (R, UR, U, UL, L, DL, D, DR)")]
     // Defined in Unity locally
