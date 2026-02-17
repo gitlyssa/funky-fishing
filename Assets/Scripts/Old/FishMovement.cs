@@ -44,6 +44,9 @@ public class FishMovement : MonoBehaviour
 
     private void Start()
     {   
+        int newSeed = System.Environment.TickCount;
+        // Initialize the random number generator's state with the new seed
+        Random.InitState(newSeed);
         attractionTarget = pondManager.playerBobber.transform;
         attractionTurnSign = Random.value < 0.5f ? -1f : 1f;
         PickRandomDirection();
@@ -225,23 +228,31 @@ public class FishMovement : MonoBehaviour
         }
     }
 
+    // private void PickRandomDirection()
+    // {
+    //     Vector3 random = Random.onUnitSphere;
+    //     if (constrainToXZ)
+    //     {
+    //         random.y = 0f;
+    //         if (random.sqrMagnitude < 0.0001f)
+    //         {
+    //             random = Vector3.right;
+    //         }
+    //     }
+    //     // moveDirection = SwapXZAxes(random.normalized);
+    //     moveDirection = random.normalized;
+    //     directionTimer = 0f;
+    // }
+
     private void PickRandomDirection()
     {
-        Vector3 random = Random.onUnitSphere;
-        if (constrainToXZ)
-        {
-            random.y = 0f;
-            if (random.sqrMagnitude < 0.0001f)
-            {
-                random = Vector3.right;
-            }
-        }
-        moveDirection = SwapXZAxes(random.normalized);
+        Vector2 circle = Random.insideUnitCircle.normalized;
+        moveDirection = new Vector3(circle.x, 0f, circle.y);
         directionTimer = 0f;
     }
 
-    private static Vector3 SwapXZAxes(Vector3 direction)
-    {
-        return new Vector3(direction.z, direction.y, -direction.x);
-    }
+    // private static Vector3 SwapXZAxes(Vector3 direction)
+    // {
+    //     return new Vector3(direction.z, direction.y, -direction.x);
+    // }
 }
