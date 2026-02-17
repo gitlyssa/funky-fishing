@@ -4,11 +4,11 @@ public enum ReelPhase { None, LeadIn, Active, Resolved }
 
 public class RhythmReelNote : MonoBehaviour
 {
-    private ReelData _data;
-    private bool _isInitialized = false;
-    private float _accumulatedSpin = 0f;
-    private float _lastRotationCheckpoint = 0f;
-    private bool _isResolved = false;
+    [SerializeField] private ReelData _data;
+    [SerializeField] private bool _isInitialized = false;
+    [SerializeField] private float _accumulatedSpin = 0f;
+    [SerializeField] private float _lastRotationCheckpoint = 0f;
+    [SerializeField] private bool _isResolved = false;
 
     // State for Visuals to read
     public ReelPhase CurrentPhase { get; private set; } = ReelPhase.None;
@@ -25,7 +25,7 @@ public class RhythmReelNote : MonoBehaviour
         _data = data;
         _isInitialized = true;
     }
-
+   
     void Update()
     {
         if (!_isInitialized || _isResolved) return;

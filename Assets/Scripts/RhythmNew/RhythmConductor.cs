@@ -30,6 +30,8 @@ public class RhythmConductor : MonoBehaviour
     // This is where you'd load your JSON or MIDI file later
     public List<NoteData> _chart = new List<NoteData>();
 
+    public List<ReelData> _reelQueue = new List<ReelData>();
+
     void Awake()
     {
         if (Instance == null)
@@ -47,9 +49,9 @@ public class RhythmConductor : MonoBehaviour
             _chart.RemoveAt(0);
         }
 
-        if (reelQueue.Count > 0 && songTime >= reelQueue[0].startTime - reelQueue[0].leadInTime)
+        if (_reelQueue.Count > 0 && songTime >= _reelQueue[0].startTime - _reelQueue[0].leadInTime)
         {
-            SpawnReel(reelQueue[0]);
+            SpawnReel(_reelQueue[0]);
         }
 
         // on pressing space, spawn a random direction note for testing
@@ -82,6 +84,21 @@ public class RhythmConductor : MonoBehaviour
 
             };
             SpawnNote(testData);
+        }
+
+        // on pressing r, spawn a reel
+        // start time is when the reel becomes active
+        // lead in is how long before it starts winding up
+        if (Input.GetKeyDown(KeyCode.R) && activeReel == null)
+        {
+            ReelData testReel = new ReelData
+            {
+                startTime = songTime + 2.0f,
+                duration = 3.0f,
+                goalDegrees = (Random.value > 0.5f) ? 720f : -720f, // 2 full spins in either direction
+                leadInTime = 1.0f
+            };
+            SpawnReel(testReel);
         }
 
         

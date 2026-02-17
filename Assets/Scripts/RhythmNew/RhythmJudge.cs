@@ -26,6 +26,8 @@ public class RhythmJudge : MonoBehaviour
 
         // 2. Process Auto-Miss for notes that fly past the bad window
         CheckAutoMiss();
+        // 3. Process Reel Notes (Continuous Evaluation)
+        CheckReelNotes();
     }
 
     private void HandleFlick(FlickDirection dir)
@@ -144,7 +146,7 @@ public class RhythmJudge : MonoBehaviour
         }
         
         // 2. Final Evaluation (Resolution Phase)
-        if (songTime >= reel.EndTime)
+        if (songTime >= reel.Data.startTime + reel.Data.duration && reel.CurrentPhase != ReelPhase.Resolved)
         {
             // We look at the total progress (unclamped)
             float finalProgress = reel.Progress; // Assuming you remove Clamp01 from the property
