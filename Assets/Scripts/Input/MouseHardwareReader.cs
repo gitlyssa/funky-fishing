@@ -23,7 +23,9 @@ public class MouseHardwareReader : MonoBehaviour
         float x = Mathf.Clamp(offset.x / maxRadius, -1f, 1f);
         float y = Mathf.Clamp(offset.y / maxRadius, -1f, 1f);
 
-        processor.RawInput = new Vector2(x, y);
+        processor.RodInput = new Vector2(x, y);
+        processor.SpinInput = new Vector2(x, y); // same thing for spin input
         processor.RawReelButton = Mouse.current.leftButton.isPressed;
+
     }
 }

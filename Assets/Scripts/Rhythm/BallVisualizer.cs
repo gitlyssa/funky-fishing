@@ -13,6 +13,9 @@ public class BallVisualizer : MonoBehaviour
     [Header("Settings")]
     public float flickFlashDuration = 0.1f;
 
+    [Header("Wheel")]
+    public RhythmWheelOld rhythmWheel;
+
     [Header("Spheres (R, UR, U, UL, L, DL, D, DR)")]
     // Defined in Unity locally
     public List<GameObject> directionSpheres;
@@ -90,5 +93,10 @@ public class BallVisualizer : MonoBehaviour
                 ball.transform.localScale = Vector3.one * idleSizeMultiplier;
             }
         }
+        // wheel spin based on velocity of input for now
+        rhythmWheel.SetDirection(inputSource.spinDirection * -1);
+
     }
+
+    
 }
