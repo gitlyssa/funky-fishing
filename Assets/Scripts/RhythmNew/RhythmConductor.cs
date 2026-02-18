@@ -113,14 +113,14 @@ public class RhythmConductor : MonoBehaviour
         
     }
 
-    void SpawnReel(ReelData data)
+    public void SpawnReel(ReelData data)
     {
         GameObject go = new GameObject("ReelLogic");
         activeReel = go.AddComponent<RhythmReelNote>();
         activeReel.Initialize(data);
     }
 
-    void SpawnNote(NoteData data)
+    public void SpawnNote(NoteData data)
     {
         GameObject go = Instantiate(notePrefab, transform);
         RhythmArcNote note = go.GetComponent<RhythmArcNote>();
