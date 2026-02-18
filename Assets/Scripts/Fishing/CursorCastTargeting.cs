@@ -13,11 +13,11 @@ public class CursorCastTargeting : MonoBehaviour
     public Collider waterCollider;
     public BobberArcCaster bobberArcCaster;
 
-    [Header("Input Mode")]
-    public bool useJoyCon = false;
-
     [Header("Joy-Con Input Source")]
     public JslStickInput jslInput;
+
+    [Header("External Stick Input")]
+    public float externalStickTimeout = 0.2f;
 
     [Header("Joy-Con Cursor (stick-driven)")]
     public float cursorSpeed = 1200f;     // pixels/sec at full stick
@@ -36,6 +36,8 @@ public class CursorCastTargeting : MonoBehaviour
     private BobberArcCaster.State _lastCasterState = BobberArcCaster.State.Idle;
     private Vector3 _lastTargetPoint;
     private bool _hasLastTarget;
+    private Vector2 _externalStick;
+    private float _externalStickExpiresAt = -1f;
 
     void Reset()
     {
@@ -51,9 +53,13 @@ public class CursorCastTargeting : MonoBehaviour
         // start centered
         CursorPixel = new Vector2(Screen.width * 0.5f, Screen.height * 0.5f);
 
-        if (useJoyCon)
+        if (cam != null)
         {
-            InitializeTargetOnWater();
+            UpdateMarkerFromCursor();
+            if (!HasTarget)
+            {
+                InitializeTargetOnWater();
+            }
         }
     }
 
@@ -91,22 +97,32 @@ public class CursorCastTargeting : MonoBehaviour
             }
         }
 
-        if (useJoyCon)
-            UpdateTargetFromStick();
-        else
+        bool mouseActive = UpdateCursorPixel();
+
+        Vector2 stick = Vector2.zero;
+        bool stickActive = TryGetStick(out stick);
+
+        // Only apply the input source that's actively being used.
+        // This prevents snapping back to the mouse cursor when the stick returns to zero.
+        if (mouseActive)
         {
-            UpdateCursorPixel();
             UpdateMarkerFromCursor();
+        }
+        else if (stickActive)
+        {
+            UpdateTargetFromStick(stick);
         }
     }
 
-    void UpdateCursorPixel()
+    bool UpdateCursorPixel()
     {
 #if ENABLE_INPUT_SYSTEM
+        bool rightHeld = false;
+        bool rightDown = false;
         if (Mouse.current != null)
         {
-            bool rightHeld = Mouse.current.rightButton.isPressed;
-            bool rightDown = Mouse.current.rightButton.wasPressedThisFrame;
+            rightHeld = Mouse.current.rightButton.isPressed;
+            rightDown = Mouse.current.rightButton.wasPressedThisFrame;
             if (rightHeld || rightDown)
                 CursorPixel = Mouse.current.position.ReadValue();
         }
@@ -122,6 +138,8 @@ public class CursorCastTargeting : MonoBehaviour
             Mathf.Clamp(CursorPixel.x, 0, Screen.width),
             Mathf.Clamp(CursorPixel.y, 0, Screen.height)
         );
+
+        return rightHeld || rightDown;
     }
 
     void UpdateMarkerFromCursor()
@@ -177,8 +195,18 @@ public class CursorCastTargeting : MonoBehaviour
         return true;
     }
 
-    void UpdateCursorFromStick()
+    bool TryGetStick(out Vector2 stick)
     {
+        stick = Vector2.zero;
+
+        // Optional external stick feed (e.g., Xbox right stick) can drive targeting.
+        if (Time.unscaledTime <= _externalStickExpiresAt)
+        {
+            stick = _externalStick;
+            if (stick != Vector2.zero)
+                return true;
+        }
+
         if (jslInput == null)
         {
             jslInput = FindObjectOfType<JslStickInput>();
@@ -189,23 +217,32 @@ public class CursorCastTargeting : MonoBehaviour
                     Debug.LogWarning("CursorCastTargeting: No JslStickInput found in scene.");
                     _warnedMissingJsl = true;
                 }
-                return;
+                return false;
             }
         }
 
-        if (!jslInput.Connected) return;
+        if (!jslInput.Connected) return false;
 
-        Vector2 stick = jslInput.Stick;
-        if (stick == Vector2.zero) return;
+        stick = jslInput.Stick;
+        return stick != Vector2.zero;
+    }
 
+    public void SetExternalStickInput(Vector2 stick)
+    {
+        _externalStick = stick;
+        _externalStickExpiresAt = Time.unscaledTime + Mathf.Max(0.02f, externalStickTimeout);
+    }
+
+    void UpdateCursorFromStick(Vector2 stick)
+    {
         CursorPixel += stick * cursorSpeed * Time.deltaTime;
     }
 
-    void UpdateTargetFromStick()
+    void UpdateTargetFromStick(Vector2 stick)
     {
         if (waterCollider == null)
         {
-            UpdateCursorFromStick();
+            UpdateCursorFromStick(stick);
             UpdateMarkerFromCursor();
             return;
         }
@@ -230,25 +267,6 @@ public class CursorCastTargeting : MonoBehaviour
         }
 
         if (!HasTarget) return;
-
-        if (jslInput == null)
-        {
-            jslInput = FindObjectOfType<JslStickInput>();
-            if (jslInput == null)
-            {
-                if (!_warnedMissingJsl)
-                {
-                    Debug.LogWarning("CursorCastTargeting: No JslStickInput found in scene.");
-                    _warnedMissingJsl = true;
-                }
-                return;
-            }
-        }
-
-        if (!jslInput.Connected) return;
-
-        Vector2 stick = jslInput.Stick;
-        if (stick == Vector2.zero) return;
 
         Vector3 planeNormal = waterCollider.transform.up;
         Vector3 planeRight = Vector3.ProjectOnPlane(cam.transform.right, planeNormal).normalized;

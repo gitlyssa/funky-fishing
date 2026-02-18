@@ -8,12 +8,15 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Scenes/SampleScene.unity
     guid: 99c9720ab356a0642a771bea13969a05
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/RhythmPrototypes/RhythmHittable.unity
     guid: 136c7fa508c64764f90ff71c9ab6149d
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/FishingPrototypes/rodBobberMech.unity
     guid: cfb71fcad4130f94ca88f1ff1760001f
+  - enabled: 1
+    path: Assets/Scenes/AlphaDemo/TestScene.unity
+    guid: b6b4656300aec994a847c7c21c765268
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0

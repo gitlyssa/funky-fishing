@@ -15,10 +15,10 @@ MonoBehaviour:
   Path: Assets/FMOD/Desktop/Master.strings.bank
   Name: Master.strings
   StudioPath: bank:/Master.strings
-  lastModified: 639069566921260386
+  lastModified: 639062432908539966
   FileSizes:
   - Name: 
-    Value: 934
+    Value: 884
   Exists: 1
 --- !u!114 &-2648038191006552393
 MonoBehaviour:
@@ -35,127 +35,10 @@ MonoBehaviour:
   Path: Assets/FMOD/Desktop/Master.bank
   Name: Master
   StudioPath: bank:/Master
-  lastModified: 639069566921260386
+  lastModified: 639062432908539966
   FileSizes: []
   Exists: 1
---- !u!114 &-1934664422090054003
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
-  m_Name: event:/Music/TestMusic
-  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
-  Path: event:/Music/TestMusic
-  Guid:
-    Data1: -1233211620
-    Data2: 1195024357
-    Data3: -255170375
-    Data4: -1468407509
-  Banks:
-  - {fileID: -2648038191006552393}
-  IsStream: 1
-  Is3D: 0
-  IsOneShot: 1
-  Parameters: []
-  MinDistance: 1
-  MaxDistance: 20
-  Length: 27260
---- !u!114 &11400000
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d32cf7c32a3ed8347bac48ef5ed56d82, type: 3}
-  m_Name: FMODStudioCache
-  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EventCache
-  EditorBanks:
-  - {fileID: -3217896682293650524}
-  - {fileID: -2648038191006552393}
-  EditorEvents:
-  - {fileID: -1934664422090054003}
-  - {fileID: 1275230400960073802}
-  - {fileID: 6021327233347114775}
-  - {fileID: 3324737824094230197}
-  EditorParameters: []
-  MasterBanks:
-  - {fileID: -2648038191006552393}
-  StringsBanks:
-  - {fileID: -3217896682293650524}
-  cacheVersion: 131858
-  cacheTime: 639069566921260386
-  SerializableEventsDict:
-  - key: event:/Music/TestMusic
-    index: 0
-  - key: event:/Sfx/tension
-    index: 1
-  - key: event:/Music/TutorialMus
-    index: 2
-  - key: event:/Sfx/success
-    index: 3
---- !u!114 &1275230400960073802
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
-  m_Name: event:/Sfx/tension
-  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
-  Path: event:/Sfx/tension
-  Guid:
-    Data1: 1543134618
-    Data2: 1326211156
-    Data3: 1569104060
-    Data4: -1769358581
-  Banks:
-  - {fileID: -2648038191006552393}
-  IsStream: 0
-  Is3D: 0
-  IsOneShot: 1
-  Parameters: []
-  MinDistance: 1
-  MaxDistance: 20
-  Length: 0
---- !u!114 &3324737824094230197
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
-  m_Name: event:/Sfx/success
-  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
-  Path: event:/Sfx/success
-  Guid:
-    Data1: 2007313463
-    Data2: 1189434961
-    Data3: 1175329411
-    Data4: 1377301339
-  Banks:
-  - {fileID: -2648038191006552393}
-  IsStream: 0
-  Is3D: 0
-  IsOneShot: 1
-  Parameters: []
-  MinDistance: 1
-  MaxDistance: 20
-  Length: 0
---- !u!114 &6021327233347114775
+--- !u!114 &-2567683884387202836
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -182,3 +65,90 @@ MonoBehaviour:
   MinDistance: 1
   MaxDistance: 20
   Length: 21818
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d32cf7c32a3ed8347bac48ef5ed56d82, type: 3}
+  m_Name: FMODStudioCache
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EventCache
+  EditorBanks:
+  - {fileID: -3217896682293650524}
+  - {fileID: -2648038191006552393}
+  EditorEvents:
+  - {fileID: 6326786675623408233}
+  - {fileID: 5354982183835215609}
+  - {fileID: -2567683884387202836}
+  EditorParameters: []
+  MasterBanks:
+  - {fileID: -2648038191006552393}
+  StringsBanks:
+  - {fileID: -3217896682293650524}
+  cacheVersion: 131858
+  cacheTime: 639062432908539966
+  SerializableEventsDict:
+  - key: event:/Music/TestMusic
+    index: 0
+  - key: event:/Sfx/tension
+    index: 1
+  - key: event:/Music/TutorialMus
+    index: 2
+--- !u!114 &5354982183835215609
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Sfx/tension
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Sfx/tension
+  Guid:
+    Data1: 1543134618
+    Data2: 1326211156
+    Data3: 1569104060
+    Data4: -1769358581
+  Banks:
+  - {fileID: -2648038191006552393}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 0
+--- !u!114 &6326786675623408233
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Music/TestMusic
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Music/TestMusic
+  Guid:
+    Data1: -1233211620
+    Data2: 1195024357
+    Data3: -255170375
+    Data4: -1468407509
+  Banks:
+  - {fileID: -2648038191006552393}
+  IsStream: 1
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 27260

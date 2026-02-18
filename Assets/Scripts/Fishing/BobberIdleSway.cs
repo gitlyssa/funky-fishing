@@ -32,6 +32,7 @@ public class BobberIdleSway : MonoBehaviour
     private float phaseA;
     private float phaseB;
     private Vector3 landedAnchor;
+    private Vector3 tensionAnchor;
     private Vector3 currentDrift;
     private BobberArcCaster.State lastState = BobberArcCaster.State.Idle;
 
@@ -73,6 +74,13 @@ public class BobberIdleSway : MonoBehaviour
                     currentDrift = Vector3.zero;
                 }
                 ApplyWaterMotion();
+            }
+            else if (bobberArcCaster.CurrentState == BobberArcCaster.State.Tension)
+            {
+                if (lastState != BobberArcCaster.State.Tension)
+                    tensionAnchor = transform.position;
+
+                transform.position = tensionAnchor;
             }
         }
         else

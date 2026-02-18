@@ -56,7 +56,7 @@ public class PondManager : MonoBehaviour
         {
             Vector2 randomCircle = Random.insideUnitCircle * radius;
             Vector3 randomPosition = new Vector3(pondCenter.x + randomCircle.x, 
-            waterlevel + Random.Range(1, 5), 
+            waterlevel, 
             pondCenter.z + randomCircle.y);
 
             SpawnFish(-1, randomPosition);

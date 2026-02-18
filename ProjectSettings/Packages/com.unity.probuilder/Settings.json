@@ -19,16 +19,16 @@
             {
                 "type": "UnityEngine.ProBuilder.SemVer, Unity.ProBuilder, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
                 "key": "about.identifier",
-                "value": "{\"m_Value\":{\"m_Major\":6,\"m_Minor\":0,\"m_Patch\":8,\"m_Build\":-1,\"m_Type\":\"\",\"m_Metadata\":\"\",\"m_Date\":\"\"}}"
+                "value": "{\"m_Value\":{\"m_Major\":6,\"m_Minor\":0,\"m_Patch\":9,\"m_Build\":-1,\"m_Type\":\"\",\"m_Metadata\":\"\",\"m_Date\":\"\"}}"
             },
             {
                 "type": "UnityEngine.ProBuilder.SemVer, Unity.ProBuilder, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
                 "key": "preferences.version",
-                "value": "{\"m_Value\":{\"m_Major\":6,\"m_Minor\":0,\"m_Patch\":8,\"m_Build\":-1,\"m_Type\":\"\",\"m_Metadata\":\"\",\"m_Date\":\"\"}}"
+                "value": "{\"m_Value\":{\"m_Major\":6,\"m_Minor\":0,\"m_Patch\":9,\"m_Build\":-1,\"m_Type\":\"\",\"m_Metadata\":\"\",\"m_Date\":\"\"}}"
             },
             {
                 "type": "System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089",
-                "key": "ShapeComponent.ResetSettings",
+                "key": "experimental.enabled",
                 "value": "{\"m_Value\":false}"
             },
             {
@@ -43,6 +43,16 @@
             },
             {
                 "type": "System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089",
+                "key": "ShapeComponent.ResetSettings",
+                "value": "{\"m_Value\":false}"
+            },
+            {
+                "type": "System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089",
+                "key": "ShapeComponent.SettingsEnabled",
+                "value": "{\"m_Value\":false}"
+            },
+            {
+                "type": "System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089",
                 "key": "lightmapping.autoUnwrapLightmapUV",
                 "value": "{\"m_Value\":true}"
             },
@@ -53,18 +63,33 @@
             },
             {
                 "type": "System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089",
-                "key": "experimental.enabled",
+                "key": "editor.backFaceSelectEnabled",
                 "value": "{\"m_Value\":false}"
             },
             {
-                "type": "UnityEngine.Material, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
-                "key": "mesh.userMaterial",
-                "value": "{\"m_Value\":{\"instanceID\":0}}"
+                "type": "System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089",
+                "key": "editor.showSceneInfo",
+                "value": "{\"m_Value\":false}"
+            },
+            {
+                "type": "System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089",
+                "key": "editor.showEditorNotifications",
+                "value": "{\"m_Value\":false}"
+            },
+            {
+                "type": "UnityEngine.ProBuilder.SelectMode, Unity.ProBuilder, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
+                "key": "s_SelectMode",
+                "value": "{\"m_Value\":4}"
             },
             {
                 "type": "UnityEngine.Rendering.ShadowCastingMode, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
                 "key": "mesh.shadowCastingMode",
                 "value": "{\"m_Value\":1}"
+            },
+            {
+                "type": "UnityEngine.Material, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
+                "key": "mesh.userMaterial",
+                "value": "{\"m_Value\":{\"instanceID\":0}}"
             },
             {
                 "type": "UnityEditor.StaticEditorFlags, UnityEditor.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
@@ -82,9 +107,64 @@
                 "value": "{\"m_Value\":{\"m_HardAngle\":88.0,\"m_PackMargin\":20.0,\"m_AngleError\":8.0,\"m_AreaError\":15.0}}"
             },
             {
-                "type": "UnityEngine.ProBuilder.SelectMode, Unity.ProBuilder, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
-                "key": "s_SelectMode",
-                "value": "{\"m_Value\":4}"
+                "type": "System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089",
+                "key": "ShapeBuilder.ActiveShapeIndex",
+                "value": "{\"m_Value\":7}"
+            },
+            {
+                "type": "UnityEngine.Vector3, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
+                "key": "ShapeBuilder.LastSize.Cube",
+                "value": "{\"m_Value\":{\"x\":1.0,\"y\":1.0,\"z\":1.0}}"
+            },
+            {
+                "type": "UnityEngine.Vector3, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
+                "key": "ShapeBuilder.LastSize.Plane",
+                "value": "{\"m_Value\":{\"x\":-107.12771606445313,\"y\":0.0,\"z\":217.39926147460938}}"
+            },
+            {
+                "type": "UnityEngine.Vector3, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
+                "key": "ShapeBuilder.LastSize.Cylinder",
+                "value": "{\"m_Value\":{\"x\":7.320669651031494,\"y\":4.808472633361816,\"z\":-3.8807830810546877}}"
+            },
+            {
+                "type": "UnityEngine.Quaternion, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
+                "key": "ShapeBuilder.LastRotation.Cube",
+                "value": "{\"m_Value\":{\"x\":0.0,\"y\":0.0,\"z\":0.0,\"w\":1.0}}"
+            },
+            {
+                "type": "UnityEngine.Quaternion, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
+                "key": "ShapeBuilder.LastRotation.Plane",
+                "value": "{\"m_Value\":{\"x\":0.0,\"y\":0.0,\"z\":0.0,\"w\":1.0}}"
+            },
+            {
+                "type": "UnityEngine.Quaternion, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
+                "key": "ShapeBuilder.LastRotation.Cylinder",
+                "value": "{\"m_Value\":{\"x\":0.0,\"y\":0.0,\"z\":0.0,\"w\":1.0}}"
+            },
+            {
+                "type": "UnityEngine.ProBuilder.PivotLocation, Unity.ProBuilder, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
+                "key": "ShapeBuilder.PivotLocation.Plane",
+                "value": "{\"m_Value\":0}"
+            },
+            {
+                "type": "UnityEngine.ProBuilder.PivotLocation, Unity.ProBuilder, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
+                "key": "ShapeBuilder.PivotLocation.Cylinder",
+                "value": "{\"m_Value\":0}"
+            },
+            {
+                "type": "UnityEngine.ProBuilder.Shapes.Shape, Unity.ProBuilder, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
+                "key": "ShapeBuilder.Plane",
+                "value": "{}"
+            },
+            {
+                "type": "UnityEngine.ProBuilder.Shapes.Shape, Unity.ProBuilder, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
+                "key": "ShapeBuilder.Cylinder",
+                "value": "{}"
+            },
+            {
+                "type": "UnityEngine.ProBuilder.RectSelectMode, Unity.ProBuilder, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
+                "key": "editor.dragSelectRectMode",
+                "value": "{\"m_Value\":0}"
             }
         ]
     }
