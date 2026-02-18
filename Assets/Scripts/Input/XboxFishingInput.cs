@@ -51,6 +51,7 @@ public class XboxFishingInput : MonoBehaviour
 
     private bool rtPrev;
     private bool ltPrev;
+    private bool xboxSwingWasDriving;
 
     void Update()
     {
@@ -59,6 +60,13 @@ public class XboxFishingInput : MonoBehaviour
         {
             if (useRightStickForTargeting && targeting != null)
                 targeting.SetExternalStickInput(Vector2.zero);
+
+            // If Xbox was previously holding a swing direction, release it once.
+            if (caster != null && xboxSwingWasDriving)
+            {
+                caster.SetDirectionalSwingHeld(false, false, false);
+                xboxSwingWasDriving = false;
+            }
             return;
         }
 
@@ -84,7 +92,11 @@ public class XboxFishingInput : MonoBehaviour
 
         if (!canSendSwing)
         {
-            caster.SetDirectionalSwingHeld(false, false, false);
+            if (xboxSwingWasDriving)
+            {
+                caster.SetDirectionalSwingHeld(false, false, false);
+                xboxSwingWasDriving = false;
+            }
             return;
         }
 
@@ -112,7 +124,15 @@ public class XboxFishingInput : MonoBehaviour
             if (rightStick.x > rightStickCardinalThreshold) right = true;
         }
 
-        caster.SetDirectionalSwingHeld(up, left, right);
+        bool xboxSwingActive = up || left || right;
+
+        // Only write when Xbox swing is active, or when clearing a previously-set hold.
+        // This avoids constantly overwriting other input sources (e.g., Joy-Con motion).
+        if (xboxSwingActive || xboxSwingWasDriving)
+        {
+            caster.SetDirectionalSwingHeld(up, left, right);
+            xboxSwingWasDriving = xboxSwingActive;
+        }
     }
 
     private void HandleCastYank(Gamepad pad)
