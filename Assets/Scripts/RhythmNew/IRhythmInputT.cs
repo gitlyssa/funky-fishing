@@ -1,8 +1,13 @@
 using UnityEngine;
-
+    /*
+    This interface specifies what input data any control scheme needs to provide.
+     */
 [System.Flags]
 public enum FlickDirection
 {
+    // Bit flags so we can technically inpnut any direction. When referring to flick directions, please use something like
+    // FlickDirection.Right or FlickDirection.Up, or FlickDirection.None 
+    // this allows multiple directions to be active at once, but not sure if we will need that
     None = 0,
     Right     = 1 << 0,
     UpRight   = 1 << 1,
@@ -23,7 +28,7 @@ public struct FlickEventArgs
 
 public interface IRhythmInputT
 {
-    // Discrete Events
+    // Discrete Events when buttons are pressed or flicks are started
     event System.Action<FlickDirection> OnFlick;
     event System.Action<int> OnButtonDown;
 
@@ -32,6 +37,7 @@ public interface IRhythmInputT
     float GetSpinVelocity(); // Returns degrees per second (positive/negative for direction)
     bool GetButton(int index);
     
+    // i dont think i ended up using this, but i left it in
     float GetTotalAccumulatedSpin(); 
     void ResetAccumulatedSpin();
     Vector2 GetReelStickDirection();

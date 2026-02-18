@@ -54,7 +54,6 @@ public class RhythmVisualizer : MonoBehaviour
 
     private void HandleFlick(FlickDirection dir)
     {
-        // Set the timer to "flash" the color
         _flickTimers[dir] = Time.time + flickFlashDuration;
         // Debug.Log($"[Visualizer] Flick Flash for {dir} started at {Time.time}");
     }
@@ -72,19 +71,19 @@ public class RhythmVisualizer : MonoBehaviour
             FlickDirection dir = pair.Key;
             Image img = pair.Value;
 
-            // Priority 1: Flick Flash (Impulse)
+ 
             if (_flickTimers.ContainsKey(dir) && Time.time < _flickTimers[dir])
             {
                 img.color = flickColor;
                 img.transform.localScale = Vector3.one * 1.3f; // Visual punch
             }
-            // Priority 2: Hold State
+
             else if (provider.IsHoldingDirection(dir))
             {
                 img.color = holdColor;
                 img.transform.localScale = Vector3.one * 1.1f;
             }
-            // Priority 3: Idle
+
             else
             {
                 img.color = idleColor;

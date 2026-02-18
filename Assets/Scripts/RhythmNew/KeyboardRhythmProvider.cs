@@ -9,8 +9,8 @@ public class KeyboardRhythmProvider : MonoBehaviour, IRhythmInputT
     public EventReference flickSoundEvent;
 
     [Header("Simulation Settings")]
-    public float lerpSpeed = 50f; // how quickly the virtual stick moves for both reeling and flicking
-    public float flickVelocityThreshold = 10f; // Speed required to trigger the OnFlick event
+    public float lerpSpeed = 50f; // because the keyboard is only capcable of instant direction changes, i lerp to make it smooth
+    public float flickVelocityThreshold = 10f; 
 
     private Vector2 _virtualStick;
     private Vector2 _lastVirtualStick;
@@ -25,8 +25,6 @@ public class KeyboardRhythmProvider : MonoBehaviour, IRhythmInputT
     public float GetTotalAccumulatedSpin() => _accumulatedSpin;
     public void ResetAccumulatedSpin() => _accumulatedSpin = 0f;
     public Vector2 GetReelStickDirection() => _virtualReelStick;
-
-    // Interface Properties/Methods
     public Vector2 DirectionalInput => _virtualStick;
 
     void Update()
@@ -122,14 +120,13 @@ public class KeyboardRhythmProvider : MonoBehaviour, IRhythmInputT
         return false;
     }
 
-    // --- Helper Math ---
+    // Helpers
     private FlickDirection GetDirectionFromVector(Vector2 v)
     {
         if (v.magnitude < 0.5f) return FlickDirection.None;
         float angle = Mathf.Atan2(v.y, v.x) * Mathf.Rad2Deg;
         if (angle < 0) angle += 360;
 
-        // 8-Direction detection logic
         if (angle <= 22.5f || angle > 337.5f) return FlickDirection.Right;
         if (angle > 22.5f && angle <= 67.5f)   return FlickDirection.UpRight;
         if (angle > 67.5f && angle <= 112.5f)  return FlickDirection.Up;

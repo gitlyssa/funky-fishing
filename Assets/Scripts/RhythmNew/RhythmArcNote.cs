@@ -3,8 +3,7 @@ using UnityEngine;
 public class RhythmArcNote : MonoBehaviour
 {
     public enum NoteType { Flick, Slide }
-
-
+    
     [Header("State (Debug Visible)")]
     [SerializeField] private NoteType type;
     [SerializeField] private FlickDirection direction;

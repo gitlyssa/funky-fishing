@@ -3,6 +3,10 @@ using UnityEngine;
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
 public class DynamicArc : MonoBehaviour
 {
+    /*
+    Just a version of the arc generator that updates the mesh every frame
+    
+     */
     private Mesh _mesh;
     private Vector3[] _vertices;
     private int[] _triangles;
@@ -21,6 +25,7 @@ public class DynamicArc : MonoBehaviour
 
     public void SetMaterial(Material mat)
     {
+        // sets the material of the mesh
         GetComponent<MeshRenderer>().material = mat;
     }
 

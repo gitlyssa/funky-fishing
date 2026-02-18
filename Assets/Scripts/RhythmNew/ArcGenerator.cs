@@ -3,10 +3,18 @@ using UnityEngine;
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
 public class ArcGenerator : MonoBehaviour
 {
+
+    /*
+    This script generates a mesh for an arc, you can specify the inner and outer radius and how many degrees of a circle it is
+    I didn't end up using this script because i wanted to deform the arc as it moved along, but the dynamic arc script is pretty much copy paste
+    in a loop.
+
+    We should be able to attach a texture or anything onto the arc mesh generated.
+     */
     public float innerRadius = 4f;
     public float outerRadius = 5f;
     public float arcAngle = 90f;
-    public int segments = 32;
+    public int segments = 24;
 
     public Mesh GenerateArc()
     {
@@ -31,7 +39,7 @@ public class ArcGenerator : MonoBehaviour
             vertices[i * 2] = new Vector3(x * innerRadius, y * innerRadius, 0);
             vertices[i * 2 + 1] = new Vector3(x * outerRadius, y * outerRadius, 0);
 
-            // UVs (x = progress along curve, y = inner vs outer)
+            // UVs 
             float u = (float)i / segments;
             uvs[i * 2] = new Vector2(u, 0);
             uvs[i * 2 + 1] = new Vector2(u, 1);

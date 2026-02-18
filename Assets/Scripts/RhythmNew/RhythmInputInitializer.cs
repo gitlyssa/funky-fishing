@@ -8,10 +8,8 @@ public class RhythmInputInitializer : MonoBehaviour
 
     void Awake()
     {
-        // 1. Try to find the hardware provider on THIS object
         IRhythmInputT provider = GetComponent<IRhythmInputT>();
 
-        // 2. If it's not here, search the whole scene (fallback)
         if (provider == null)
         {
             provider = Object.FindAnyObjectByType<MonoBehaviour>() as IRhythmInputT;

@@ -16,7 +16,6 @@ public class RhythmReelNote : MonoBehaviour
 
     public bool isClockwise => _data.isClockwise;
 
-    // Progress: 0 to 1 (can exceed 1 for bonus)
     public float Progress => Mathf.Abs(_accumulatedSpin / _data.goalDegrees);
     public float TotalSpin => _accumulatedSpin;
 
@@ -32,17 +31,17 @@ public class RhythmReelNote : MonoBehaviour
 
         float songTime = RhythmConductor.Instance.songTime;
 
-        // PHASE 1: Lead-In
+        // Lead-In
         if (songTime >= _data.startTime - _data.leadInTime && songTime < _data.startTime)
         {
             CurrentPhase = ReelPhase.LeadIn;
         }
-        // PHASE 2: Active
+        // Active
         else if (songTime >= _data.startTime && songTime < _data.startTime + _data.duration)
         {
             CurrentPhase = ReelPhase.Active;
         }
-        // PHASE 3: Expired
+        //Expired
         else if (songTime >= _data.startTime + _data.duration)
         {
             CurrentPhase = ReelPhase.Resolved;
@@ -68,7 +67,7 @@ public class RhythmReelNote : MonoBehaviour
 
     private void OnRotationComplete()
     {
-        // This is where you trigger the "tick" or "steam puff"
+        //trigger effects here 
         // RhythmWheel.Instance.PlayRotationPulse(); 
         Debug.Log("Full Rotation Completed!");
     }
@@ -76,14 +75,14 @@ public class RhythmReelNote : MonoBehaviour
     public void OnClear()
     {
         _isResolved = true;
-        // Logic for "Perfect" or "Bonus" score resolution
+       
         Destroy(gameObject);
     }
 
     public void OnFail()
     {
         _isResolved = true;
-        // Logic for "Miss" resolution
+        
         Destroy(gameObject);
     }
     

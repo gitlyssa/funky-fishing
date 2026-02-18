@@ -137,7 +137,7 @@ public class RhythmJudge : MonoBehaviour
 
         float songTime = conductor.songTime;
 
-        // 1. Feeding Input (Active Phase)
+
         if (reel.CurrentPhase == ReelPhase.Active)
         {
             float spinVelocity = processor.GetSmoothedSpinVelocity(); // Get the current smoothed spin velocity
@@ -145,22 +145,20 @@ public class RhythmJudge : MonoBehaviour
             reel.AddSpin(delta);
         }
         
-        // 2. Final Evaluation (Resolution Phase)
+
         if (songTime >= reel.Data.startTime + reel.Data.duration && reel.CurrentPhase != ReelPhase.Resolved)
         {
-            // We look at the total progress (unclamped)
-            float finalProgress = reel.Progress; // Assuming you remove Clamp01 from the property
+            
+            float finalProgress = reel.Progress;
 
             if (finalProgress >= 1.0f)
             {
-                // Award base score
-                // AddScore(1000); 
+
                 Debug.Log("<color=green>REEL CLEARED!</color>");
-                // Calculate Bonus (up to 200% total)
                 if (finalProgress > 1.0f)
                 {
-                    float bonus = Mathf.Min(finalProgress - 1.0f, 1.0f); // Cap bonus at 1.0 (100%)
-                    // AddScore((int)(1000 * bonus)); 
+                    float bonus = Mathf.Min(finalProgress - 1.0f, 1.0f); 
+   
                     Debug.Log($"<color=gold>BONUS REACHED: {bonus * 100:F0}%</color>");
                 }
 

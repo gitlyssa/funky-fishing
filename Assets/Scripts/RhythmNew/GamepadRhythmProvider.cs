@@ -3,6 +3,11 @@ using UnityEngine.InputSystem;
 
 public class GamepadRhythmProvider : MonoBehaviour, IRhythmInputT
 {
+    /*
+    Unity supports gamepad input through the input system by default. Its basically the same as keyboard input
+    don't need a library.
+    I basically have the two thumbsticks mapped as 2D vectors representing its current position.
+     */
     public event System.Action<FlickDirection> OnFlick;
     public event System.Action<int> OnButtonDown;
 
@@ -20,7 +25,6 @@ public class GamepadRhythmProvider : MonoBehaviour, IRhythmInputT
     public void ResetAccumulatedSpin() => _accumulatedSpin = 0f;
     public Vector2 GetReelStickDirection() => Gamepad.current.rightStick.ReadValue();
 
-    // Interface Implementation
     public Vector2 DirectionalInput => _leftStick;
 
 
@@ -35,6 +39,11 @@ public class GamepadRhythmProvider : MonoBehaviour, IRhythmInputT
 
     private void HandleLeftStickFlick()
     {
+        // a flick is detected by checking the velocity of the stick movement. 
+        // If the velocity exceeds a certain threshold, we consider the player to be flicking
+        // I then check the direction of the flick, and trigger the event
+        // A flick cannot occur again until the velocity drops below the threshold, meaning  distinct flicks can only hit
+        // one note.
         _leftStick = Gamepad.current.leftStick.ReadValue();
 
         float velocity = (_leftStick - _lastLeftStick).magnitude / Time.deltaTime;
@@ -60,6 +69,7 @@ public class GamepadRhythmProvider : MonoBehaviour, IRhythmInputT
 
     private void HandleRightStickSpin()
     {
+        // similarly, i check the nagle of the right stick, calculate angular velocity
         Vector2 rightStick = Gamepad.current.rightStick.ReadValue();
 
         if (rightStick.magnitude > deadzone)
@@ -79,6 +89,7 @@ public class GamepadRhythmProvider : MonoBehaviour, IRhythmInputT
 
     private void HandleButtons()
     {
+        // just for testing, don't have button controls yet but you would add them here
         if (Gamepad.current.buttonSouth.wasPressedThisFrame)
         {
             OnButtonDown?.Invoke(0);

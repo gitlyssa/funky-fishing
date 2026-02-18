@@ -27,7 +27,6 @@ public class RhythmConductor : MonoBehaviour
     public float songTime => Time.time; // To be replaced by AudioSource.timeSamples
     public float noteTravelTime = 2.0f; //global speed setting for notes
 
-    // This is where you'd load your JSON or MIDI file later
     public List<NoteData> _chart = new List<NoteData>();
 
     public List<ReelData> _reelQueue = new List<ReelData>();
@@ -54,7 +53,7 @@ public class RhythmConductor : MonoBehaviour
             SpawnReel(_reelQueue[0]);
         }
 
-        // on pressing space, spawn a random direction note for testing
+        // on pressing space spawn a random direction note 
         if (Input.GetKeyDown(KeyCode.Space))
         {
             int randomDir = Random.Range(0, 4);

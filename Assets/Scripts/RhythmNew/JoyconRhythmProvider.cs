@@ -66,10 +66,7 @@ public class JoyconRhythmProvider : MonoBehaviour, IRhythmInputT
             {
                 OnFlick?.Invoke(dir);
                 _isFlicking = true;
-                
-                // Rumble on impact
-                JSL.JslSetRumble(deviceId, 160, 160); 
-                // Invoke(nameof(StopRumble), 0.1f);
+            
             }
         }
 
@@ -116,10 +113,28 @@ public class JoyconRhythmProvider : MonoBehaviour, IRhythmInputT
 
     private FlickDirection GetDirectionFromAccel(Vector3 acc)
     {
-        if (Mathf.Abs(acc.x) > Mathf.Abs(acc.y))
-            return acc.x > 0 ? FlickDirection.Right : FlickDirection.Left;
-        return acc.y > 0 ? FlickDirection.Up : FlickDirection.Down;
+        float x = acc.x;
+        float y = acc.y;
+        float absX = Mathf.Abs(x);
+        float absY = Mathf.Abs(y);
+
+        // bool isDiagonal = (Mathf.Min(absX, absY) / Mathf.Max(absX, absY)) > 0.4f;
+
+        // if (isDiagonal)
+        // {
+        //     if (x > 0 && y > 0) return FlickDirection.UpRight;
+        //     if (x < 0 && y > 0) return FlickDirection.UpLeft;
+        //     if (x < 0 && y < 0) return FlickDirection.DownLeft;
+        //     if (x > 0 && y < 0) return FlickDirection.DownRight;
+        // }
+
+        if (absX > absY)
+            return x > 0 ? FlickDirection.Right : FlickDirection.Left;
+        else
+            return y > 0 ? FlickDirection.Up : FlickDirection.Down;
     }
+
+    
     private FlickDirection GetDirectionFromVector(Vector2 v)
     {
         if (v.magnitude < 0.4f) return FlickDirection.None;
