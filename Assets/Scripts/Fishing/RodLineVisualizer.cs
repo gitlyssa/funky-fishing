@@ -81,6 +81,12 @@ public class RodLineVisualizer : MonoBehaviour
                 doLineSway = false;
         }
 
+        if (bobberArcCaster != null && bobberArcCaster.CurrentState == BobberArcCaster.State.Tension)
+        {
+            useSlack = 0f;
+            doLineSway = false;
+        }
+
         DrawSagLine(rodTip.position, bobber.position, useSlack, doLineSway);
     }
 

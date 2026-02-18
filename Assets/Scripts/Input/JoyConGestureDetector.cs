@@ -57,6 +57,10 @@ public class JoyConGestureDetector : MonoBehaviour
     public float minTimeBetweenCastAndYank = 0.25f;
     public float cooldownAfterTrigger = 0.25f;
 
+    [Header("Yank Guard")]
+    public BobberArcCaster caster;
+    public bool blockYankDuringTension = true;
+
     [Header("Events")]
     public UnityEvent onCast;
     public UnityEvent onYank;
@@ -84,6 +88,9 @@ public class JoyConGestureDetector : MonoBehaviour
 
     void Start()
     {
+        if (caster == null)
+            caster = FindObjectOfType<BobberArcCaster>();
+
         Connect();
     }
 
@@ -200,6 +207,9 @@ public class JoyConGestureDetector : MonoBehaviour
 
                 if (IsYank(forwardLin, swingGyro))
                 {
+                    if (ShouldBlockYank())
+                        return false;
+
                     if (logTriggers) Debug.Log($"YANK! handle={handle} lin={forwardLin:F2}g gyro={swingGyro:F0}dps polarity={_castPolarity}");
                     onYank?.Invoke();
                     _state = State.Cooldown;
@@ -236,6 +246,13 @@ public class JoyConGestureDetector : MonoBehaviour
         float signedForward = forwardLin * _castPolarity;
         float signedGyro = swingGyro * _castPolarity;
         return signedForward < -yankBackLinG && signedGyro < -yankGyroDps;
+    }
+
+    private bool ShouldBlockYank()
+    {
+        return blockYankDuringTension &&
+               caster != null &&
+               caster.CurrentState == BobberArcCaster.State.Tension;
     }
 
     private static float GetAxis(Vector3 v, Axis a) => a == Axis.X ? v.x : (a == Axis.Y ? v.y : v.z);

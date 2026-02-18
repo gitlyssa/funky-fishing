@@ -905,6 +905,68 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 122586135}
   m_Mesh: {fileID: 10206, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &129970896
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 129970897}
+  - component: {fileID: 129970898}
+  m_Layer: 0
+  m_Name: XboxFishingControls
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &129970897
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 129970896}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1799519543}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &129970898
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 129970896}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 378be348425ceda4ebf7637664bcb770, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::XboxFishingInput
+  caster: {fileID: 1405675315}
+  targeting: {fileID: 2039806075}
+  useSingleButtonForCastYank: 1
+  castYankButton: 0
+  castButton: 5
+  yankButton: 4
+  useTriggerFallback: 0
+  triggerPressThreshold: 0.5
+  useRightStickForTargeting: 1
+  targetingStickDeadzone: 0.2
+  enableTensionToggle: 1
+  tensionToggleButton: 1
+  onlySendSwingInTension: 1
+  useDpadForSwing: 1
+  useLeftStickForSwing: 1
+  useRightStickForSwing: 0
+  leftStickCardinalThreshold: 0.7
+  rightStickCardinalThreshold: 0.7
 --- !u!4 &145753174 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1279437348525638701, guid: e2e682b966e3f644392ffbfab511e0e2, type: 3}
@@ -3285,8 +3347,9 @@ GameObject:
   m_Component:
   - component: {fileID: 935650903}
   - component: {fileID: 935650904}
+  - component: {fileID: 935650905}
   m_Layer: 0
-  m_Name: JoyConCastYank
+  m_Name: JoyConFishingMotion
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3301,11 +3364,11 @@ Transform:
   m_GameObject: {fileID: 935650902}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -7.1833, y: -8.8675, z: -10.204081}
+  m_LocalPosition: {x: -0.72770023, y: 1.1838598, z: -0.27245045}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1521670362}
+  m_Father: {fileID: 1799519543}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &935650904
 MonoBehaviour:
@@ -3336,6 +3399,8 @@ MonoBehaviour:
   yankGyroDps: 160
   minTimeBetweenCastAndYank: 0.1
   cooldownAfterTrigger: 0.1
+  caster: {fileID: 0}
+  blockYankDuringTension: 1
   onCast:
     m_PersistentCalls:
       m_Calls:
@@ -3367,6 +3432,35 @@ MonoBehaviour:
           m_BoolArgument: 0
         m_CallState: 2
   logTriggers: 1
+--- !u!114 &935650905
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 935650902}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f10d5089b3e9b54aab4074ec90fffda, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::JoyConDirectionalSwingInput
+  caster: {fileID: 1405675315}
+  onlyWhenTensionState: 1
+  deviceIndex: 0
+  upGyroAxis: 0
+  upGyroSign: 1
+  sideGyroAxis: 1
+  sideGyroSign: -1
+  gyroSmooth: 45
+  upEnterDps: 200
+  upExitDps: 110
+  sideEnterDps: 300
+  sideExitDps: 110
+  upPriorityBias: 1.05
+  directionRearmDelay: 0.08
+  sideNeutralRearmDps: 65
+  sideNeutralHoldTime: 0.03
+  logDirectionChanges: 0
 --- !u!4 &951590839 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1686021177305034388, guid: ebee340de387f334f9ac44e044abd8fb, type: 3}
@@ -4792,6 +4886,7 @@ MonoBehaviour:
   caster: {fileID: 1405675315}
   castKey: 273
   yankKey: 274
+  tensionKey: 104
 --- !u!114 &1405675315
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4852,6 +4947,65 @@ MonoBehaviour:
       time: 1
       value: 1
       inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  tensionBobbingEnabled: 0
+  rodRoot: {fileID: 0}
+  tensionCamera: {fileID: 0}
+  centerRodWithCamera: 1
+  rodCenterSpeed: 8
+  cameraCenterDepth: -1
+  cameraCenterOffset: {x: 0.7, y: -0.3, z: 0}
+  tensionYawAngle: 0
+  tensionPitchDownAngle: 30
+  rodBendAngle: 5
+  rodBendSpeed: 7
+  rodBendNoiseAngle: 1.5
+  rodBendResponsiveness: 16
+  directionalSwingEnabled: 1
+  rodSwingPivot: {fileID: 1833976767}
+  swingUpKey: 119
+  swingLeftKey: 97
+  swingRightKey: 100
+  swingUpPitchAngle: -50
+  swingLeftYawAngle: -50
+  swingRightYawAngle: 50
+  useCameraRelativeSwingAxes: 1
+  directionalSwingInSpeed: 20
+  directionalSwingOutSpeed: 14
+  directionalTapThreshold: 0.12
+  directionalTapDuration: 0.16
+  directionalTapCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 4
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.5
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: -4
       outSlope: 0
       tangentMode: 0
       weightedMode: 0
@@ -5453,12 +5607,11 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 2085349717}
   - {fileID: 2039806074}
   - {fileID: 1756262539}
   - {fileID: 1405675313}
   - {fileID: 1762950671}
-  - {fileID: 2085349717}
-  - {fileID: 935650903}
   - {fileID: 1799519543}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -6339,6 +6492,7 @@ GameObject:
   - component: {fileID: 1761183079}
   - component: {fileID: 1761183078}
   - component: {fileID: 1761183077}
+  - component: {fileID: 1761183080}
   m_Layer: 4
   m_Name: WaterShader
   m_TagString: Untagged
@@ -6440,6 +6594,28 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1761183075}
   m_Mesh: {fileID: 10209, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &1761183080
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1761183075}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0e2823e292f02074e822d2497939c6fc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PondManager
+  fishPrefabs:
+  - {fileID: 7196154191263375292, guid: 83e8391f15bad734ab3208fc4c46d905, type: 3}
+  - {fileID: 7196154191263375292, guid: 5653e2282b255bd468ef71503ebbb22e, type: 3}
+  fishList: []
+  radius: 6
+  waterlevel: 9
+  FishCaughtText: {fileID: 0}
+  catchRadius: 1.5
+  playerBobber: {fileID: 1762950672}
+  gameManager: {fileID: 0}
 --- !u!4 &1762015740 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 9069115365609054727, guid: 60f79905accf3b24fa0114b941f1aac0, type: 3}
@@ -6847,7 +7023,9 @@ Transform:
   m_LocalPosition: {x: -6.4556, y: -10.05136, z: -9.93163}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 935650903}
+  - {fileID: 129970897}
   m_Father: {fileID: 1521670362}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1799519544
@@ -7031,6 +7209,37 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 108507113624698413, guid: eebb56c82efbd8d4bb0eb6bd925a0e9d, type: 3}
   m_PrefabInstance: {fileID: 428673215}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1833976766
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1833976767}
+  m_Layer: 0
+  m_Name: RodBase
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1833976767
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1833976766}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.3438, y: -0.4956, z: -0.015}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2085349717}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1842232808
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -7825,6 +8034,7 @@ MonoBehaviour:
   waterCollider: {fileID: 122586137}
   bobberArcCaster: {fileID: 1405675315}
   jslInput: {fileID: 1799519544}
+  externalStickTimeout: 0.2
   cursorSpeed: 1200
   worldMoveSpeed: 6
   maxDistance: 30
@@ -7965,6 +8175,7 @@ Transform:
   m_Children:
   - {fileID: 54873919}
   - {fileID: 812878740}
+  - {fileID: 1833976767}
   m_Father: {fileID: 1521670362}
   m_LocalEulerAnglesHint: {x: 22, y: 180, z: 10}
 --- !u!114 &2085349718

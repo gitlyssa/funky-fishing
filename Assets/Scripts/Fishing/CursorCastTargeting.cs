@@ -16,6 +16,9 @@ public class CursorCastTargeting : MonoBehaviour
     [Header("Joy-Con Input Source")]
     public JslStickInput jslInput;
 
+    [Header("External Stick Input")]
+    public float externalStickTimeout = 0.2f;
+
     [Header("Joy-Con Cursor (stick-driven)")]
     public float cursorSpeed = 1200f;     // pixels/sec at full stick
     public float worldMoveSpeed = 6f;     // units/sec on the water plane
@@ -33,6 +36,8 @@ public class CursorCastTargeting : MonoBehaviour
     private BobberArcCaster.State _lastCasterState = BobberArcCaster.State.Idle;
     private Vector3 _lastTargetPoint;
     private bool _hasLastTarget;
+    private Vector2 _externalStick;
+    private float _externalStickExpiresAt = -1f;
 
     void Reset()
     {
@@ -193,6 +198,15 @@ public class CursorCastTargeting : MonoBehaviour
     bool TryGetStick(out Vector2 stick)
     {
         stick = Vector2.zero;
+
+        // Optional external stick feed (e.g., Xbox right stick) can drive targeting.
+        if (Time.unscaledTime <= _externalStickExpiresAt)
+        {
+            stick = _externalStick;
+            if (stick != Vector2.zero)
+                return true;
+        }
+
         if (jslInput == null)
         {
             jslInput = FindObjectOfType<JslStickInput>();
@@ -211,6 +225,12 @@ public class CursorCastTargeting : MonoBehaviour
 
         stick = jslInput.Stick;
         return stick != Vector2.zero;
+    }
+
+    public void SetExternalStickInput(Vector2 stick)
+    {
+        _externalStick = stick;
+        _externalStickExpiresAt = Time.unscaledTime + Mathf.Max(0.02f, externalStickTimeout);
     }
 
     void UpdateCursorFromStick(Vector2 stick)
