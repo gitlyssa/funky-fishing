@@ -5,7 +5,7 @@ public class DynamicArc : MonoBehaviour
 {
     /*
     Just a version of the arc generator that updates the mesh every frame
-    
+    RhythmArcNote calls redraw every frame with parameters to deform the arc as it moves along
      */
     private Mesh _mesh;
     private Vector3[] _vertices;

@@ -3,6 +3,15 @@ using System.Collections.Generic;
 
 public class RhythmConductor : MonoBehaviour
 {   
+    /*
+    The Rhythm Conductor is pretty much the note spawner. It holds a list of all the notes and the reel note state
+    It is responsible for spawning all the ntoes at the right time and storing their data when they are active
+    I currently just have two lists, but they should probably be adjusted to be text files or something for easier
+    charting.
+
+    Currently, I have pressing space bar spawns a random flick or slide note and pressing r spawns a reel in a random direction
+    If you scroll down, there are spawn note and spawn reel functions that can be called from elsewhere
+    */
     public static RhythmConductor Instance; 
     public List<RhythmArcNote> activeNotes = new List<RhythmArcNote>();
 

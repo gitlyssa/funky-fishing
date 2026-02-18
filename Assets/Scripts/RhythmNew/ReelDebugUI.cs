@@ -3,6 +3,15 @@ using UnityEngine.UI;
 
 public class ReelDebugUI : MonoBehaviour
 {
+
+    /*
+    This is a debug script to visualize the reel state since the actual rhythm wheel doesn't have visuals yet
+    It is composed of a state square that shows the current rotation of the reel. This acts as the spinning reel for later
+    The first progress bar shows the reel's active progress. When it fills up, the reel is complete
+    The second progress bar shows the player's progress towards the goal. 
+    If it is half filled up, the player has met the goal and the reel is considered cleared
+    If it is fully filled up, the player has exceeded the goal and has obtained the maximum bonus points available
+    */
     [Header("State Square")]
     public Image stateSquare;
     public float maxRotationSpeed = 360f; // Degrees per second

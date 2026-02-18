@@ -10,6 +10,8 @@ public class ArcGenerator : MonoBehaviour
     in a loop.
 
     We should be able to attach a texture or anything onto the arc mesh generated.
+
+    I don't think this is very useful anymore, but you can generate and save a mesh with this if you want a static one
      */
     public float innerRadius = 4f;
     public float outerRadius = 5f;

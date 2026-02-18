@@ -4,6 +4,17 @@ public enum ReelPhase { None, LeadIn, Active, Resolved }
 
 public class RhythmReelNote : MonoBehaviour
 {
+    /*
+    The reel note is a continuous note that has essentially 2 stages
+    The lead in is when the big visual wheel starts spinning and it indicates to the player that they have an upcoming reel note
+    the active portion is when the player can actually input. The player must meet the goal number of rotations within the duration
+    of the note.
+
+    Similar to the arc notes, this class mostly contains the logic for the visual side of the reel note
+    The conductor uses it to update its own active reel state, which the judger checks to determine if the player
+    input matches what the reel note is looking for.
+    */
+
     [SerializeField] private ReelData _data;
     [SerializeField] private bool _isInitialized = false;
     [SerializeField] private float _accumulatedSpin = 0f;
@@ -67,22 +78,20 @@ public class RhythmReelNote : MonoBehaviour
 
     private void OnRotationComplete()
     {
-        //trigger effects here 
-        // RhythmWheel.Instance.PlayRotationPulse(); 
+        // we can have some effects for every rotation the player completes 
         Debug.Log("Full Rotation Completed!");
     }
 
     public void OnClear()
     {
+        // on clear effects
         _isResolved = true;
-       
         Destroy(gameObject);
     }
 
     public void OnFail()
-    {
+    {        // on fail effects
         _isResolved = true;
-        
         Destroy(gameObject);
     }
     

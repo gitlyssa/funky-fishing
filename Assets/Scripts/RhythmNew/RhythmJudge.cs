@@ -3,7 +3,11 @@ using System.Collections.Generic;
 
 public class RhythmJudge : MonoBehaviour
 {
-
+    /*
+    This is where all the note hitting logic happens. It listens to the processor for the player input
+    and has a reference to the conductor to get the position of all the acitve notes
+    I have some manually set timing windows for now to control the scoring of the notes.
+    */
     public enum JudgeRating { Perfect, Good, Bad, Miss }
     [Header("References")]
     public RhythmConductor conductor;
@@ -21,12 +25,15 @@ public class RhythmJudge : MonoBehaviour
 
     void Update()
     {
-        // 1. Process State-based notes (Slides)
+        // Flick notes are handled through on flick events, separate to the update loop
+        //Anything under the update loop is essentially a state check, for continuous notes
+
+        // Slides are checked every frame to see if the player isholding down in the correct direction
         CheckSlideNotes();
 
-        // 2. Process Auto-Miss for notes that fly past the bad window
+        // Any notes past the window should automatically be missed, as they cant be hit anymore
         CheckAutoMiss();
-        // 3. Process Reel Notes (Continuous Evaluation)
+        // Process reels, which are done over a time frame
         CheckReelNotes();
     }
 

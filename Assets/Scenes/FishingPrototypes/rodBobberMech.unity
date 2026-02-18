@@ -1266,6 +1266,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 63147cf258a311d4cb0d938ec0d0e698, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SceneManager
+  rhythmSceneName: RhythmHittable
+  fishingSceneName: rodBobberMech
 --- !u!4 &1117287689
 Transform:
   m_ObjectHideFlags: 0

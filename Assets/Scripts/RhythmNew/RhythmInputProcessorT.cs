@@ -4,6 +4,11 @@ using System.Linq;
 
 public class RhythmInputProcessorT : MonoBehaviour
 {
+    /*
+    This class bridges the providers, which collect the raw data from a control scheme. The processor reads this and turns it inot
+    slightly processed input that any of the other classes can read from. I think currently the judge, and the visualizers both read from this
+    Its just a bunch of state checks mostly, and a handle flick which happens whenever a flick goes off.
+    */
     private IRhythmInputT _currentHardware;
 
     [Header("Flick Calibration")]

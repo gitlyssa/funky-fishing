@@ -4,6 +4,15 @@ using System.Collections.Generic;
 
 public class RhythmVisualizer : MonoBehaviour
 {
+    /*
+    This is the visualizer for the player input. It lies on the canvas and listens to the processor for the input events
+    It has 8 squares to represent flicks and holds in each direction, and a central square to represent the reel input
+    The squares are gray by default, and flash red to signal a flick has occured in that direction
+    otherwise, any hold inputs cause the squares to turn yellow
+
+    The center square turns yellow whenever there is any input for the reeling and rotates to show
+    the direction of the player's input
+    */
     [Header("References")]
     public RhythmInputProcessorT processor; // Listens for events
     private IRhythmInputT provider;  
@@ -48,7 +57,6 @@ public class RhythmVisualizer : MonoBehaviour
             { FlickDirection.DownRight, directionImages[7] }
         };
 
-        // Subscribe to the Processor's flick event
         processor.OnValidFlick += HandleFlick;
     }
 
@@ -75,7 +83,7 @@ public class RhythmVisualizer : MonoBehaviour
             if (_flickTimers.ContainsKey(dir) && Time.time < _flickTimers[dir])
             {
                 img.color = flickColor;
-                img.transform.localScale = Vector3.one * 1.3f; // Visual punch
+                img.transform.localScale = Vector3.one * 1.3f; 
             }
 
             else if (provider.IsHoldingDirection(dir))

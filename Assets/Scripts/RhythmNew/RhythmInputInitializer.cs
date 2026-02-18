@@ -3,6 +3,9 @@ using UnityEngine;
 [DefaultExecutionOrder(-50)] // Ensure this runs before Visualizers
 public class RhythmInputInitializer : MonoBehaviour
 {
+    /*
+    This just links the provider to the processor
+    */
     [Header("Core System")]
     public RhythmInputProcessorT processor;
 

@@ -3,7 +3,14 @@ using UnityEngine;
 public class RhythmArcNote : MonoBehaviour
 {
     public enum NoteType { Flick, Slide }
-    
+    /*
+    An arc note moves down the lane and is either a flick or a slide. But since theyre animated the same they both use
+    this same script.
+
+    The visuals determine how thick or wide each note is. Each note has a material or texture that can be applied.
+    The logic is contained in RhythmJudge and the spawning is done through Rhythm Conductor
+    This script mostly updates the visuals and handles any animations when the note is hit or missed
+    */
     [Header("State (Debug Visible)")]
     [SerializeField] private NoteType type;
     [SerializeField] private FlickDirection direction;
@@ -16,7 +23,7 @@ public class RhythmArcNote : MonoBehaviour
     [Header("Visual Config")]
     public float noteThickness = 0.2f;
     public float laneAngle = 90f;
-    public int meshSegments = 16; // Lower = Faster
+    public int meshSegments = 16; 
 
 
     private float _travelDuration;
@@ -68,7 +75,7 @@ public class RhythmArcNote : MonoBehaviour
     {
         if (!_isInitialized) return;
 
-        // Use the Conductor's song time for perfect sync
+        // Use the Conductor's song time so they are all synced up
         float elapsed = RhythmConductor.Instance.songTime - _spawnTime;
         float linearT = Mathf.Clamp01(elapsed / _travelDuration);
 
@@ -79,25 +86,20 @@ public class RhythmArcNote : MonoBehaviour
 
     private void UpdatePositionAndScale(float t)
     {
-        // 1. Move Radius
+        
         float currentRadius = Mathf.Lerp(_spawnRadius, _outerRingRadius, t);
-        // transform.localPosition = transform.up * currentRadius;  
-
         _visuals.Redraw(currentRadius, noteThickness, laneAngle, meshSegments);
     }
 
     public void OnHit()
     {
-        // 1. Play Hit Sound
-        // 2. Spawn "Perfect!" particles
-        // 3. Play "Pop" animation
+        // PLAY HIT ANIMATIONS AND SOUNDS HERE
         Destroy(gameObject); 
     }
 
     public void OnMiss()
     {
-        // 1. Play "Fade Out" or "Gray out" animation
-        // 2. Tell the UI to break the combo
+        // PLAY MISS ANIMATIONS AND SOUNDS HERE
         Destroy(gameObject);
     }
 
