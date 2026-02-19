@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.03.00">
+	<object class="AudioFile" id="{b147ff04-f9ee-40f5-b911-3669db27418f}">
+		<property name="assetPath">
+			<value>mus_99bpm_tutorialBase_lp.flac</value>
+		</property>
+		<property name="isStreaming">
+			<value>true</value>
+		</property>
+		<property name="frequencyInKHz">
+			<value>44.0999985</value>
+		</property>
+		<property name="channelCount">
+			<value>2</value>
+		</property>
+		<property name="length">
+			<value>20.391405895691609</value>
+		</property>
+		<relationship name="masterAssetFolder">
+			<destination>{ba2a1a69-d313-4fe5-983c-906aed850381}</destination>
+		</relationship>
+	</object>
+</objects>
