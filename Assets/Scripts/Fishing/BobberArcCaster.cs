@@ -133,34 +133,31 @@ public class BobberArcCaster : MonoBehaviour
     // Call this from your JoyCon gesture event
     public void Yank()
     {
+        if (!rodTip || !bobber) return;
 
-        GameObject fish = pondManager.GetClosestFish(pondManager.playerBobber);
+        // Guard: don't yank if already idle/hanging
+        if (CurrentState == State.Idle || _isPreparingYank) return;
 
-        if (fish != null)
+        // If rod is displaced by tension feedback, let it settle before retracting bobber.
+        if (CurrentState == State.Tension || _isRestoringFromTension)
         {
-            Debug.Log("Fish hooked! Entering tension state.");
-
-            ToggleTension(); // enter tension state
-
-            // START BEATMAP
+            StartYankAfterRodRestore();
+            return;
         }
-        else
+
+        if (CurrentState == State.Landed && pondManager != null && pondManager.playerBobber != null)
         {
-            Debug.Log("No fish nearby. Normal yank.");
-            if (!rodTip || !bobber) return;
-
-            // Guard: don't yank if already idle/hanging
-            if (CurrentState == State.Idle || _isPreparingYank) return;
-
-            // If rod is displaced by tension feedback, let it settle before retracting bobber.
-            if (CurrentState == State.Tension || _isRestoringFromTension)
+            GameObject fish = pondManager.GetClosestFish(pondManager.playerBobber);
+            if (fish != null)
             {
-                StartYankAfterRodRestore();
+                Debug.Log("Fish hooked! Entering tension state.");
+                ToggleTension(); // enter tension state
                 return;
             }
-
-            StartYank();
         }
+
+        Debug.Log("No fish nearby. Normal yank.");
+        StartYank();
     }
 
     // Call this when a fish is hooked (or for now, a test key)
