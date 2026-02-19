@@ -102,7 +102,7 @@ public class PondManager : MonoBehaviour
         fishList.RemoveAt(fishIndex);
     }
 
-GameObject closestFish(GameObject bobber)
+public GameObject GetClosestFish(GameObject bobber)
 {
     GameObject closestFish = null;
     float closestDistance = Mathf.Infinity;
@@ -135,7 +135,7 @@ GameObject closestFish(GameObject bobber)
 
     void CatchFish(GameObject bobber)
     {
-        GameObject fish = closestFish(bobber);
+        GameObject fish = GetClosestFish(bobber);
         if (fish != null)
         {   
             // // add force throwing fish upwards
