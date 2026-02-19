@@ -959,7 +959,6 @@ MonoBehaviour:
   triggerPressThreshold: 0.5
   useRightStickForTargeting: 1
   targetingStickDeadzone: 0.2
-  enableTensionToggle: 1
   tensionToggleButton: 1
   onlySendSwingInTension: 1
   useDpadForSwing: 1
@@ -4899,6 +4898,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 50789c80e43c79b46aca4fdb91230497, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BobberArcCaster
+  pondManager: {fileID: 1761183080}
   rodTip: {fileID: 812878740}
   bobber: {fileID: 1762950671}
   bobberHangPoint: {fileID: 2061332169}
@@ -4955,6 +4955,7 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+  allowManualTensionEntry: 1
   tensionBobbingEnabled: 0
   rodRoot: {fileID: 0}
   tensionCamera: {fileID: 0}
@@ -6663,7 +6664,7 @@ MonoBehaviour:
   radius: 6
   waterlevel: 9
   FishCaughtText: {fileID: 0}
-  catchRadius: 1.5
+  catchRadius: 1
   enableKeyboardCatchAttempt: 0
   catchAttemptKey: 32
   playerBobber: {fileID: 1762950672}

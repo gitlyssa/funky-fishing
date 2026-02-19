@@ -28,6 +28,9 @@ public class BobberArcCaster : MonoBehaviour
     public float yankDuration = 0.25f;
     public AnimationCurve yankEase = AnimationCurve.EaseInOut(0, 0, 1, 1);
 
+    [Header("Tension Entry (Input)")]
+    public bool allowManualTensionEntry = false;
+
     [Header("Tension Rod Feedback")]
     [FormerlySerializedAs("tensionRodFeedbackEnabled")]
     public bool tensionBobbingEnabled = true;
@@ -118,6 +121,9 @@ public class BobberArcCaster : MonoBehaviour
         if (tensionCamera == null)
             tensionCamera = Camera.main;
 
+        if (pondManager == null)
+            pondManager = FindObjectOfType<PondManager>();
+
         CacheStableRodBasePose();
     }
 
@@ -179,6 +185,24 @@ public class BobberArcCaster : MonoBehaviour
         {
             CurrentState = State.Tension;
         }
+    }
+
+    public void RequestTensionToggleFromInput()
+    {
+        // Allow input to always exit tension, but gate manual entry.
+        if (CurrentState == State.Tension)
+        {
+            ToggleTension();
+            return;
+        }
+
+        if (CurrentState == State.Landed && !allowManualTensionEntry)
+        {
+            Debug.Log("Manual tension entry blocked: hook a fish.");
+            return;
+        }
+
+        ToggleTension();
     }
 
     // Optional external driver (e.g., Joy-Con motion) for W/A/D directional swing.
