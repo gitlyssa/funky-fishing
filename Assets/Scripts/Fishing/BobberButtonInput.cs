@@ -15,28 +15,28 @@ public class BobberButtonInput : MonoBehaviour
         if (!caster) return;
 
         if (Input.GetKeyDown(castKey)) caster.Cast();
-        if (Input.GetKeyDown(yankKey)) HandleYank();
+        if (Input.GetKeyDown(yankKey)) caster.Yank();
         if (Input.GetKeyDown(tensionKey)) caster.ToggleTension();
     }
-    private void HandleYank()
-    {
-        if (!pondManager || !caster) return;
+    // private void HandleYank()
+    // {
+    //     if (!pondManager || !caster) return;
 
-        GameObject fish = pondManager.GetClosestFish(pondManager.playerBobber);
+    //     GameObject fish = pondManager.GetClosestFish(pondManager.playerBobber);
 
-        if (fish != null)
-        {
-            Debug.Log("Fish hooked! Entering tension state.");
+    //     if (fish != null)
+    //     {
+    //         Debug.Log("Fish hooked! Entering tension state.");
 
-            caster.ToggleTension(); // enter tension state
+    //         caster.ToggleTension(); // enter tension state
             
-            // START BEATMAP
-        }
-        else
-        {
-            Debug.Log("No fish nearby. Normal yank.");
-            caster.Yank();
-        }
-    }
+    //         // START BEATMAP
+    //     }
+    //     else
+    //     {
+    //         Debug.Log("No fish nearby. Normal yank.");
+    //         caster.Yank();
+    //     }
+    // }
 
 }

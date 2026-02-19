@@ -1652,7 +1652,6 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 1761183076}
   - {fileID: 122586136}
   m_Father: {fileID: 1209918014}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -4900,6 +4899,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 50789c80e43c79b46aca4fdb91230497, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BobberArcCaster
+  pondManager: {fileID: 0}
   rodTip: {fileID: 812878740}
   bobber: {fileID: 1762950671}
   bobberHangPoint: {fileID: 2061332169}
@@ -6509,12 +6509,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1761183075}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 553.85, y: 9.71, z: 414.5}
+  m_LocalRotation: {x: -0.08555449, y: -0.9778918, z: 0.19008283, w: 0.0166301}
+  m_LocalPosition: {x: 0.28851464, y: 2.3036752, z: 10.029974}
   m_LocalScale: {x: 2, y: 1, z: 2}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 271987410}
+  m_Father: {fileID: 2085349717}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!64 &1761183077
 MeshCollider:
@@ -8177,6 +8177,7 @@ Transform:
   - {fileID: 54873919}
   - {fileID: 812878740}
   - {fileID: 1833976767}
+  - {fileID: 1761183076}
   m_Father: {fileID: 1521670362}
   m_LocalEulerAnglesHint: {x: 22, y: 180, z: 10}
 --- !u!114 &2085349718

@@ -4,6 +4,8 @@ using UnityEngine.Serialization;
 
 public class BobberArcCaster : MonoBehaviour
 {
+    public PondManager pondManager;
+
     [Header("References")]
     public Transform rodTip;
     public Transform bobber;
@@ -131,19 +133,34 @@ public class BobberArcCaster : MonoBehaviour
     // Call this from your JoyCon gesture event
     public void Yank()
     {
-        if (!rodTip || !bobber) return;
 
-        // Guard: don't yank if already idle/hanging
-        if (CurrentState == State.Idle || _isPreparingYank) return;
+        GameObject fish = pondManager.GetClosestFish(pondManager.playerBobber);
 
-        // If rod is displaced by tension feedback, let it settle before retracting bobber.
-        if (CurrentState == State.Tension || _isRestoringFromTension)
+        if (fish != null)
         {
-            StartYankAfterRodRestore();
-            return;
-        }
+            Debug.Log("Fish hooked! Entering tension state.");
 
-        StartYank();
+            ToggleTension(); // enter tension state
+
+            // START BEATMAP
+        }
+        else
+        {
+            Debug.Log("No fish nearby. Normal yank.");
+            if (!rodTip || !bobber) return;
+
+            // Guard: don't yank if already idle/hanging
+            if (CurrentState == State.Idle || _isPreparingYank) return;
+
+            // If rod is displaced by tension feedback, let it settle before retracting bobber.
+            if (CurrentState == State.Tension || _isRestoringFromTension)
+            {
+                StartYankAfterRodRestore();
+                return;
+            }
+
+            StartYank();
+        }
     }
 
     // Call this when a fish is hooked (or for now, a test key)
