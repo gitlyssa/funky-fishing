@@ -4,6 +4,8 @@ using UnityEngine.Serialization;
 
 public class BobberArcCaster : MonoBehaviour
 {
+    public PondManager pondManager;
+
     [Header("References")]
     public Transform rodTip;
     public Transform bobber;
@@ -149,6 +151,18 @@ public class BobberArcCaster : MonoBehaviour
             return;
         }
 
+        if (CurrentState == State.Landed && pondManager != null && pondManager.playerBobber != null)
+        {
+            GameObject fish = pondManager.GetClosestFish(pondManager.playerBobber);
+            if (fish != null)
+            {
+                Debug.Log("Fish hooked! Entering tension state.");
+                ToggleTension(); // enter tension state
+                return;
+            }
+        }
+
+        Debug.Log("No fish nearby. Normal yank.");
         StartYank();
     }
 

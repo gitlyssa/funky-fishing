@@ -78,7 +78,7 @@ MonoBehaviour:
   directionChangeInterval: 2.5
   constrainToXZ: 1
   wallDeflectBlend: 0.6
-  useAttraction: 0
+  useAttraction: 1
   attractionTarget: {fileID: 0}
   attractionPoint: {x: 0, y: 0, z: 0}
   attractionStrength: 0.6

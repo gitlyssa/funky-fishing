@@ -1,8 +1,10 @@
 using UnityEngine;
 
+
 public class BobberButtonInput : MonoBehaviour
 {
     public BobberArcCaster caster;
+    public PondManager pondManager;
 
     public KeyCode castKey = KeyCode.C;
     public KeyCode yankKey = KeyCode.Y;
@@ -16,4 +18,25 @@ public class BobberButtonInput : MonoBehaviour
         if (Input.GetKeyDown(yankKey)) caster.Yank();
         if (Input.GetKeyDown(tensionKey)) caster.ToggleTension();
     }
+    // private void HandleYank()
+    // {
+    //     if (!pondManager || !caster) return;
+
+    //     GameObject fish = pondManager.GetClosestFish(pondManager.playerBobber);
+
+    //     if (fish != null)
+    //     {
+    //         Debug.Log("Fish hooked! Entering tension state.");
+
+    //         caster.ToggleTension(); // enter tension state
+            
+    //         // START BEATMAP
+    //     }
+    //     else
+    //     {
+    //         Debug.Log("No fish nearby. Normal yank.");
+    //         caster.Yank();
+    //     }
+    // }
+
 }
