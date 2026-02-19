@@ -18,6 +18,9 @@ public class PondManager : MonoBehaviour
     private bool fishCaughtTextActive = false;
 
     public float catchRadius = 1.5f;
+    [Header("Input")]
+    public bool enableKeyboardCatchAttempt = true;
+    public KeyCode catchAttemptKey = KeyCode.Space;
 
     public GameObject playerBobber;
     public GameManager gameManager;
@@ -71,7 +74,7 @@ public class PondManager : MonoBehaviour
             }
         }
 
-        if (Input.GetKeyDown(KeyCode.Space))
+        if (enableKeyboardCatchAttempt && Input.GetKeyDown(catchAttemptKey))
         {
             Debug.Log("Attempting to catch fish...");
             if (fishCaughtTextActive)
@@ -102,7 +105,7 @@ public class PondManager : MonoBehaviour
         fishList.RemoveAt(fishIndex);
     }
 
-GameObject closestFish(GameObject bobber)
+public GameObject GetClosestFish(GameObject bobber)
 {
     GameObject closestFish = null;
     float closestDistance = Mathf.Infinity;
@@ -135,7 +138,7 @@ GameObject closestFish(GameObject bobber)
 
     void CatchFish(GameObject bobber)
     {
-        GameObject fish = closestFish(bobber);
+        GameObject fish = GetClosestFish(bobber);
         if (fish != null)
         {   
             // // add force throwing fish upwards
@@ -149,12 +152,14 @@ GameObject closestFish(GameObject bobber)
 
 
             fishList.Remove(fish);
-            Destroy(fish);
-
+            // Destroy(fish);
+            
             FishCaughtText.gameObject.SetActive(true);
             fishCaughtTextActive = true;
 
             Debug.Log("Fish caught!");
+            
+            SceneLoading.Instance.StartRhythmEncounter(fish);
 
             // playerBobber.GetComponent<BobberScript>().Reset();
             // gameManager.HookFish();

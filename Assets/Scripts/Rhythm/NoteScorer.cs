@@ -66,6 +66,7 @@ public class NoteScorer : MonoBehaviour
                 if (absDiff <= missWindow)
                 {
                     EvaluateHit(i, absDiff);
+                    inputProcessor.ConsumeFlick();
                     return; // found hit, exit
                 }
             }

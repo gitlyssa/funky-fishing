@@ -4,6 +4,8 @@ using UnityEngine.Serialization;
 
 public class BobberArcCaster : MonoBehaviour
 {
+    public PondManager pondManager;
+
     [Header("References")]
     public Transform rodTip;
     public Transform bobber;
@@ -25,6 +27,9 @@ public class BobberArcCaster : MonoBehaviour
     [Header("Yank / Retract")]
     public float yankDuration = 0.25f;
     public AnimationCurve yankEase = AnimationCurve.EaseInOut(0, 0, 1, 1);
+
+    [Header("Tension Entry (Input)")]
+    public bool allowManualTensionEntry = false;
 
     [Header("Tension Rod Feedback")]
     [FormerlySerializedAs("tensionRodFeedbackEnabled")]
@@ -96,6 +101,10 @@ public class BobberArcCaster : MonoBehaviour
     private bool _upHeldLastFrame;
     private bool _leftHeldLastFrame;
     private bool _rightHeldLastFrame;
+    private bool _hasStableRodBasePose;
+    private Vector3 _stableRodBasePos;
+    private Quaternion _stableRodBaseRot;
+    private Vector3 _stableSwingPivotLocalOffsetFromRoot;
 
     void Start()
     {
@@ -111,6 +120,11 @@ public class BobberArcCaster : MonoBehaviour
 
         if (tensionCamera == null)
             tensionCamera = Camera.main;
+
+        if (pondManager == null)
+            pondManager = FindObjectOfType<PondManager>();
+
+        CacheStableRodBasePose();
     }
 
     // Call this from your JoyCon gesture event
@@ -143,6 +157,18 @@ public class BobberArcCaster : MonoBehaviour
             return;
         }
 
+        if (CurrentState == State.Landed && pondManager != null && pondManager.playerBobber != null)
+        {
+            GameObject fish = pondManager.GetClosestFish(pondManager.playerBobber);
+            if (fish != null)
+            {
+                Debug.Log("Fish hooked! Entering tension state.");
+                ToggleTension(); // enter tension state
+                return;
+            }
+        }
+
+        Debug.Log("No fish nearby. Normal yank.");
         StartYank();
     }
 
@@ -159,6 +185,24 @@ public class BobberArcCaster : MonoBehaviour
         {
             CurrentState = State.Tension;
         }
+    }
+
+    public void RequestTensionToggleFromInput()
+    {
+        // Allow input to always exit tension, but gate manual entry.
+        if (CurrentState == State.Tension)
+        {
+            ToggleTension();
+            return;
+        }
+
+        if (CurrentState == State.Landed && !allowManualTensionEntry)
+        {
+            Debug.Log("Manual tension entry blocked: hook a fish.");
+            return;
+        }
+
+        ToggleTension();
     }
 
     // Optional external driver (e.g., Joy-Con motion) for W/A/D directional swing.
@@ -310,6 +354,9 @@ public class BobberArcCaster : MonoBehaviour
 
         bool inTension = CurrentState == State.Tension;
 
+        if (!inTension && !_wasInTension && !_isRestoringFromTension)
+            CacheStableRodBasePose();
+
         if (inTension && !_wasInTension)
             BeginTensionFeedback();
 
@@ -333,16 +380,28 @@ public class BobberArcCaster : MonoBehaviour
         if (tensionCamera == null)
             tensionCamera = Camera.main;
 
-        if (rodRoot != null)
+        if (!_hasStableRodBasePose)
+            CacheStableRodBasePose();
+
+        if (_hasStableRodBasePose)
+        {
+            _rodBasePos = _stableRodBasePos;
+            _rodBaseRot = _stableRodBaseRot;
+            _swingPivotLocalOffsetFromRoot = _stableSwingPivotLocalOffsetFromRoot;
+        }
+        else if (rodRoot != null)
         {
             _rodBasePos = rodRoot.position;
             _rodBaseRot = rodRoot.rotation;
-        }
-
-        if (rodSwingPivot != null && rodRoot != null)
-        {
-            _swingPivotLocalOffsetFromRoot =
-                Quaternion.Inverse(rodRoot.rotation) * (rodSwingPivot.position - rodRoot.position);
+            if (rodSwingPivot != null)
+            {
+                _swingPivotLocalOffsetFromRoot =
+                    Quaternion.Inverse(rodRoot.rotation) * (rodSwingPivot.position - rodRoot.position);
+            }
+            else
+            {
+                _swingPivotLocalOffsetFromRoot = Vector3.zero;
+            }
         }
         else
         {
@@ -540,7 +599,31 @@ public class BobberArcCaster : MonoBehaviour
             _lastSwingPoseDirection = SwingDirection.None;
             _swingStrength = 0f;
             _isRestoringFromTension = false;
+            CacheStableRodBasePose();
         }
+    }
+
+    private void CacheStableRodBasePose()
+    {
+        if (rodRoot == null && rodTip != null)
+            rodRoot = rodTip.parent;
+        if (rodRoot == null)
+            return;
+
+        _stableRodBasePos = rodRoot.position;
+        _stableRodBaseRot = rodRoot.rotation;
+
+        if (rodSwingPivot != null)
+        {
+            _stableSwingPivotLocalOffsetFromRoot =
+                Quaternion.Inverse(_stableRodBaseRot) * (rodSwingPivot.position - _stableRodBasePos);
+        }
+        else
+        {
+            _stableSwingPivotLocalOffsetFromRoot = Vector3.zero;
+        }
+
+        _hasStableRodBasePose = true;
     }
 
     private void UpdateDirectionalSwingInput()

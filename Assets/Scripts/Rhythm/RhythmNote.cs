@@ -58,7 +58,7 @@ public class RhythmNote : MonoBehaviour
         //calculate current Z position based on head progress
         float curZ = spawnZ - (tHead * spawnZ);
         
-        transform.position = new Vector3(0, 0, curZ);
+        transform.localPosition = new Vector3(0, 0, curZ);
     }
 
     void GenerateRibbonMesh()

@@ -38,7 +38,6 @@ public class XboxFishingInput : MonoBehaviour
     [SerializeField, Range(0.05f, 0.95f)] private float targetingStickDeadzone = 0.2f;
 
     [Header("Tension")]
-    [SerializeField] private bool enableTensionToggle = true;
     [SerializeField] private PadButton tensionToggleButton = PadButton.B; // B on Xbox
 
     [Header("Tension Swing")]
@@ -83,8 +82,8 @@ public class XboxFishingInput : MonoBehaviour
 
         HandleCastYank(pad);
 
-        if (enableTensionToggle && WasPressedThisFrame(pad, tensionToggleButton))
-            caster.ToggleTension();
+        if (WasPressedThisFrame(pad, tensionToggleButton))
+            caster.RequestTensionToggleFromInput();
 
         bool canSendSwing =
             !onlySendSwingInTension ||

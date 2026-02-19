@@ -959,7 +959,6 @@ MonoBehaviour:
   triggerPressThreshold: 0.5
   useRightStickForTargeting: 1
   targetingStickDeadzone: 0.2
-  enableTensionToggle: 1
   tensionToggleButton: 1
   onlySendSwingInTension: 1
   useDpadForSwing: 1
@@ -4899,6 +4898,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 50789c80e43c79b46aca4fdb91230497, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BobberArcCaster
+  pondManager: {fileID: 1761183080}
   rodTip: {fileID: 812878740}
   bobber: {fileID: 1762950671}
   bobberHangPoint: {fileID: 2061332169}
@@ -4955,6 +4955,7 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+  allowManualTensionEntry: 1
   tensionBobbingEnabled: 0
   rodRoot: {fileID: 0}
   tensionCamera: {fileID: 0}
@@ -6368,6 +6369,56 @@ Terrain:
   m_EnableHeightmapRayTracing: 1
   m_EnableTreesAndDetailsRayTracing: 0
   m_TreeMotionVectorModeOverride: 3
+--- !u!1 &1703477165
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1703477167}
+  - component: {fileID: 1703477166}
+  m_Layer: 0
+  m_Name: SceneLoading
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1703477166
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1703477165}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 63147cf258a311d4cb0d938ec0d0e698, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SceneLoading
+  rhythmSceneName: AlphaRhythm
+  fishingSceneName: Pond_Level_1
+  preloadRhythmOverlayOnStart: 1
+  keepRhythmOverlayLoaded: 1
+  driveOverlayFromBobberTension: 1
+  tensionSource: {fileID: 1405675315}
+--- !u!4 &1703477167
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1703477165}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 9.76591, y: 9.73, z: -5.82539}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1756262538
 GameObject:
   m_ObjectHideFlags: 0
@@ -6613,7 +6664,9 @@ MonoBehaviour:
   radius: 6
   waterlevel: 9
   FishCaughtText: {fileID: 0}
-  catchRadius: 1.5
+  catchRadius: 1
+  enableKeyboardCatchAttempt: 0
+  catchAttemptKey: 32
   playerBobber: {fileID: 1762950672}
   gameManager: {fileID: 0}
 --- !u!4 &1762015740 stripped
@@ -8499,3 +8552,4 @@ SceneRoots:
   - {fileID: 1118731304}
   - {fileID: 1209918014}
   - {fileID: 1521670362}
+  - {fileID: 1703477167}

@@ -1,7 +1,7 @@
 using UnityEngine;
 
 [System.Flags]
-public enum FlickDirection
+public enum FlickDirectionOld
 {
     None = 0,
     Right     = 1 << 0,
