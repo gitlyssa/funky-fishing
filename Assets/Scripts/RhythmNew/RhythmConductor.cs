@@ -30,6 +30,9 @@ public class RhythmConductor : MonoBehaviour
     [Header("Note Styles")]
     public Material flickMaterial;
     public Material slideMaterial;
+    
+    [Header("Debug")]
+    public bool enableDebugInput = true;
 
     
 
@@ -62,51 +65,54 @@ public class RhythmConductor : MonoBehaviour
             SpawnReel(_reelQueue[0]);
         }
 
-        // on pressing space spawn a random direction note 
-        if (Input.GetKeyDown(KeyCode.Space))
+        if (enableDebugInput)
         {
-            int randomDir = Random.Range(0, 4);
-            FlickDirection dir = FlickDirection.Right;
-            if (randomDir == 0)
+            // on pressing space spawn a random direction note 
+            if (Input.GetKeyDown(KeyCode.Space))
             {
-                dir = FlickDirection.Right;
-            }
-            else if (randomDir == 1)
-            {
-                dir = FlickDirection.Up;
-            }
-            else if (randomDir == 2)
-            {
-                dir = FlickDirection.Left;
-            }
-            else if (randomDir == 3)
-            {
-                dir = FlickDirection.Down;
+                int randomDir = Random.Range(0, 4);
+                FlickDirection dir = FlickDirection.Right;
+                if (randomDir == 0)
+                {
+                    dir = FlickDirection.Right;
+                }
+                else if (randomDir == 1)
+                {
+                    dir = FlickDirection.Up;
+                }
+                else if (randomDir == 2)
+                {
+                    dir = FlickDirection.Left;
+                }
+                else if (randomDir == 3)
+                {
+                    dir = FlickDirection.Down;
+                }
+
+                NoteData testData = new NoteData
+                {
+                    hitTime = songTime + noteTravelTime,
+                    type = (Random.value > 0.5f) ? RhythmArcNote.NoteType.Flick : RhythmArcNote.NoteType.Slide,
+                    direction = dir
+
+                };
+                SpawnNote(testData);
             }
 
-            NoteData testData = new NoteData
+            // on pressing r, spawn a reel
+            // start time is when the reel becomes active
+            // lead in is how long before it starts winding up
+            if (Input.GetKeyDown(KeyCode.R) && activeReel == null)
             {
-                hitTime = songTime + noteTravelTime,
-                type = (Random.value > 0.5f) ? RhythmArcNote.NoteType.Flick : RhythmArcNote.NoteType.Slide,
-                direction = dir
-
-            };
-            SpawnNote(testData);
-        }
-
-        // on pressing r, spawn a reel
-        // start time is when the reel becomes active
-        // lead in is how long before it starts winding up
-        if (Input.GetKeyDown(KeyCode.R) && activeReel == null)
-        {
-            ReelData testReel = new ReelData
-            {
-                startTime = songTime + 2.0f,
-                duration = 3.0f,
-                goalDegrees = (Random.value > 0.5f) ? 720f : -720f, // 2 full spins in either direction
-                leadInTime = 1.0f
-            };
-            SpawnReel(testReel);
+                ReelData testReel = new ReelData
+                {
+                    startTime = songTime + 2.0f,
+                    duration = 3.0f,
+                    goalDegrees = (Random.value > 0.5f) ? 720f : -720f, // 2 full spins in either direction
+                    leadInTime = 1.0f
+                };
+                SpawnReel(testReel);
+            }
         }
 
         

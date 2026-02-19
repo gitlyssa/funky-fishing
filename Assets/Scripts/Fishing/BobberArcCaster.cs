@@ -96,6 +96,10 @@ public class BobberArcCaster : MonoBehaviour
     private bool _upHeldLastFrame;
     private bool _leftHeldLastFrame;
     private bool _rightHeldLastFrame;
+    private bool _hasStableRodBasePose;
+    private Vector3 _stableRodBasePos;
+    private Quaternion _stableRodBaseRot;
+    private Vector3 _stableSwingPivotLocalOffsetFromRoot;
 
     void Start()
     {
@@ -111,6 +115,8 @@ public class BobberArcCaster : MonoBehaviour
 
         if (tensionCamera == null)
             tensionCamera = Camera.main;
+
+        CacheStableRodBasePose();
     }
 
     // Call this from your JoyCon gesture event
@@ -310,6 +316,9 @@ public class BobberArcCaster : MonoBehaviour
 
         bool inTension = CurrentState == State.Tension;
 
+        if (!inTension && !_wasInTension && !_isRestoringFromTension)
+            CacheStableRodBasePose();
+
         if (inTension && !_wasInTension)
             BeginTensionFeedback();
 
@@ -333,16 +342,28 @@ public class BobberArcCaster : MonoBehaviour
         if (tensionCamera == null)
             tensionCamera = Camera.main;
 
-        if (rodRoot != null)
+        if (!_hasStableRodBasePose)
+            CacheStableRodBasePose();
+
+        if (_hasStableRodBasePose)
+        {
+            _rodBasePos = _stableRodBasePos;
+            _rodBaseRot = _stableRodBaseRot;
+            _swingPivotLocalOffsetFromRoot = _stableSwingPivotLocalOffsetFromRoot;
+        }
+        else if (rodRoot != null)
         {
             _rodBasePos = rodRoot.position;
             _rodBaseRot = rodRoot.rotation;
-        }
-
-        if (rodSwingPivot != null && rodRoot != null)
-        {
-            _swingPivotLocalOffsetFromRoot =
-                Quaternion.Inverse(rodRoot.rotation) * (rodSwingPivot.position - rodRoot.position);
+            if (rodSwingPivot != null)
+            {
+                _swingPivotLocalOffsetFromRoot =
+                    Quaternion.Inverse(rodRoot.rotation) * (rodSwingPivot.position - rodRoot.position);
+            }
+            else
+            {
+                _swingPivotLocalOffsetFromRoot = Vector3.zero;
+            }
         }
         else
         {
@@ -540,7 +561,31 @@ public class BobberArcCaster : MonoBehaviour
             _lastSwingPoseDirection = SwingDirection.None;
             _swingStrength = 0f;
             _isRestoringFromTension = false;
+            CacheStableRodBasePose();
         }
+    }
+
+    private void CacheStableRodBasePose()
+    {
+        if (rodRoot == null && rodTip != null)
+            rodRoot = rodTip.parent;
+        if (rodRoot == null)
+            return;
+
+        _stableRodBasePos = rodRoot.position;
+        _stableRodBaseRot = rodRoot.rotation;
+
+        if (rodSwingPivot != null)
+        {
+            _stableSwingPivotLocalOffsetFromRoot =
+                Quaternion.Inverse(_stableRodBaseRot) * (rodSwingPivot.position - _stableRodBasePos);
+        }
+        else
+        {
+            _stableSwingPivotLocalOffsetFromRoot = Vector3.zero;
+        }
+
+        _hasStableRodBasePose = true;
     }
 
     private void UpdateDirectionalSwingInput()

@@ -18,6 +18,9 @@ public class PondManager : MonoBehaviour
     private bool fishCaughtTextActive = false;
 
     public float catchRadius = 1.5f;
+    [Header("Input")]
+    public bool enableKeyboardCatchAttempt = true;
+    public KeyCode catchAttemptKey = KeyCode.Space;
 
     public GameObject playerBobber;
     public GameManager gameManager;
@@ -71,7 +74,7 @@ public class PondManager : MonoBehaviour
             }
         }
 
-        if (Input.GetKeyDown(KeyCode.Space))
+        if (enableKeyboardCatchAttempt && Input.GetKeyDown(catchAttemptKey))
         {
             Debug.Log("Attempting to catch fish...");
             if (fishCaughtTextActive)
