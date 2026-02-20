@@ -741,6 +741,57 @@ RectTransform:
   m_AnchoredPosition: {x: 150, y: -100}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &635976672
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 635976673}
+  - component: {fileID: 635976674}
+  m_Layer: 0
+  m_Name: MusicPlayer
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &635976673
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 635976672}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 13.72992, y: 0, z: -18.29739}
+  m_LocalScale: {x: 2, y: 2, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1761328189}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &635976674
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 635976672}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8597094cbc86b134891f6144932ee8a9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RhythmMusicPlayer
+  musicEvent:
+    Guid:
+      Data1: -1233211620
+      Data2: 1195024357
+      Data3: -255170375
+      Data4: -1468407509
+    Path: event:/Music/TestMusic
 --- !u!1 &654662435
 GameObject:
   m_ObjectHideFlags: 0
@@ -12963,6 +13014,7 @@ MonoBehaviour:
   noteTravelTime: 2
   _chart: []
   _reelQueue: []
+  beatmapFile: {fileID: 4900000, guid: 83510d5fa9bdaad4d86018360113c2d8, type: 3}
 --- !u!114 &1610214993
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -13105,6 +13157,7 @@ Transform:
   m_Children:
   - {fileID: 1173819259}
   - {fileID: 1610214995}
+  - {fileID: 635976673}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1949879678
