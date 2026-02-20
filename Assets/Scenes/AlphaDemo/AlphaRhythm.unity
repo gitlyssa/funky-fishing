@@ -12959,7 +12959,7 @@ MonoBehaviour:
   notePrefab: {fileID: 4897388239609443938, guid: 7236b4e7e53abbc45996582de97acaa3, type: 3}
   flickMaterial: {fileID: 0}
   slideMaterial: {fileID: 0}
-  enableDebugInput: 0
+  enableDebugInput: 1
   noteTravelTime: 2
   _chart: []
   _reelQueue: []
