@@ -1,5 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
+using System.IO;
+using System;
 
 public class RhythmConductor : MonoBehaviour
 {   
@@ -13,6 +15,8 @@ public class RhythmConductor : MonoBehaviour
     If you scroll down, there are spawn note and spawn reel functions that can be called from elsewhere
     */
     public static RhythmConductor Instance; 
+    public static RhythmMusicPlayer rhythmMusicPlayer;
+
     public List<RhythmArcNote> activeNotes = new List<RhythmArcNote>();
 
     [Header("Current Reel State")]
@@ -34,15 +38,25 @@ public class RhythmConductor : MonoBehaviour
     [Header("Debug")]
     public bool enableDebugInput = true;
 
-    
-
-    public float songTime => Time.time; // To be replaced by AudioSource.timeSamples
-    public float noteTravelTime = 2.0f; //global speed setting for notes
+    public float songTime;
+    public float noteSpeed = 2.0f; //global speed setting for notes
+    public float noteTravelTime;
 
     public List<NoteData> _chart = new List<NoteData>();
-
     public List<ReelData> _reelQueue = new List<ReelData>();
+    public TextAsset beatmapFile; // Reference to the CSV file
 
+
+    void Start()
+    {
+        noteTravelTime = (hitRingRadius - spawnRadius) / noteSpeed;
+
+        // Load the beatmap and parse it into NoteData objects
+        LoadBeatmapFromCSV();
+        _chart.Sort((a, b) => a.hitTime.CompareTo(b.hitTime));
+    }
+
+    
     void Awake()
     {
         if (Instance == null)
@@ -51,10 +65,12 @@ public class RhythmConductor : MonoBehaviour
             Destroy(gameObject);
     }
 
+
     void Update()
     {
-        // Spawning Logic
-        if (_chart.Count > 0 && songTime >= _chart[0].hitTime - noteTravelTime)
+        songTime = GetFmodSongTimeSeconds();
+
+        while (_chart.Count > 0 && songTime >= _chart[0].hitTime - noteTravelTime)
         {
             SpawnNote(_chart[0]);
             _chart.RemoveAt(0);
@@ -65,59 +81,23 @@ public class RhythmConductor : MonoBehaviour
             SpawnReel(_reelQueue[0]);
         }
 
-        if (enableDebugInput)
-        {
-            // on pressing space spawn a random direction note 
-            if (Input.GetKeyDown(KeyCode.Space))
-            {
-                int randomDir = Random.Range(0, 4);
-                FlickDirection dir = FlickDirection.Right;
-                if (randomDir == 0)
-                {
-                    dir = FlickDirection.Right;
-                }
-                else if (randomDir == 1)
-                {
-                    dir = FlickDirection.Up;
-                }
-                else if (randomDir == 2)
-                {
-                    dir = FlickDirection.Left;
-                }
-                else if (randomDir == 3)
-                {
-                    dir = FlickDirection.Down;
-                }
-
-                NoteData testData = new NoteData
-                {
-                    hitTime = songTime + noteTravelTime,
-                    type = (Random.value > 0.5f) ? RhythmArcNote.NoteType.Flick : RhythmArcNote.NoteType.Slide,
-                    direction = dir
-
-                };
-                SpawnNote(testData);
-            }
-
             // on pressing r, spawn a reel
             // start time is when the reel becomes active
             // lead in is how long before it starts winding up
-            if (Input.GetKeyDown(KeyCode.R) && activeReel == null)
-            {
-                ReelData testReel = new ReelData
-                {
-                    startTime = songTime + 2.0f,
-                    duration = 3.0f,
-                    goalDegrees = (Random.value > 0.5f) ? 720f : -720f, // 2 full spins in either direction
-                    leadInTime = 1.0f
-                };
-                SpawnReel(testReel);
-            }
-        }
-
-        
-        
+            // if (Input.GetKeyDown(KeyCode.R) && activeReel == null)
+            // {
+            //     ReelData testReel = new ReelData
+            //     {
+            //         startTime = songTime + 2.0f,
+            //         duration = 3.0f,
+            //         goalDegrees = (Random.value > 0.5f) ? 720f : -720f, // 2 full spins in either direction
+            //         leadInTime = 1.0f
+            //     };
+            //     SpawnReel(testReel);
+            // }
+        // }
     }
+
 
     public void SpawnReel(ReelData data)
     {
@@ -125,6 +105,7 @@ public class RhythmConductor : MonoBehaviour
         activeReel = go.AddComponent<RhythmReelNote>();
         activeReel.Initialize(data);
     }
+
 
     public void SpawnNote(NoteData data)
     {
@@ -134,5 +115,61 @@ public class RhythmConductor : MonoBehaviour
         note.Initialize(data, noteTravelTime, spawnRadius, hitRingRadius, noteScaleCurve);
         
         activeNotes.Add(note);
+    }
+
+
+    private void LoadBeatmapFromCSV()
+    {
+        if (beatmapFile == null)
+        {
+            Debug.LogError("Beatmap file not assigned!");
+            return;
+        }
+
+        string[] lines = beatmapFile.text.Split('\n'); // Split the CSV into lines
+        for (int i = 1; i < lines.Length; i++) // Skip the header row
+        {
+            string line = lines[i].Trim();
+            if (string.IsNullOrEmpty(line)) continue; // Skip empty lines
+
+            string[] values = line.Split(',');
+            if (values.Length < 3) continue; // Ensure the row has enough columns
+
+            // Parse the values
+            if (float.TryParse(values[0], out float hitTime))
+            {
+                RhythmArcNote.NoteType type = RhythmArcNote.NoteType.Flick; // Default value
+                FlickDirection direction = FlickDirection.None; // Default value
+
+                Enum.TryParse(values[1], true, out type);
+                Enum.TryParse(values[2], true, out direction);
+
+                // Create a new NoteData object and add it to the chart
+                NoteData note = new NoteData
+                {
+                    hitTime = hitTime,
+                    type = type,
+                    direction = direction
+                };
+                _chart.Add(note);
+            }
+            else
+            {
+                Debug.LogWarning($"Invalid data in beatmap line: {line}");
+            }
+        }
+
+        Debug.Log($"Loaded {_chart.Count} notes from beatmap.");
+    }
+
+
+    private float GetFmodSongTimeSeconds()
+    {
+        if (rhythmMusicPlayer == null) return Time.time; // fallback
+
+        int ms;
+        var result = rhythmMusicPlayer.musicInstance.getTimelinePosition(out ms);
+        // If you want: handle result != FMOD.RESULT.OK
+        return ms / 1000f;
     }
 }
