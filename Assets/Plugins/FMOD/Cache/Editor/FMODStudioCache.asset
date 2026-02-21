@@ -42,7 +42,7 @@ MonoBehaviour:
   Path: Assets/FMOD/Desktop/Master.strings.bank
   Name: Master.strings
   StudioPath: bank:/Master.strings
-  lastModified: 639071466778387124
+  lastModified: 639070702505626596
   FileSizes:
   - Name: 
     Value: 934
@@ -62,7 +62,7 @@ MonoBehaviour:
   Path: Assets/FMOD/Desktop/Master.bank
   Name: Master
   StudioPath: bank:/Master
-  lastModified: 639071466778297215
+  lastModified: 639070702505566568
   FileSizes: []
   Exists: 1
 --- !u!114 &-2567683884387202836
@@ -111,14 +111,14 @@ MonoBehaviour:
   - {fileID: 6326786675623408233}
   - {fileID: 5354982183835215609}
   - {fileID: -2567683884387202836}
-  - {fileID: -5875265738577587281}
+  - {fileID: 761730912841408774}
   EditorParameters: []
   MasterBanks:
   - {fileID: -2648038191006552393}
   StringsBanks:
   - {fileID: -3217896682293650524}
   cacheVersion: 131858
-  cacheTime: 639071466778387124
+  cacheTime: 639070702505626596
   SerializableEventsDict:
   - key: event:/Music/TestMusic
     index: 0
@@ -128,6 +128,33 @@ MonoBehaviour:
     index: 2
   - key: event:/Sfx/success
     index: 3
+--- !u!114 &761730912841408774
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Sfx/success
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Sfx/success
+  Guid:
+    Data1: 2007313463
+    Data2: 1189434961
+    Data3: 1175329411
+    Data4: 1377301339
+  Banks:
+  - {fileID: -2648038191006552393}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 0
 --- !u!114 &5354982183835215609
 MonoBehaviour:
   m_ObjectHideFlags: 0
