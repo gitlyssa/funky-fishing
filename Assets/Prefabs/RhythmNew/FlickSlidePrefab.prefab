@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 1862889042809602855}
   - component: {fileID: 7532979620623959317}
   - component: {fileID: 3268027811624709382}
-  m_Layer: 8
+  m_Layer: 6
   m_Name: FlickSlidePrefab
   m_TagString: Untagged
   m_Icon: {fileID: 0}
