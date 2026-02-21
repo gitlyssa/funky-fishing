@@ -9,4 +9,10 @@ public class MainMenuManagerScript : MonoBehaviour
         Debug.Log("Start Game");
         SceneManager.LoadScene("PondSelect");
     }
+
+    public void ControllerMenu()
+    {
+        Debug.Log("Controller Menu");
+        SceneManager.LoadScene("ControllerMenu");
+    }
 }

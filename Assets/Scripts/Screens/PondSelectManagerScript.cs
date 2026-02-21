@@ -7,6 +7,6 @@ public class PondSelectManagerScript : MonoBehaviour
     public void FunkPondSelected()
     {
         Debug.Log("Funk Pond Selected");
-        SceneManager.LoadScene("FishAndRod");
+        SceneManager.LoadScene("Pond_Level_1");
     }
 }
