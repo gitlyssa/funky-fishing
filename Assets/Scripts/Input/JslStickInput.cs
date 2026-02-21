@@ -30,6 +30,7 @@ public class JslStickInput : MonoBehaviour
     [Header("Device")]
     public int deviceIndex = 0;
     public bool useAnyConnectedDevice = true;
+    [Min(0.1f)] public float reconnectInterval = 2f;
 
     [Header("Stick")]
     public bool autoDetectStickSide = true;
@@ -40,6 +41,7 @@ public class JslStickInput : MonoBehaviour
     [Header("Debug")]
     public bool showDebugOverlay = true;
     public KeyCode toggleDebugKey = KeyCode.F3;
+    [Min(0.1f)] public float missingDeviceWarningInterval = 5f;
 
     public Vector2 Stick { get; private set; }  // -1..1 (approx)
     public bool Connected { get; private set; }
@@ -47,10 +49,13 @@ public class JslStickInput : MonoBehaviour
 
     private int[] _handles = Array.Empty<int>();
     private int _id = -1;
+    private float _nextReconnectTime;
+    private float _nextMissingDeviceWarningTime;
 
     void Start()
     {
         Connect();
+        _nextReconnectTime = Time.unscaledTime + Mathf.Max(0.1f, reconnectInterval);
     }
 
     void Update()
@@ -60,8 +65,11 @@ public class JslStickInput : MonoBehaviour
             showDebugOverlay = !showDebugOverlay;
         }
 
-        if (_handles.Length == 0)
+        if (_handles.Length == 0 && Time.unscaledTime >= _nextReconnectTime)
+        {
             Connect();
+            _nextReconnectTime = Time.unscaledTime + Mathf.Max(0.1f, reconnectInterval);
+        }
 
         if (_handles.Length == 0)
         {
@@ -110,6 +118,11 @@ public class JslStickInput : MonoBehaviour
             Connected = false;
             Stick = Vector2.zero;
             ActiveDeviceId = -1;
+            if (Time.unscaledTime >= _nextReconnectTime)
+            {
+                Connect();
+                _nextReconnectTime = Time.unscaledTime + Mathf.Max(0.1f, reconnectInterval);
+            }
             return;
         }
 
@@ -137,7 +150,11 @@ public class JslStickInput : MonoBehaviour
 
         if (_handles.Length == 0)
         {
-            Debug.LogWarning("JslStickInput: No JoyShockLibrary devices found.");
+            if (Time.unscaledTime >= _nextMissingDeviceWarningTime)
+            {
+                Debug.LogWarning("JslStickInput: No JoyShockLibrary devices found.");
+                _nextMissingDeviceWarningTime = Time.unscaledTime + Mathf.Max(0.1f, missingDeviceWarningInterval);
+            }
             Connected = false;
             ActiveDeviceId = -1;
             _id = -1;
