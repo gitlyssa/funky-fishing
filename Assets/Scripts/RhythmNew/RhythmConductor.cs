@@ -168,11 +168,17 @@ public class RhythmConductor : MonoBehaviour
 
     private float GetFmodSongTimeSeconds()
     {
-        if (rhythmMusicPlayer == null) return Time.time; // fallback
+        if (rhythmMusicPlayer == null)
+            rhythmMusicPlayer = FindObjectOfType<RhythmMusicPlayer>();
+
+        if (rhythmMusicPlayer == null || !rhythmMusicPlayer.musicInstance.isValid())
+            return 0f;
 
         int ms;
         var result = rhythmMusicPlayer.musicInstance.getTimelinePosition(out ms);
-        // If you want: handle result != FMOD.RESULT.OK
+        if (result != FMOD.RESULT.OK)
+            return 0f;
+
         return ms / 1000f;
     }
 }
