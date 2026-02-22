@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.Serialization;
+using FMOD.Studio;
 
 public class BobberArcCaster : MonoBehaviour
 {
@@ -151,6 +152,12 @@ public class BobberArcCaster : MonoBehaviour
         if (CurrentState == State.Idle || _isPreparingYank) return;
 
         // If rod is displaced by tension feedback, let it settle before retracting bobber.
+        if (CurrentState == State.Tension && IsBeatmapPlaying())
+        {
+            Debug.Log("Cannot yank out of tension while beatmap is playing.");
+            return;
+        }
+
         if (CurrentState == State.Tension || _isRestoringFromTension)
         {
             StartYankAfterRodRestore();
@@ -192,6 +199,12 @@ public class BobberArcCaster : MonoBehaviour
         // Allow input to always exit tension, but gate manual entry.
         if (CurrentState == State.Tension)
         {
+            if (IsBeatmapPlaying())
+            {
+                Debug.Log("Cannot exit tension while beatmap is playing.");
+                return;
+            }
+
             ToggleTension();
             return;
         }
@@ -821,5 +834,19 @@ public class BobberArcCaster : MonoBehaviour
         _upHeldLastFrame = false;
         _leftHeldLastFrame = false;
         _rightHeldLastFrame = false;
+    }
+
+    private bool IsBeatmapPlaying()
+    {
+        RhythmMusicPlayer musicPlayer = RhythmConductor.rhythmMusicPlayer;
+        if (musicPlayer == null)
+        {
+            return false;
+        }
+
+        musicPlayer.musicInstance.getPlaybackState(out PLAYBACK_STATE playbackState);
+        return playbackState == PLAYBACK_STATE.PLAYING ||
+               playbackState == PLAYBACK_STATE.STARTING ||
+               playbackState == PLAYBACK_STATE.SUSTAINING;
     }
 }

@@ -30,13 +30,9 @@ public class RhythmMusicPlayer : MonoBehaviour
 
     void Update()
     {
-        if (!musicInstance.isValid())
-            return;
-
-        ResolveBobberArcCaster();
-        bool inTension = bobberArcCaster != null && bobberArcCaster.CurrentState == BobberArcCaster.State.Tension;
-
-        if (inTension && !wasInTension)
+        // Check if the music has stopped
+        musicInstance.getPlaybackState(out PLAYBACK_STATE playbackState);
+        if (playbackState == PLAYBACK_STATE.STOPPED && !hasProcessedMusicEnd)
         {
             hasProcessedMusicEnd = false;
             musicInstance.setTimelinePosition(0);
@@ -65,8 +61,14 @@ public class RhythmMusicPlayer : MonoBehaviour
 
     private void ResolveBobberArcCaster()
     {
-        if (bobberArcCaster == null)
-            bobberArcCaster = FindObjectOfType<BobberArcCaster>();
+        hasProcessedMusicEnd = false; // Reset the flag
+        if (RhythmConductor.Instance != null)
+        {
+            RhythmConductor.Instance.ResetBeatmapForReplay();
+        }
+        musicInstance.setTimelinePosition(0);
+        musicInstance.start(); // Restart the music
+        Debug.Log("Music restarted.");
     }
 
     void OnDestroy()
