@@ -10,6 +10,8 @@ public class RhythmMusicPlayer : MonoBehaviour
     private BobberArcCaster bobberArcCaster;
     private bool hasProcessedMusicEnd = false;
     private bool wasInTension = false;
+    public bool inTension = false;
+
 
     void Awake()
     {
@@ -30,23 +32,29 @@ public class RhythmMusicPlayer : MonoBehaviour
 
     void Update()
     {
-        // Check if the music has stopped
-        musicInstance.getPlaybackState(out PLAYBACK_STATE playbackState);
+        // 1. Declare the variable ONCE at the start of the loop
+        PLAYBACK_STATE playbackState;
+        musicInstance.getPlaybackState(out playbackState);
+
+        // 2. Logic for Auto-Looping/Restarting
         if (playbackState == PLAYBACK_STATE.STOPPED && !hasProcessedMusicEnd)
         {
-            hasProcessedMusicEnd = false;
+            hasProcessedMusicEnd = false; // Note: This was set to false in your original code; 
+                                        // usually looping requires a reset.
             musicInstance.setTimelinePosition(0);
             musicInstance.start();
         }
+        // Logic for stopping when tension breaks
         else if (!inTension && wasInTension)
         {
             hasProcessedMusicEnd = false;
             musicInstance.stop(FMOD.Studio.STOP_MODE.IMMEDIATE);
         }
 
+        // 3. Logic for ending the "Tension" state (Removed the second declaration)
         if (inTension && !hasProcessedMusicEnd)
         {
-            musicInstance.getPlaybackState(out PLAYBACK_STATE playbackState);
+            // We already have playbackState from the top of Update!
             if (playbackState == PLAYBACK_STATE.STOPPED)
             {
                 if (bobberArcCaster != null)

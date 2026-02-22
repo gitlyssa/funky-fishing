@@ -1,4 +1,6 @@
 using UnityEngine;
+using System.Linq;
+
 
 [DefaultExecutionOrder(-50)] // Ensure this runs before Visualizers
 public class RhythmInputInitializer : MonoBehaviour
@@ -11,23 +13,21 @@ public class RhythmInputInitializer : MonoBehaviour
 
     void Awake()
     {
-        IRhythmInputT provider = GetComponent<IRhythmInputT>();
+        if (processor == null) return;
 
-        if (provider == null)
-        {
-            provider = Object.FindAnyObjectByType<MonoBehaviour>() as IRhythmInputT;
-        }
+        var providers = Object.FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None)
+                              .OfType<IRhythmInputT>();
 
-        // 3. Connect them
-        if (provider != null && processor != null)
+        int count = 0;
+        foreach (var provider in providers)
         {
             processor.Initialize(provider);
-            Debug.Log($"<color=cyan>[Initializer] Success! Linked {provider.GetType().Name} to {processor.name}</color>");
+            count++;
         }
+
+        if (count > 0)
+            Debug.Log($"<color=cyan>[Initializer] Connected {count} input sources!</color>");
         else
-        {
-            if (provider == null) Debug.LogError("[Initializer] Failed: No IRhythmInputT found in scene!");
-            if (processor == null) Debug.LogError("[Initializer] Failed: Processor reference is missing!");
-        }
+            Debug.LogError("[Initializer] No IRhythmInputT sources found!");
     }
 }
