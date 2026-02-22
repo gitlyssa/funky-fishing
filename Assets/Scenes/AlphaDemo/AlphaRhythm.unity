@@ -13011,6 +13011,8 @@ MonoBehaviour:
   flickMaterial: {fileID: 0}
   slideMaterial: {fileID: 0}
   enableDebugInput: 0
+  songTime: 0
+  noteSpeed: 2
   noteTravelTime: 2
   _chart: []
   _reelQueue: []

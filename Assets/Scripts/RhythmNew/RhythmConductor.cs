@@ -44,16 +44,25 @@ public class RhythmConductor : MonoBehaviour
 
     public List<NoteData> _chart = new List<NoteData>();
     public List<ReelData> _reelQueue = new List<ReelData>();
+    private readonly List<NoteData> _chartTemplate = new List<NoteData>();
+    private readonly List<ReelData> _reelTemplate = new List<ReelData>();
     public TextAsset beatmapFile; // Reference to the CSV file
 
 
     void Start()
     {
+        rhythmMusicPlayer = FindObjectOfType<RhythmMusicPlayer>();
+        if (rhythmMusicPlayer == null)
+        {
+            Debug.LogError("RhythmMusicPlayer not found in the active scene.");
+        }
+
         noteTravelTime = (hitRingRadius - spawnRadius) / noteSpeed;
 
         // Load the beatmap and parse it into NoteData objects
         LoadBeatmapFromCSV();
         _chart.Sort((a, b) => a.hitTime.CompareTo(b.hitTime));
+        CacheBeatmapTemplates();
     }
 
     
@@ -68,6 +77,11 @@ public class RhythmConductor : MonoBehaviour
 
     void Update()
     {
+        if (rhythmMusicPlayer == null)
+        {
+            return;
+        }
+
         songTime = GetFmodSongTimeSeconds();
 
         while (_chart.Count > 0 && songTime >= _chart[0].hitTime - noteTravelTime)
@@ -117,6 +131,36 @@ public class RhythmConductor : MonoBehaviour
         activeNotes.Add(note);
     }
 
+    public void ResetBeatmapForReplay()
+    {
+        ClearActiveRhythmObjects();
+        _chart.Clear();
+        _reelQueue.Clear();
+
+        foreach (NoteData note in _chartTemplate)
+        {
+            _chart.Add(new NoteData
+            {
+                hitTime = note.hitTime,
+                type = note.type,
+                direction = note.direction
+            });
+        }
+
+        foreach (ReelData reel in _reelTemplate)
+        {
+            _reelQueue.Add(new ReelData
+            {
+                startTime = reel.startTime,
+                duration = reel.duration,
+                goalDegrees = reel.goalDegrees,
+                leadInTime = reel.leadInTime
+            });
+        }
+
+        songTime = 0f;
+    }
+
 
     private void LoadBeatmapFromCSV()
     {
@@ -162,14 +206,57 @@ public class RhythmConductor : MonoBehaviour
         Debug.Log($"Loaded {_chart.Count} notes from beatmap.");
     }
 
+    private void CacheBeatmapTemplates()
+    {
+        _chartTemplate.Clear();
+        _reelTemplate.Clear();
+
+        foreach (NoteData note in _chart)
+        {
+            _chartTemplate.Add(new NoteData
+            {
+                hitTime = note.hitTime,
+                type = note.type,
+                direction = note.direction
+            });
+        }
+
+        foreach (ReelData reel in _reelQueue)
+        {
+            _reelTemplate.Add(new ReelData
+            {
+                startTime = reel.startTime,
+                duration = reel.duration,
+                goalDegrees = reel.goalDegrees,
+                leadInTime = reel.leadInTime
+            });
+        }
+    }
+
+    private void ClearActiveRhythmObjects()
+    {
+        for (int i = 0; i < activeNotes.Count; i++)
+        {
+            RhythmArcNote note = activeNotes[i];
+            if (note != null)
+            {
+                Destroy(note.gameObject);
+            }
+        }
+        activeNotes.Clear();
+
+        if (activeReel != null)
+        {
+            Destroy(activeReel.gameObject);
+            activeReel = null;
+        }
+    }
+
 
     private float GetFmodSongTimeSeconds()
     {
-        if (rhythmMusicPlayer == null) return Time.time; // fallback
-
         int ms;
         var result = rhythmMusicPlayer.musicInstance.getTimelinePosition(out ms);
-        // If you want: handle result != FMOD.RESULT.OK
         return ms / 1000f;
     }
 }

@@ -25,9 +25,6 @@ public class RhythmMusicPlayer : MonoBehaviour
 
     void Update()
     {
-        musicInstance.getTimelinePosition(out int position);
-        Debug.Log("Music Time (ms): " + position);
-
         // Check if the music has stopped
         musicInstance.getPlaybackState(out PLAYBACK_STATE playbackState);
         if (playbackState == PLAYBACK_STATE.STOPPED && !hasProcessedMusicEnd)
@@ -50,6 +47,11 @@ public class RhythmMusicPlayer : MonoBehaviour
     private void RestartMusic()
     {
         hasProcessedMusicEnd = false; // Reset the flag
+        if (RhythmConductor.Instance != null)
+        {
+            RhythmConductor.Instance.ResetBeatmapForReplay();
+        }
+        musicInstance.setTimelinePosition(0);
         musicInstance.start(); // Restart the music
         Debug.Log("Music restarted.");
     }
