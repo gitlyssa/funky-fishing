@@ -7,20 +7,25 @@ public class RhythmMusicPlayer : MonoBehaviour
     [SerializeField] private EventReference musicEvent;
 
     public EventInstance musicInstance;
-    private BobberArcCaster bobberArcCaster; // Reference to BobberArcCaster
-    private bool hasProcessedMusicEnd = false; // Flag to track if music end has been processed
+    private BobberArcCaster bobberArcCaster;
+    private bool hasProcessedMusicEnd = false;
+    private bool wasInTension = false;
+
+    void Awake()
+    {
+        RhythmConductor.rhythmMusicPlayer = this;
+    }
 
     void Start()
     {
-        musicInstance = RuntimeManager.CreateInstance(musicEvent);
-        musicInstance.start();
-
-        // Find the BobberArcCaster in the active scene
-        bobberArcCaster = FindObjectOfType<BobberArcCaster>();
-        if (bobberArcCaster == null)
+        if (musicEvent.IsNull)
         {
-            Debug.LogError("BobberArcCaster not found in the active scene!");
+            Debug.LogError("RhythmMusicPlayer has no FMOD music event assigned.");
+            return;
         }
+
+        musicInstance = RuntimeManager.CreateInstance(musicEvent);
+        ResolveBobberArcCaster();
     }
 
     void Update()
@@ -29,22 +34,32 @@ public class RhythmMusicPlayer : MonoBehaviour
         musicInstance.getPlaybackState(out PLAYBACK_STATE playbackState);
         if (playbackState == PLAYBACK_STATE.STOPPED && !hasProcessedMusicEnd)
         {
-            // Toggle the tension state back to Landed
-            if (bobberArcCaster != null && bobberArcCaster.CurrentState == BobberArcCaster.State.Tension)
+            hasProcessedMusicEnd = false;
+            musicInstance.setTimelinePosition(0);
+            musicInstance.start();
+        }
+        else if (!inTension && wasInTension)
+        {
+            hasProcessedMusicEnd = false;
+            musicInstance.stop(FMOD.Studio.STOP_MODE.IMMEDIATE);
+        }
+
+        if (inTension && !hasProcessedMusicEnd)
+        {
+            musicInstance.getPlaybackState(out PLAYBACK_STATE playbackState);
+            if (playbackState == PLAYBACK_STATE.STOPPED)
             {
-                bobberArcCaster.ToggleTension();
-                hasProcessedMusicEnd = true; // Mark the music end as processed
+                if (bobberArcCaster != null)
+                    bobberArcCaster.ToggleTension();
+
+                hasProcessedMusicEnd = true;
             }
         }
 
-        // Automatically restart music if the tension state is re-entered
-        if (bobberArcCaster != null && bobberArcCaster.CurrentState == BobberArcCaster.State.Tension && hasProcessedMusicEnd)
-        {
-            RestartMusic();
-        }
+        wasInTension = inTension;
     }
 
-    private void RestartMusic()
+    private void ResolveBobberArcCaster()
     {
         hasProcessedMusicEnd = false; // Reset the flag
         if (RhythmConductor.Instance != null)
@@ -58,6 +73,12 @@ public class RhythmMusicPlayer : MonoBehaviour
 
     void OnDestroy()
     {
+        if (RhythmConductor.rhythmMusicPlayer == this)
+            RhythmConductor.rhythmMusicPlayer = null;
+
+        if (!musicInstance.isValid())
+            return;
+
         musicInstance.stop(FMOD.Studio.STOP_MODE.IMMEDIATE);
         musicInstance.release();
     }
