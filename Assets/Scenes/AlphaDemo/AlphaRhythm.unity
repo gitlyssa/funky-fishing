@@ -13611,7 +13611,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: -0, z: 0}
-  m_LocalScale: {x: 0.5, y: 0.5, z: 1}
+  m_LocalScale: {x: 0.7, y: 0.7, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1173819259}
@@ -13730,11 +13730,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::KeyboardRhythmProvider
   flickSoundEvent:
     Guid:
-      Data1: 2007313463
-      Data2: 1189434961
-      Data3: 1175329411
-      Data4: 1377301339
-    Path: event:/Sfx/success
+      Data1: 0
+      Data2: 0
+      Data3: 0
+      Data4: 0
+    Path: 
   lerpSpeed: 50
   flickVelocityThreshold: 10
   reelLerpSpeed: 15

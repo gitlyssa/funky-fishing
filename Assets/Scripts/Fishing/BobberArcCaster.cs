@@ -31,6 +31,17 @@ public class BobberArcCaster : MonoBehaviour
 
     [Header("Tension Entry (Input)")]
     public bool allowManualTensionEntry = false;
+    [Header("Hooked Fish")]
+    public bool lockHookedFishToBobber = true;
+    public float hookedFishFrontPadding = 0f;
+    [Min(0f)] public float hookedFishDepthBelowSurface = 0.35f;
+    [Min(0f)] public float hookedFishSwimRadius = 0.35f;
+    [Min(0f)] public float hookedFishSwimSpeed = 7f;
+    [Range(0f, 1f)] public float hookedFishRandomMotionScale = 1f;
+    [Min(0.1f)] public float hookedFishSwimToCenterSpeed = 3.5f;
+    [Min(0.01f)] public float hookedFishCenterArrivalDistance = 0.08f;
+    public float bobberFollowVerticalOffset = 0.02f;
+    [Min(0.1f)] public float bobberFollowSmoothing = 18f;
 
     [Header("Tension Rod Feedback")]
     [FormerlySerializedAs("tensionRodFeedbackEnabled")]
@@ -106,6 +117,20 @@ public class BobberArcCaster : MonoBehaviour
     private Vector3 _stableRodBasePos;
     private Quaternion _stableRodBaseRot;
     private Vector3 _stableSwingPivotLocalOffsetFromRoot;
+    private GameObject _hookedFish;
+    private bool _hookedFishLockedToBobber;
+    private float _hookedFishFrontDistance = 0.25f;
+    private Rigidbody _hookedFishRb;
+    private FishMovement _hookedFishMovement;
+    private Vector3 _hookedFishTensionCenter;
+    private Vector3 _hookedFishCenterTarget;
+    private bool _hookedFishMovingToCenter;
+    private float _hookedFishSwimSeed;
+
+    public bool IsHookedFishDrivingBobber =>
+        _hookedFishLockedToBobber &&
+        CurrentState == State.Tension &&
+        _hookedFish != null;
 
     void Start()
     {
@@ -135,6 +160,10 @@ public class BobberArcCaster : MonoBehaviour
 
         // Only allow a fresh cast from idle/hanging.
         if (CurrentState != State.Idle) return;
+        _hookedFish = null;
+        ClearHookedFishLockState();
+        if (pondManager != null)
+            pondManager.RestoreFishAfterTension();
 
         Vector3 from = bobber.position;            // launch from current (hanging) position
         Vector3 to = targetMarker.position + Vector3.up * castTargetYOffset;
@@ -164,17 +193,23 @@ public class BobberArcCaster : MonoBehaviour
             return;
         }
 
-        if (CurrentState == State.Landed && pondManager != null && pondManager.playerBobber != null)
+        if (CurrentState == State.Landed && pondManager != null)
         {
-            GameObject fish = pondManager.GetClosestFish(pondManager.playerBobber);
+            GameObject hookQueryBobber = GetHookQueryBobber();
+            GameObject fish = hookQueryBobber != null ? pondManager.GetClosestFish(hookQueryBobber) : null;
             if (fish != null)
             {
+                _hookedFish = fish;
                 Debug.Log("Fish hooked! Entering tension state.");
                 ToggleTension(); // enter tension state
                 return;
             }
         }
 
+        _hookedFish = null;
+        ClearHookedFishLockState();
+        if (pondManager != null)
+            pondManager.RestoreFishAfterTension();
         Debug.Log("No fish nearby. Normal yank.");
         StartYank();
     }
@@ -184,38 +219,102 @@ public class BobberArcCaster : MonoBehaviour
     {
         if (CurrentState == State.Tension)
         {
+            ConsumeHookedFish();
             CurrentState = State.Landed;
             return;
         }
 
         if (CurrentState == State.Landed)
         {
+            if (_hookedFish == null && pondManager != null)
+            {
+                GameObject hookQueryBobber = GetHookQueryBobber();
+                if (hookQueryBobber != null)
+                    _hookedFish = pondManager.GetClosestFish(hookQueryBobber);
+            }
+
             CurrentState = State.Tension;
+            BeginHookedFishLock();
+            if (pondManager != null)
+                pondManager.HideFishForTension(_hookedFish);
         }
+    }
+
+    public void CompleteRhythmEncounter()
+    {
+        ConsumeHookedFish();
+
+        if (CurrentState == State.Tension || _isRestoringFromTension)
+        {
+            StartYankAfterRodRestore();
+            return;
+        }
+
+        if (CurrentState == State.Landed || CurrentState == State.InFlight || CurrentState == State.Retracting)
+            StartYank();
+    }
+
+    private void ConsumeHookedFish()
+    {
+        if (_hookedFish == null)
+        {
+            ClearHookedFishLockState();
+            if (pondManager != null)
+                pondManager.RestoreFishAfterTension();
+            return;
+        }
+
+        ClearHookedFishLockState();
+
+        if (pondManager != null)
+            pondManager.RemoveFish(_hookedFish);
+        else
+            Destroy(_hookedFish);
+
+        _hookedFish = null;
+        if (pondManager != null)
+            pondManager.RestoreFishAfterTension();
     }
 
     public void RequestTensionToggleFromInput()
     {
-        // Allow input to always exit tension, but gate manual entry.
-        if (CurrentState == State.Tension)
+        if (!allowManualTensionEntry)
         {
-            if (IsBeatmapPlaying())
-            {
-                Debug.Log("Cannot exit tension while beatmap is playing.");
-                return;
-            }
-
-            ToggleTension();
+            Debug.Log("Manual tension toggle disabled: hook a fish to enter, song end exits.");
             return;
         }
 
-        if (CurrentState == State.Landed && !allowManualTensionEntry)
+        if (CurrentState == State.Tension)
         {
-            Debug.Log("Manual tension entry blocked: hook a fish.");
+            ToggleTension();
+            RhythmMusicPlayer musicPlayer = RhythmConductor.rhythmMusicPlayer;
+            if (musicPlayer != null)
+                musicPlayer.ForceStopPlaybackAndBeatmap();
+            if (SceneLoading.Instance != null)
+                SceneLoading.Instance.EndRhythmEncounter();
+            return;
+        }
+
+        if (CurrentState != State.Landed)
+        {
+            Debug.Log("Manual tension toggle requires landed/tension state.");
             return;
         }
 
         ToggleTension();
+        if (SceneLoading.Instance != null)
+            SceneLoading.Instance.StartRhythmEncounter();
+    }
+
+    private GameObject GetHookQueryBobber()
+    {
+        if (bobber != null)
+            return bobber.gameObject;
+
+        if (pondManager != null && pondManager.playerBobber != null)
+            return pondManager.playerBobber;
+
+        return null;
     }
 
     // Optional external driver (e.g., Joy-Con motion) for W/A/D directional swing.
@@ -353,6 +452,189 @@ public class BobberArcCaster : MonoBehaviour
     void LateUpdate()
     {
         UpdateTensionRodFeedback();
+        UpdateHookedFishLock();
+    }
+
+    private void BeginHookedFishLock()
+    {
+        if (!lockHookedFishToBobber || CurrentState != State.Tension || _hookedFish == null || bobber == null)
+            return;
+
+        _hookedFishRb = _hookedFish.GetComponent<Rigidbody>();
+        if (_hookedFishRb != null)
+        {
+            _hookedFishRb.linearVelocity = Vector3.zero;
+            _hookedFishRb.angularVelocity = Vector3.zero;
+            _hookedFishRb.isKinematic = true;
+        }
+
+        _hookedFishMovement = _hookedFish.GetComponent<FishMovement>();
+        if (_hookedFishMovement != null)
+            _hookedFishMovement.enabled = false;
+
+        _hookedFishTensionCenter = _hookedFish.transform.position;
+        float surfaceY = pondManager != null ? pondManager.waterlevel : _hookedFishTensionCenter.y;
+        _hookedFishTensionCenter.y = surfaceY - Mathf.Max(0f, hookedFishDepthBelowSurface);
+        _hookedFishCenterTarget = _hookedFishTensionCenter;
+        if (pondManager != null)
+        {
+            Vector3 pondCenter = pondManager.transform.position;
+            _hookedFishCenterTarget.x = pondCenter.x;
+            _hookedFishCenterTarget.z = pondCenter.z;
+        }
+        _hookedFishMovingToCenter = true;
+        _hookedFishSwimSeed = Random.Range(0f, 1000f);
+        _hookedFishFrontDistance = EstimateFishFrontDistance(_hookedFish.transform);
+        _hookedFishLockedToBobber = true;
+        UpdateHookedFishLock();
+    }
+
+    private void UpdateHookedFishLock()
+    {
+        if (!_hookedFishLockedToBobber)
+            return;
+
+        if (!lockHookedFishToBobber || CurrentState != State.Tension || _hookedFish == null || bobber == null)
+        {
+            ClearHookedFishLockState();
+            return;
+        }
+
+        UpdateHookedFishTensionMotion();
+        FollowBobberToHookedFishFront();
+    }
+
+    private void UpdateHookedFishTensionMotion()
+    {
+        if (_hookedFish == null)
+            return;
+
+        Transform fishTransform = _hookedFish.transform;
+        if (_hookedFishMovingToCenter)
+        {
+            Vector3 toCenter = _hookedFishCenterTarget - fishTransform.position;
+            toCenter.y = 0f;
+
+            float arriveDistance = Mathf.Max(0.01f, hookedFishCenterArrivalDistance);
+            if (toCenter.sqrMagnitude <= arriveDistance * arriveDistance)
+            {
+                _hookedFishMovingToCenter = false;
+                _hookedFishTensionCenter = _hookedFishCenterTarget;
+            }
+            else
+            {
+                Vector3 moveDir = toCenter.normalized;
+                float speed = Mathf.Max(0.1f, hookedFishSwimToCenterSpeed);
+                fishTransform.position += moveDir * speed * Time.deltaTime;
+                fishTransform.position = new Vector3(
+                    fishTransform.position.x,
+                    _hookedFishCenterTarget.y,
+                    fishTransform.position.z);
+
+                Quaternion targetRot = Quaternion.LookRotation(moveDir, Vector3.up);
+                fishTransform.rotation = Quaternion.Slerp(
+                    fishTransform.rotation,
+                    targetRot,
+                    1f - Mathf.Exp(-8f * Time.deltaTime));
+                return;
+            }
+        }
+
+        float t = Time.time * Mathf.Max(0.01f, hookedFishSwimSpeed);
+        float radius = Mathf.Max(0f, hookedFishSwimRadius * Mathf.Clamp01(hookedFishRandomMotionScale));
+
+        Vector3 localOffset = new Vector3(
+            Mathf.Sin(t + _hookedFishSwimSeed),
+            0f,
+            Mathf.Cos((t * 1.27f) + (_hookedFishSwimSeed * 0.73f)));
+
+        Vector3 targetPos = _hookedFishTensionCenter + (localOffset * radius);
+        targetPos.y = _hookedFishTensionCenter.y;
+        Vector3 previousPos = fishTransform.position;
+        fishTransform.position = targetPos;
+
+        Vector3 planarVel = targetPos - previousPos;
+        planarVel.y = 0f;
+
+        if (planarVel.sqrMagnitude > 0.0001f)
+        {
+            Quaternion targetRot = Quaternion.LookRotation(planarVel.normalized, Vector3.up);
+            fishTransform.rotation = Quaternion.Slerp(
+                fishTransform.rotation,
+                targetRot,
+                1f - Mathf.Exp(-8f * Time.deltaTime));
+        }
+    }
+
+    private void FollowBobberToHookedFishFront()
+    {
+        if (_hookedFish == null || bobber == null)
+            return;
+
+        Transform fishTransform = _hookedFish.transform;
+        Vector3 forward = fishTransform.forward;
+        if (forward.sqrMagnitude < 0.0001f)
+            forward = Vector3.forward;
+        float offset = Mathf.Max(0f, _hookedFishFrontDistance + hookedFishFrontPadding);
+        Vector3 hookFrontPos = fishTransform.position + (forward.normalized * offset);
+        float surfaceY = pondManager != null ? pondManager.waterlevel : hookFrontPos.y;
+        Vector3 targetBobberPos = new Vector3(
+            hookFrontPos.x,
+            surfaceY + bobberFollowVerticalOffset,
+            hookFrontPos.z);
+
+        float k = 1f - Mathf.Exp(-Mathf.Max(0.1f, bobberFollowSmoothing) * Time.deltaTime);
+        bobber.position = Vector3.Lerp(bobber.position, targetBobberPos, k);
+    }
+
+    private static float EstimateFishFrontDistance(Transform fishTransform)
+    {
+        if (fishTransform == null)
+            return 0.25f;
+
+        Collider col = fishTransform.GetComponentInChildren<Collider>();
+        if (col == null)
+            return 0.25f;
+
+        Bounds b = col.bounds;
+        Vector3 c = b.center;
+        Vector3 e = b.extents;
+        Vector3 forward = fishTransform.forward.normalized;
+        if (forward.sqrMagnitude < 0.0001f)
+            forward = Vector3.forward;
+
+        float maxProjection = 0.05f;
+        for (int x = -1; x <= 1; x += 2)
+        {
+            for (int y = -1; y <= 1; y += 2)
+            {
+                for (int z = -1; z <= 1; z += 2)
+                {
+                    Vector3 corner = c + new Vector3(e.x * x, e.y * y, e.z * z);
+                    float projection = Vector3.Dot(corner - fishTransform.position, forward);
+                    if (projection > maxProjection)
+                        maxProjection = projection;
+                }
+            }
+        }
+
+        return Mathf.Max(0.05f, maxProjection);
+    }
+
+    private void ClearHookedFishLockState()
+    {
+        if (_hookedFishMovement != null)
+            _hookedFishMovement.enabled = true;
+
+        if (_hookedFishRb != null)
+            _hookedFishRb.isKinematic = false;
+
+        _hookedFishLockedToBobber = false;
+        _hookedFishFrontDistance = 0.25f;
+        _hookedFishRb = null;
+        _hookedFishMovement = null;
+        _hookedFishMovingToCenter = false;
+        _hookedFishSwimSeed = 0f;
     }
 
     private void UpdateTensionRodFeedback()
