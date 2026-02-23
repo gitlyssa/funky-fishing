@@ -13467,7 +13467,7 @@ MonoBehaviour:
   notePrefab: {fileID: 4897388239609443938, guid: 7236b4e7e53abbc45996582de97acaa3, type: 3}
   flickMaterial: {fileID: 0}
   slideMaterial: {fileID: 0}
-  enableDebugInput: 1
+  enableDebugInput: 0
   songTime: 0
   noteSpeed: 2
   noteTravelTime: 2
@@ -13691,9 +13691,9 @@ GameObject:
   - component: {fileID: 1949879682}
   - component: {fileID: 1949879679}
   - component: {fileID: 1949879683}
-  - component: {fileID: 1949879684}
   - component: {fileID: 1949879681}
   - component: {fileID: 1949879685}
+  - component: {fileID: 1949879684}
   m_Layer: 0
   m_Name: InputManager
   m_TagString: Untagged
@@ -13816,7 +13816,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1980199570
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -55,6 +55,17 @@ public class RhythmInputProcessorT : MonoBehaviour
         return false;
     }
 
+    public Vector2 GetCombinedReelStick()
+    {
+        Vector2 combined = Vector2.zero;
+        foreach (var hardware in _connectedHardware)
+        {
+            Vector2 stick = hardware.GetReelStickDirection();
+            if (stick.magnitude > 0.1f) return stick; // Prioritize the active one
+        }
+        return Vector2.zero;
+    }
+
     private void Update()
     {
         if (_connectedHardware.Count == 0) return;
@@ -64,6 +75,7 @@ public class RhythmInputProcessorT : MonoBehaviour
         {
             // We sum them up. If only one is used, the others add 0.
             totalRawSpin += hardware.GetSpinVelocity();
+            Debug.Log($"[Processor] Raw spin from {hardware.GetType().Name}: {hardware.GetSpinVelocity()}");
         }
 
         // 2. Manage the Sliding Window
