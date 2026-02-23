@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 
 [System.Serializable]
@@ -10,11 +11,40 @@ public class NoteData
 }
 
 [System.Serializable]
-public class ReelData 
+public class ReelData   
 {
     public float startTime; // time the player needs to begin reeling
     public float duration; // duration the reel note lasts
     public float goalDegrees; // total degrees the player needs to spin
     public float leadInTime = 1.0f; // how long the reel starts spinning before the player needs to start inputting. windup time
     public bool isClockwise => goalDegrees > 0;
+}
+
+public enum DisplayMode { Player, Dev, InDepth }
+
+[System.Serializable]
+public class DetailedStats
+{
+    // Miss Categories
+    public int earlyMisses;    // Swung too early (before bad window)
+    public int lateMisses;     // Swung too late
+    public int completeMisses; // Didn't swing at all (AutoMiss)
+
+    // Hit Categories
+    public int perfects;
+    public int earlyGoods;
+    public int lateGoods;
+
+    // Timing Data
+    public List<float> timingOffsets = new List<float>(); // Raw deltas
+    public float averageOffset;
+
+    // Reel Data
+    public int reelsCleared;
+    public int reelsFailed;
+    public float totalBonusDegrees;
+
+    // Helper to get total counts for the player UI
+    public int TotalMisses => earlyMisses + lateMisses + completeMisses;
+    public int TotalGoods => earlyGoods + lateGoods;
 }

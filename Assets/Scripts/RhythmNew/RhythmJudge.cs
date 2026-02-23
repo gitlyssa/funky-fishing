@@ -69,6 +69,16 @@ public class RhythmJudge : MonoBehaviour
     {
         float finalDiff = Mathf.Abs(conductor.songTime - target.TargetHitTime);
         JudgeRating rating = GetRating(finalDiff);
+
+        if (rating == JudgeRating.Bad || rating == JudgeRating.Miss)
+        {
+            ScoreManager.Instance.RecordMiss(true, finalDiff); // Input was provided, but late/early
+        }
+        else
+        {
+            ScoreManager.Instance.RecordHit(rating, finalDiff);
+        }
+
         ResolveNote(target, rating);
     }
 }
@@ -104,6 +114,7 @@ public class RhythmJudge : MonoBehaviour
             // If the current time is beyond the bad window on the LATE side
             if (conductor.songTime > note.TargetHitTime + badWindow)
             {
+                ScoreManager.Instance.RecordMiss(false); 
                 ResolveNote(note, JudgeRating.Miss);
             }
         }

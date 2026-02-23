@@ -53,6 +53,7 @@ public class RhythmMusicPlayer : MonoBehaviour
             sawPlaybackActiveInCurrentTension = false;
             StartRhythmPlayback();
         }
+        // Logic for stopping when tension breaks
         else if (!inTension && wasInTension)
         {
             hasProcessedMusicEnd = false;
@@ -60,6 +61,7 @@ public class RhythmMusicPlayer : MonoBehaviour
             StopRhythmPlayback();
         }
 
+        // 3. Logic for ending the "Tension" state (Removed the second declaration)
         if (inTension && !hasProcessedMusicEnd)
         {
             musicInstance.getPlaybackState(out PLAYBACK_STATE playbackState);
