@@ -15,7 +15,6 @@ public class RhythmVisualizer : MonoBehaviour
     */
     [Header("References")]
     public RhythmInputProcessorT processor; // Listens for events
-    private IRhythmInputT provider;  
 
     [Header("Visual Settings")]
     public Color idleColor = Color.gray;
@@ -32,19 +31,6 @@ public class RhythmVisualizer : MonoBehaviour
 
     void Start()
     {   
-        // get provider component from processor's gameobject if active, otherwise keep looking
-        provider = processor.GetComponent<IRhythmInputT>();
-        if (provider == null)        {
-            provider = FindObjectOfType<KeyboardRhythmProvider>();
-            if (provider == null)
-                provider = FindObjectOfType<GamepadRhythmProvider>();
-        }
-        if (provider == null)
-        {
-            Debug.LogError("[Visualizer] No rhythm input provider found!");
-            return;
-        }
-        // Map the Enum to our UI Images
         _dirMap = new Dictionary<FlickDirection, Image>
         {
             { FlickDirection.Right,     directionImages[0] },
@@ -86,7 +72,7 @@ public class RhythmVisualizer : MonoBehaviour
                 img.transform.localScale = Vector3.one * 1.3f; 
             }
 
-            else if (provider.IsHoldingDirection(dir))
+            else if (processor.IsHoldingDirection(dir))
             {
                 img.color = holdColor;
                 img.transform.localScale = Vector3.one * 1.1f;
@@ -102,7 +88,7 @@ public class RhythmVisualizer : MonoBehaviour
 
     private void UpdateReelVisuals()
     {
-        Vector2 reelDir = provider.GetReelStickDirection();
+        Vector2 reelDir = processor.GetCombinedReelStick();
     
         if (reelDir.magnitude > 0.1f)
         {

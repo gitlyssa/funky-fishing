@@ -78,7 +78,7 @@ MonoBehaviour:
   directionChangeInterval: 2.5
   constrainToXZ: 1
   wallDeflectBlend: 0.6
-  useAttraction: 1
+  useAttraction: 0
   attractionTarget: {fileID: 0}
   attractionPoint: {x: 0, y: 0, z: 0}
   attractionStrength: 0.6
@@ -88,6 +88,22 @@ MonoBehaviour:
   maxReturnDuration: 8
   logAttractionState: 0
   logAttractionInterval: 2
+  enableBobberBumpAssist: 1
+  bumpEngageRadius: 2.2
+  bumpContactDistance: 0.5
+  bumpsPerCycle: 2
+  bumpApproachSpeedMultiplier: 1.7
+  bumpRetreatDuration: 0.5
+  bumpRetreatSpeedMultiplier: 2.5
+  bumpCycleCooldown: 1.8
+  bumpRearmDistance: 0.2
+  dartAwayDuration: 0.8
+  dartAwaySpeedMultiplier: 3.2
+  minimumDartSeparation: 1.2
+  dartAwayTurnRandomness: 0.15
+  ignoreBobberCollisionDuringAssist: 1
+  bobberInWaterMargin: 0.26
+  bumpRetreatTurnRandomness: 0.45
   pondManager: {fileID: 0}
 --- !u!136 &2725616706174294822
 CapsuleCollider:

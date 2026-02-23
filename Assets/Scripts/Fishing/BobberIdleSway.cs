@@ -77,10 +77,17 @@ public class BobberIdleSway : MonoBehaviour
             }
             else if (bobberArcCaster.CurrentState == BobberArcCaster.State.Tension)
             {
-                if (lastState != BobberArcCaster.State.Tension)
-                    tensionAnchor = transform.position;
+                if (bobberArcCaster.IsHookedFishDrivingBobber)
+                {
+                    // BobberArcCaster is actively driving bobber position from hooked fish motion.
+                }
+                else
+                {
+                    if (lastState != BobberArcCaster.State.Tension)
+                        tensionAnchor = transform.position;
 
-                transform.position = tensionAnchor;
+                    transform.position = tensionAnchor;
+                }
             }
         }
         else
@@ -88,7 +95,19 @@ public class BobberIdleSway : MonoBehaviour
             ApplyIdleSway();
         }
 
+        ApplyNibbleBobberVerticalOverride();
         lastState = bobberArcCaster != null ? bobberArcCaster.CurrentState : lastState;
+    }
+
+    private void ApplyNibbleBobberVerticalOverride()
+    {
+        if (FishMovement.TryGetBobberNibbleVerticalOverride(transform, out float targetY, out float followSpeed))
+        {
+            float k = 1f - Mathf.Exp(-Mathf.Max(0.1f, followSpeed) * Time.deltaTime);
+            Vector3 p = transform.position;
+            p.y = Mathf.Lerp(p.y, targetY, k);
+            transform.position = p;
+        }
     }
 
     private void ApplyIdleSway()

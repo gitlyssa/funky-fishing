@@ -4955,7 +4955,17 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  allowManualTensionEntry: 1
+  allowManualTensionEntry: 0
+  lockHookedFishToBobber: 1
+  hookedFishFrontPadding: 0
+  hookedFishDepthBelowSurface: 0.35
+  hookedFishSwimRadius: 0.35
+  hookedFishSwimSpeed: 7
+  hookedFishRandomMotionScale: 0.35
+  hookedFishSwimToCenterSpeed: 3.5
+  hookedFishCenterArrivalDistance: 0.08
+  bobberFollowVerticalOffset: 0.02
+  bobberFollowSmoothing: 18
   tensionBobbingEnabled: 0
   rodRoot: {fileID: 0}
   tensionCamera: {fileID: 0}
@@ -6663,10 +6673,12 @@ MonoBehaviour:
   fishList: []
   radius: 6
   waterlevel: 9
+  initialFishCount: 5
   FishCaughtText: {fileID: 0}
-  catchRadius: 1
+  catchRadius: 0.5
   enableKeyboardCatchAttempt: 0
   catchAttemptKey: 32
+  disableFishFishCollisions: 1
   playerBobber: {fileID: 1762950672}
   gameManager: {fileID: 0}
 --- !u!4 &1762015740 stripped
@@ -7095,12 +7107,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::JslStickInput
   deviceIndex: 0
   useAnyConnectedDevice: 1
+  reconnectInterval: 2
   autoDetectStickSide: 1
   useRightStick: 0
   deadzone: 0.15
   invertY: 0
   showDebugOverlay: 0
   toggleDebugKey: 284
+  missingDeviceWarningInterval: 5
 --- !u!1001 &1801924238
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -8246,9 +8260,15 @@ MonoBehaviour:
   rodTip: {fileID: 812878740}
   bobber: {fileID: 1762950671}
   bobberArcCaster: {fileID: 1405675315}
-  waterSurface: {fileID: 0}
+  waterSurface: {fileID: 1761183076}
   preventUnderWater: 1
   waterClearance: 0.02
+  allowUnderwaterTailWhenBobberDips: 1
+  pullWholeLineWithBobberDip: 1
+  wholeLineDipInfluence: 0.85
+  increaseSegmentsWhenBobberDips: 1
+  dippedSegments: 48
+  underwaterTailPortion: 0.15
   segments: 20
   slack: 0.08
   slackInFlight: 0.15

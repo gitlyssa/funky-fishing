@@ -13467,7 +13467,7 @@ MonoBehaviour:
   notePrefab: {fileID: 4897388239609443938, guid: 7236b4e7e53abbc45996582de97acaa3, type: 3}
   flickMaterial: {fileID: 0}
   slideMaterial: {fileID: 0}
-  enableDebugInput: 1
+  enableDebugInput: 0
   songTime: 0
   noteSpeed: 2
   noteTravelTime: 2
@@ -13611,7 +13611,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: -0, z: 0}
-  m_LocalScale: {x: 0.7, y: 0.7, z: 1}
+  m_LocalScale: {x: 0.5, y: 0.5, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1173819259}
@@ -13691,9 +13691,9 @@ GameObject:
   - component: {fileID: 1949879682}
   - component: {fileID: 1949879679}
   - component: {fileID: 1949879683}
-  - component: {fileID: 1949879684}
   - component: {fileID: 1949879681}
   - component: {fileID: 1949879685}
+  - component: {fileID: 1949879684}
   m_Layer: 0
   m_Name: InputManager
   m_TagString: Untagged
@@ -13730,11 +13730,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::KeyboardRhythmProvider
   flickSoundEvent:
     Guid:
-      Data1: 0
-      Data2: 0
-      Data3: 0
-      Data4: 0
-    Path: 
+      Data1: 2007313463
+      Data2: 1189434961
+      Data3: 1175329411
+      Data4: 1377301339
+    Path: event:/Sfx/success
   lerpSpeed: 50
   flickVelocityThreshold: 10
   reelLerpSpeed: 15
@@ -13816,7 +13816,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1980199570
 MonoBehaviour:
   m_ObjectHideFlags: 0

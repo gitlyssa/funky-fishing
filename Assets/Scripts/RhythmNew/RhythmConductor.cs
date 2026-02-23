@@ -90,9 +90,10 @@ public class RhythmConductor : MonoBehaviour
             _chart.RemoveAt(0);
         }
 
-        if (_reelQueue.Count > 0 && songTime >= _reelQueue[0].startTime - _reelQueue[0].leadInTime)
+        if (activeReel == null && _reelQueue.Count > 0 && songTime >= _reelQueue[0].startTime - _reelQueue[0].leadInTime)
         {
             SpawnReel(_reelQueue[0]);
+            _reelQueue.RemoveAt(0);
         }
 
             // on pressing r, spawn a reel
