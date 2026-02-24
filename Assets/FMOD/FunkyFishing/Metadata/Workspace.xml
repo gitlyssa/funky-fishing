@@ -2,7 +2,7 @@
 <objects serializationModel="Studio.02.03.00">
 	<object class="Workspace" id="{aa1a62c0-45a1-463a-9016-929fca9771b1}">
 		<property name="builtBanksOutputDirectory">
-			<value>../funky-fishing/Assets/FMOD</value>
+			<value>../</value>
 		</property>
 		<relationship name="masterEventFolder">
 			<destination>{e5d2c1da-4e00-429a-b3a5-886ca43a9534}</destination>
