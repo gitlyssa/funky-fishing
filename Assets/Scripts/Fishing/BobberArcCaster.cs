@@ -168,6 +168,8 @@ public class BobberArcCaster : MonoBehaviour
         Vector3 from = bobber.position;            // launch from current (hanging) position
         Vector3 to = targetMarker.position + Vector3.up * castTargetYOffset;
 
+        FMODUnity.RuntimeManager.PlayOneShot("event:/Sfx/castPH");
+
         StartArcMove(from, to, castDuration, arcHeight, arcEase);
         CurrentState = State.InFlight;
     }

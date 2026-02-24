@@ -536,6 +536,9 @@ public class FishMovement : MonoBehaviour
         s_nibblePullDownSpeed = Mathf.Max(0.1f, nibbleBobberPullDownSpeed);
         s_nibblePullReturnSpeed = Mathf.Max(0.1f, nibbleBobberReturnSpeed);
         s_nibblePullActive = true;
+
+        FMODUnity.RuntimeManager.PlayOneShot("event:/Sfx/bite");
+
         s_nibblePullRestorePending = false;
         UpdateBobberNibblePull();
     }
