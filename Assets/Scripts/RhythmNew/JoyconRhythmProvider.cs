@@ -36,8 +36,16 @@ public class JoyconRhythmProvider : MonoBehaviour, IRhythmInputT
     }
     void Update()
     {
-        int count = JSL.JslGetConnectedDeviceHandles(new int[16], 16);
-        if (count == 0) return; // no connected joycons
+        int[] handles = new int[16];
+        int count = JSL.JslGetConnectedDeviceHandles(handles, handles.Length);
+        if (count <= 0)
+            return;
+
+        int selectedHandle = ResolveConnectedHandle(handles, count);
+        if (selectedHandle < 0)
+            return;
+
+        deviceId = selectedHandle;
         JSL.JOY_SHOCK_STATE state = JSL.JslGetSimpleState(deviceId);
         JSL.MOTION_STATE motion = JSL.JslGetMotionState(deviceId);
 
@@ -107,7 +115,28 @@ public class JoyconRhythmProvider : MonoBehaviour, IRhythmInputT
     public float GetTotalAccumulatedSpin() => _accumulatedSpin;
     public void ResetAccumulatedSpin() => _accumulatedSpin = 0f;
     public Vector2 GetReelStickDirection() => _reelStick;
-    public bool GetButton(int index) => (JSL.JslGetSimpleState(deviceId).buttons & (1 << JSL.ButtonMaskDown)) != 0;
+    public bool GetButton(int index)
+    {
+        if (!JSL.JslStillConnected(deviceId))
+            return false;
+
+        return (JSL.JslGetSimpleState(deviceId).buttons & (1 << JSL.ButtonMaskDown)) != 0;
+    }
+
+    private int ResolveConnectedHandle(int[] handles, int count)
+    {
+        if (JSL.JslStillConnected(deviceId))
+            return deviceId;
+
+        for (int i = 0; i < count; i++)
+        {
+            int handle = handles[i];
+            if (JSL.JslStillConnected(handle))
+                return handle;
+        }
+
+        return -1;
+    }
 
     // --- Helper Math ---
 

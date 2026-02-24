@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using System;
 
 public class RhythmJudge : MonoBehaviour
 {
@@ -17,10 +18,18 @@ public class RhythmJudge : MonoBehaviour
     public float perfectWindow = 0.1f;
     public float goodWindow = 0.3f;
     public float badWindow = 0.5f; // Beyond this is an automatic Miss
+    public static event Action<JudgeRating> OnNoteJudged;
 
     void Start()
     {
-        processor.OnValidFlick += HandleFlick;
+        if (processor != null)
+            processor.OnValidFlick += HandleFlick;
+    }
+
+    void OnDestroy()
+    {
+        if (processor != null)
+            processor.OnValidFlick -= HandleFlick;
     }
 
     void Update()
@@ -71,13 +80,9 @@ public class RhythmJudge : MonoBehaviour
         JudgeRating rating = GetRating(finalDiff);
 
         if (rating == JudgeRating.Bad || rating == JudgeRating.Miss)
-        {
-            ScoreManager.Instance.RecordMiss(true, finalDiff); // Input was provided, but late/early
-        }
+            TryRecordMiss(true, finalDiff); // Input was provided, but late/early
         else
-        {
-            ScoreManager.Instance.RecordHit(rating, finalDiff);
-        }
+            TryRecordHit(rating, finalDiff);
 
         ResolveNote(target, rating);
     }
@@ -114,10 +119,22 @@ public class RhythmJudge : MonoBehaviour
             // If the current time is beyond the bad window on the LATE side
             if (conductor.songTime > note.TargetHitTime + badWindow)
             {
-                ScoreManager.Instance.RecordMiss(false); 
+                TryRecordMiss(false);
                 ResolveNote(note, JudgeRating.Miss);
             }
         }
+    }
+
+    private void TryRecordHit(JudgeRating rating, float timingDelta)
+    {
+        if (ScoreManager.Instance != null)
+            ScoreManager.Instance.RecordHit(rating, timingDelta);
+    }
+
+    private void TryRecordMiss(bool wasInputProvided, float timingDelta = 0f)
+    {
+        if (ScoreManager.Instance != null)
+            ScoreManager.Instance.RecordMiss(wasInputProvided, timingDelta);
     }
 
     private JudgeRating GetRating(float absDiff)
@@ -146,6 +163,8 @@ public class RhythmJudge : MonoBehaviour
                 note.OnMiss();
                 break;
         }
+
+        OnNoteJudged?.Invoke(rating);
     }
 
     private void CheckReelNotes()

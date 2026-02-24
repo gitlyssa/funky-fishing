@@ -80,6 +80,8 @@ public static class JSL
     [DllImport("JoyShockLibrary")]
     public static extern int JslGetConnectedDeviceHandles(int[] deviceHandleArray, int size);
     [DllImport("JoyShockLibrary")]
+    public static extern bool JslStillConnected(int deviceId);
+    [DllImport("JoyShockLibrary")]
     public static extern void JslDisconnectAndDisposeAll();
 
     [DllImport("JoyShockLibrary", CallingConvention = CallingConvention.Cdecl)]

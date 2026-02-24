@@ -67,6 +67,7 @@ public class JoyConGestureDetector : MonoBehaviour
 
     [Header("Debug")]
     public bool logTriggers = true;
+    public int LastTriggerHandle { get; private set; } = -1;
 
     private int[] _handles = Array.Empty<int>();
     private int _id = -1;
@@ -104,12 +105,15 @@ public class JoyConGestureDetector : MonoBehaviour
         if (_handles.Length == 0)
         {
             _id = -1;
+            LastTriggerHandle = -1;
             _filtersByHandle.Clear();
             Debug.LogWarning("JoyConGestureDetector: No JoyShockLibrary devices found.");
             return;
         }
 
         _id = _handles[Mathf.Clamp(deviceIndex, 0, _handles.Length - 1)];
+        if (!useAnyConnectedDevice)
+            LastTriggerHandle = _id;
         _filtersByHandle.Clear();
         Debug.Log($"JoyConGestureDetector handles={_handles.Length}, selectedHandle={_id}, useAnyConnectedDevice={useAnyConnectedDevice}");
     }
@@ -193,6 +197,7 @@ public class JoyConGestureDetector : MonoBehaviour
                 if (TryDetectCast(forwardLin, swingGyro, out int castPolarity))
                 {
                     if (logTriggers) Debug.Log($"CAST! handle={handle} lin={forwardLin:F2}g gyro={swingGyro:F0}dps polarity={castPolarity}");
+                    LastTriggerHandle = handle;
                     onCast?.Invoke();
                     _castPolarity = castPolarity;
                     _castTime = Time.time;
@@ -211,6 +216,7 @@ public class JoyConGestureDetector : MonoBehaviour
                         return false;
 
                     if (logTriggers) Debug.Log($"YANK! handle={handle} lin={forwardLin:F2}g gyro={swingGyro:F0}dps polarity={_castPolarity}");
+                    LastTriggerHandle = handle;
                     onYank?.Invoke();
                     _state = State.Cooldown;
                     _cooldownUntil = Time.time + cooldownAfterTrigger;

@@ -303,7 +303,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 300, y: 150}
+  m_AnchoredPosition: {x: 300, y: 179.5}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &155898122
@@ -440,7 +440,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 300, y: 100}
+  m_AnchoredPosition: {x: 300, y: 70.3}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &211530145
@@ -571,7 +571,7 @@ Camera:
   m_GameObject: {fileID: 216608055}
   m_Enabled: 1
   serializedVersion: 2
-  m_ClearFlags: 2
+  m_ClearFlags: 4
   m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
@@ -643,7 +643,7 @@ MonoBehaviour:
   m_RenderShadows: 1
   m_RequiresDepthTextureOption: 2
   m_RequiresOpaqueTextureOption: 2
-  m_CameraType: 0
+  m_CameraType: 1
   m_Cameras: []
   m_RendererIndex: -1
   m_VolumeLayerMask:
@@ -1169,7 +1169,6 @@ MonoBehaviour:
       Data3: -255170375
       Data4: -1468407509
     Path: event:/Music/TestMusic
-  inTension: 0
 --- !u!1 &639150794
 GameObject:
   m_ObjectHideFlags: 0
@@ -13636,7 +13635,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1886759212
 Transform:
   m_ObjectHideFlags: 0
@@ -13694,6 +13693,7 @@ GameObject:
   - component: {fileID: 1949879684}
   - component: {fileID: 1949879681}
   - component: {fileID: 1949879685}
+  - component: {fileID: 1949879686}
   m_Layer: 0
   m_Name: InputManager
   m_TagString: Untagged
@@ -13787,7 +13787,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1949879678}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c2fde3299ae6f724f8fc4e41a81edb00, type: 3}
   m_Name: 
@@ -13797,6 +13797,42 @@ MonoBehaviour:
   resetThreshold: 1.2
   holdingDeadzone: 0.4
   deadzone: 0.15
+--- !u!114 &1949879686
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1949879678}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 554ea7131457d524a99c2fca8cf587b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::JoyConDirectionalRhythmProvider
+  directionalSwingInput: {fileID: 0}
+  gestureDetector: {fileID: 0}
+  syncSettingsFromDirectionalSwing: 1
+  followGestureDetectorLastTrigger: 1
+  deviceIndex: 0
+  useAnyConnectedDevice: 1
+  reconnectInterval: 2
+  upGyroAxis: 0
+  upGyroSign: 1
+  sideGyroAxis: 1
+  sideGyroSign: 1
+  gyroSmooth: 20
+  upEnterDps: 170
+  upExitDps: 110
+  sideEnterDps: 170
+  sideExitDps: 110
+  upPriorityBias: 1.05
+  directionRearmDelay: 0.08
+  sideNeutralRearmDps: 65
+  sideNeutralHoldTime: 0.03
+  enableThumbstickReel: 1
+  reelDeadzone: 0.15
+  emitSouthButtonEvents: 1
+  logFlicks: 0
 --- !u!1 &1980199569
 GameObject:
   m_ObjectHideFlags: 0
@@ -13928,6 +13964,66 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
+--- !u!1 &2115724246
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2115724248}
+  - component: {fileID: 2115724247}
+  m_Layer: 0
+  m_Name: RhythmHUDManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &2115724247
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2115724246}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 36f8767c337682148bbe844354724ee7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RhythmPerformanceHud
+  hudEnabled: 1
+  perfectPoints: 100
+  goodPoints: 70
+  missPoints: 0
+  judgementAnchoredPosition: {x: 0, y: -120}
+  judgementFontSize: 56
+  perfectColor: {r: 0.95, g: 1, b: 0.35, a: 1}
+  goodColor: {r: 0.4, g: 0.95, b: 1, a: 1}
+  missColor: {r: 1, g: 0.45, b: 0.45, a: 1}
+  judgementVisibleDuration: 0.12
+  judgementFadeDuration: 0.28
+  judgementPopReturnDuration: 0.12
+  judgementPopScale: 1.28
+  judgementRiseDistance: 26
+  detailAnchoredPosition: {x: -28, y: -28}
+  detailFontSize: 26
+--- !u!4 &2115724248
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2115724246}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1823.101, y: -0, z: 6638.748}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -13938,3 +14034,4 @@ SceneRoots:
   - {fileID: 1694095531}
   - {fileID: 1761328189}
   - {fileID: 639150797}
+  - {fileID: 2115724248}

@@ -6,6 +6,8 @@ using UnityEngine.InputSystem;
 public class SceneLoading : MonoBehaviour
 {
     public static SceneLoading Instance { get; private set; }
+    public bool HasCompletedInitialPreload { get; private set; }
+    public bool IsRhythmVisible => isRhythmVisible;
     
     public string rhythmSceneName = "AlphaRhythm";
     public string fishingSceneName = "rodBobberMech";
@@ -26,12 +28,24 @@ public class SceneLoading : MonoBehaviour
     private readonly Dictionary<int, bool> rhythmRootDefaultActive = new Dictionary<int, bool>();
     private readonly List<GameObject> rhythmRoots = new List<GameObject>();
 
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetStatics()
+    {
+        Instance = null;
+        MigratedFish = null;
+    }
+
     private void Start()
     {
+        HasCompletedInitialPreload = false;
+
         if (preloadRhythmOverlayOnStart && keepRhythmOverlayLoaded && !isRhythmLoaded)
         {
             StartCoroutine(PreloadRhythmOverlay());
+            return;
         }
+
+        HasCompletedInitialPreload = true;
     }
 
     void Update()
@@ -65,8 +79,13 @@ public class SceneLoading : MonoBehaviour
         else
         {
             Instance = this;
-            DontDestroyOnLoad(gameObject);
         }
+    }
+
+    void OnDestroy()
+    {
+        if (Instance == this)
+            Instance = null;
     }
 
     public void StartRhythmEncounter(GameObject fishToMigrate = null)
@@ -133,8 +152,29 @@ public class SceneLoading : MonoBehaviour
         isRhythmLoaded = true;
         Scene rhythmScene = SceneManager.GetSceneByName(rhythmSceneName);
         CacheRhythmRoots(rhythmScene);
+        SetRhythmRootsToDefaultActive();
+
+        // Let the additive scene run one frame under LoadingScreen so rhythm setup
+        // completes before gameplay starts.
+        yield return null;
+
         SetRhythmOverlayVisible(false);
         isRhythmTransitioning = false;
+        HasCompletedInitialPreload = true;
+    }
+
+    private void SetRhythmRootsToDefaultActive()
+    {
+        for (int i = 0; i < rhythmRoots.Count; i++)
+        {
+            GameObject root = rhythmRoots[i];
+            if (root == null)
+                continue;
+
+            bool defaultActive = true;
+            rhythmRootDefaultActive.TryGetValue(root.GetInstanceID(), out defaultActive);
+            root.SetActive(defaultActive);
+        }
     }
 
     private IEnumerator LoadRhythmAdditive()
@@ -288,11 +328,23 @@ public class SceneLoading : MonoBehaviour
         {
             wasInTensionLastFrame = inTension;
             tensionStateInitialized = true;
+
+            if (inTension && !isRhythmVisible)
+                StartRhythmEncounter();
+            else if (!inTension && isRhythmVisible)
+                EndRhythmEncounter();
             return;
         }
 
         if (inTension == wasInTensionLastFrame)
+        {
+            // Self-heal in case the edge transition was missed during initialization.
+            if (inTension && !isRhythmVisible && !isRhythmTransitioning)
+                StartRhythmEncounter();
+            else if (!inTension && isRhythmVisible && !isRhythmTransitioning)
+                EndRhythmEncounter();
             return;
+        }
 
         wasInTensionLastFrame = inTension;
         if (inTension)
