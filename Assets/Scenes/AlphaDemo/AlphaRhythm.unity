@@ -13693,6 +13693,7 @@ GameObject:
   - component: {fileID: 1949879684}
   - component: {fileID: 1949879681}
   - component: {fileID: 1949879685}
+  - component: {fileID: 1949879686}
   m_Layer: 0
   m_Name: InputManager
   m_TagString: Untagged
@@ -13786,7 +13787,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1949879678}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c2fde3299ae6f724f8fc4e41a81edb00, type: 3}
   m_Name: 
@@ -13796,6 +13797,42 @@ MonoBehaviour:
   resetThreshold: 1.2
   holdingDeadzone: 0.4
   deadzone: 0.15
+--- !u!114 &1949879686
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1949879678}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 554ea7131457d524a99c2fca8cf587b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::JoyConDirectionalRhythmProvider
+  directionalSwingInput: {fileID: 0}
+  gestureDetector: {fileID: 0}
+  syncSettingsFromDirectionalSwing: 1
+  followGestureDetectorLastTrigger: 1
+  deviceIndex: 0
+  useAnyConnectedDevice: 1
+  reconnectInterval: 2
+  upGyroAxis: 0
+  upGyroSign: 1
+  sideGyroAxis: 1
+  sideGyroSign: 1
+  gyroSmooth: 20
+  upEnterDps: 170
+  upExitDps: 110
+  sideEnterDps: 170
+  sideExitDps: 110
+  upPriorityBias: 1.05
+  directionRearmDelay: 0.08
+  sideNeutralRearmDps: 65
+  sideNeutralHoldTime: 0.03
+  enableThumbstickReel: 1
+  reelDeadzone: 0.15
+  emitSouthButtonEvents: 1
+  logFlicks: 0
 --- !u!1 &1980199569
 GameObject:
   m_ObjectHideFlags: 0
@@ -13965,6 +14002,11 @@ MonoBehaviour:
   perfectColor: {r: 0.95, g: 1, b: 0.35, a: 1}
   goodColor: {r: 0.4, g: 0.95, b: 1, a: 1}
   missColor: {r: 1, g: 0.45, b: 0.45, a: 1}
+  judgementVisibleDuration: 0.12
+  judgementFadeDuration: 0.28
+  judgementPopReturnDuration: 0.12
+  judgementPopScale: 1.28
+  judgementRiseDistance: 26
   detailAnchoredPosition: {x: -28, y: -28}
   detailFontSize: 26
 --- !u!4 &2115724248

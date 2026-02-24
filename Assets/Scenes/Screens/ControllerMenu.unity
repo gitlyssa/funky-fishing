@@ -1374,8 +1374,9 @@ MonoBehaviour:
   disconnectedLabel: Not Connected
   connectedColor: {r: 0, g: 0.7, b: 0, a: 1}
   disconnectedColor: {r: 0.75, g: 0, b: 0, a: 1}
-  treatAnyGamepadAsXbox: 1
-  refreshInterval: 0.5
+  refreshInterval: 0.1
+  logDetection: 1
+  preferWirelessGamepadAsJoyCon: 1
 --- !u!4 &2070664505
 Transform:
   m_ObjectHideFlags: 0

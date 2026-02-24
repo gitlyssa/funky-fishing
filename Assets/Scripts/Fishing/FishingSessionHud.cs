@@ -1,6 +1,7 @@
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class FishingSessionHud : MonoBehaviour
 {
@@ -14,6 +15,8 @@ public class FishingSessionHud : MonoBehaviour
 
     [Header("Display")]
     [SerializeField] private bool hideDuringRhythmMode = true;
+    [SerializeField] private bool hideWhenPausedInPondLevel1 = true;
+    [SerializeField] private string pondLevelSceneName = "Pond_Level_1";
     [SerializeField] private Vector2 panelSize = new Vector2(308f, 290f);
     [SerializeField] private Vector2 panelOffset = new Vector2(-24f, -24f);
     [SerializeField] private int fontSize = 22;
@@ -303,7 +306,17 @@ public class FishingSessionHud : MonoBehaviour
         if (canvas == null)
             return;
 
-        bool shouldShow = hudEnabled && (!hideDuringRhythmMode || !rhythmVisible);
+        bool hideForPause = hideWhenPausedInPondLevel1 && IsPausedInPondLevel();
+        bool shouldShow = hudEnabled && (!hideDuringRhythmMode || !rhythmVisible) && !hideForPause;
         canvas.enabled = shouldShow;
+    }
+
+    private bool IsPausedInPondLevel()
+    {
+        if (Time.timeScale > 0f)
+            return false;
+
+        Scene activeScene = SceneManager.GetActiveScene();
+        return activeScene.name == pondLevelSceneName;
     }
 }
