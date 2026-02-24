@@ -4,6 +4,7 @@ using UnityEngine.SceneManagement;
 public class PauseManager : MonoBehaviour
 {
     public GameObject PausePanel;
+    public GameObject ControlsPanel;
 
     private bool isPaused = false;
 
@@ -22,6 +23,8 @@ public class PauseManager : MonoBehaviour
     public void PauseGame()
     {
         PausePanel.SetActive(true);
+        if (ControlsPanel != null)
+            ControlsPanel.SetActive(false);
         Time.timeScale = 0f;
         isPaused = true;
     }
@@ -29,6 +32,8 @@ public class PauseManager : MonoBehaviour
     public void ResumeGame()
     {
         PausePanel.SetActive(false);
+        if (ControlsPanel != null)
+            ControlsPanel.SetActive(false);
         Time.timeScale = 1f;
         isPaused = false;
     }
@@ -37,5 +42,19 @@ public class PauseManager : MonoBehaviour
     {
         Time.timeScale = 1f;
         SceneManager.LoadScene("MainMenu");
+    }
+
+    public void OpenControls()
+    {
+        PausePanel.SetActive(false);
+        if (ControlsPanel != null)
+            ControlsPanel.SetActive(true);
+    }
+
+    public void BackToPauseMenu()
+    {
+        if (ControlsPanel != null)
+            ControlsPanel.SetActive(false);
+        PausePanel.SetActive(true);
     }
 }
