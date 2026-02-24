@@ -111,6 +111,30 @@ MonoBehaviour:
   noteThickness: 0.2
   laneAngle: 90
   meshSegments: 8
+  perfectHitSoundEvent:
+    Guid:
+      Data1: 2007313463
+      Data2: 1189434961
+      Data3: 1175329411
+      Data4: 1377301339
+    Path: event:/Sfx/success
+  goodHitSoundEvent:
+    Guid:
+      Data1: 2007313463
+      Data2: 1189434961
+      Data3: 1175329411
+      Data4: 1377301339
+    Path: event:/Sfx/success
+  missSoundEvent:
+    Guid:
+      Data1: 1543134618
+      Data2: 1326211156
+      Data3: 1569104060
+      Data4: -1769358581
+    Path: event:/Sfx/tension
+  perfectHitParticleEffect: {fileID: 6790922153684138783, guid: 55976ddcf08f2004cab48b01de8695af, type: 3}
+  goodHitParticleEffect: {fileID: 6790922153684138783, guid: 5055eeb53e549df4d8194abc0f3c4ef0, type: 3}
+  missParticleEffect: {fileID: 6790922153684138783, guid: 4bbabf215393a8a458b3982846a9d405, type: 3}
   _visuals: {fileID: 0}
   _renderer: {fileID: 5690868057350169890}
   flickMaterial: {fileID: 2100000, guid: 2f0cedc9b3ff58e4a8cd52e18d709565, type: 2}
