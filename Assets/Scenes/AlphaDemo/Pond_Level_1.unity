@@ -8221,6 +8221,24 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4720976302214661807, guid: 8afcf6ad3ad8cb346849bf25d6f7dc19, type: 3}
+      propertyPath: m_text
+      value: "                              Menu/UI\nConfirm/Select:                                             
+        A\nCancel/Back                                                  B\nPause:                                                     
+        Start\n\n                               Fishing\n1. Move the bobber using
+        the right stick.\n2. Cast/retrieve your fishing line by pressing the A button.\n\n                              
+        Rhythm\n1. Flick the left stick in the direction of incoming notes.\n\n"
+      objectReference: {fileID: 0}
+    - target: {fileID: 5326612402367047607, guid: 8afcf6ad3ad8cb346849bf25d6f7dc19, type: 3}
+      propertyPath: m_text
+      value: "                              Menu/UI\nConfirm/Select:                     
+        Down D-Pad / B\nCancel/Back                            Right D-Pad / A\nPause:                                                      
+        - / +\n\n                              Fishing\n1. Move the bobber using
+        the joystick.\n2. Cast the rod using a forward throwing motion.\n3. Hook
+        a fish using a quick backward motion.\n\n                             Rhythm\n1.
+        Hold the joycon flat and point it towards the screen.\n2. Flick the joycon
+        in the direction of incoming notes.\n"
+      objectReference: {fileID: 0}
     - target: {fileID: 9113616845428310236, guid: 8afcf6ad3ad8cb346849bf25d6f7dc19, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
