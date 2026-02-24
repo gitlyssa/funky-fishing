@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 public class PondSelectManagerScript : MonoBehaviour
 {
@@ -7,6 +6,6 @@ public class PondSelectManagerScript : MonoBehaviour
     public void FunkPondSelected()
     {
         Debug.Log("Funk Pond Selected");
-        SceneManager.LoadScene("Pond_Level_1");
+        SceneTransitionManager.LoadSceneWithLoading("Pond_Level_1");
     }
 } 

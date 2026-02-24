@@ -1368,6 +1368,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4232e2863eb4b48fb9a67a33a1dfb9af, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
+  xboxConnectedText: {fileID: 1868440459}
+  joyConConnectedText: {fileID: 1900411007}
+  connectedLabel: Connected!
+  disconnectedLabel: Not Connected
+  connectedColor: {r: 0, g: 0.7, b: 0, a: 1}
+  disconnectedColor: {r: 0.75, g: 0, b: 0, a: 1}
+  treatAnyGamepadAsXbox: 1
+  refreshInterval: 0.5
 --- !u!4 &2070664505
 Transform:
   m_ObjectHideFlags: 0

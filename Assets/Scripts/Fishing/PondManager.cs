@@ -4,6 +4,7 @@ using UnityEngine.InputSystem;
 using UnityEngine.Audio;
 using TMPro;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class PondManager : MonoBehaviour
 {
@@ -177,6 +178,7 @@ public class PondManager : MonoBehaviour
             fishIndex = randomIndex;
         }
         GameObject fish = Instantiate(fishPrefabs[fishIndex], position, Quaternion.identity);
+        SceneManager.MoveGameObjectToScene(fish, gameObject.scene);
         //append to fish list
         fish.GetComponent<FishMovement>().pondManager = this;
         fishList.Add(fish);

@@ -7,6 +7,15 @@ public class PauseManager : MonoBehaviour
 
     private bool isPaused = false;
 
+    void Awake()
+    {
+        isPaused = false;
+        Time.timeScale = 1f;
+
+        if (PausePanel != null)
+            PausePanel.SetActive(false);
+    }
+
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.Escape))

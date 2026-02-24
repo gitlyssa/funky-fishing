@@ -10,9 +10,13 @@ public class JoyConDirectionalSwingInput : MonoBehaviour
     [Header("Target")]
     public BobberArcCaster caster;
     public bool onlyWhenTensionState = true;
+    public JoyConGestureDetector gestureDetector;
+    public bool followGestureDetectorLastTrigger = true;
 
     [Header("Device")]
     public int deviceIndex = 0;
+    public bool useAnyConnectedDevice = true;
+    public float reconnectInterval = 2f;
 
     [Header("Axis Mapping")]
     public Axis upGyroAxis = Axis.X;
@@ -43,16 +47,24 @@ public class JoyConDirectionalSwingInput : MonoBehaviour
     private float _directionRearmUntil = -1f;
     private bool _sideRearmed = true;
     private float _sideNeutralSince = -1f;
+    private float _nextReconnectTime = -1f;
+    private bool _warnedMissingDevice;
+    private bool _joyConSwingWasDriving;
 
     void Start()
     {
+        if (gestureDetector == null)
+            gestureDetector = FindObjectOfType<JoyConGestureDetector>();
+
         ConnectDevice();
     }
 
     void OnDisable()
     {
-        if (caster != null)
+        if (caster != null && _joyConSwingWasDriving)
             caster.ClearDirectionalSwingHeld();
+
+        _joyConSwingWasDriving = false;
         _activeDirection = MotionDirection.None;
         _directionRearmUntil = -1f;
         _sideRearmed = true;
@@ -61,13 +73,51 @@ public class JoyConDirectionalSwingInput : MonoBehaviour
 
     void Update()
     {
-        if (caster == null || _deviceId < 0)
+        if (caster == null)
             return;
+
+        if (_deviceId < 0)
+        {
+            if (_joyConSwingWasDriving)
+                PushDirection(MotionDirection.None);
+
+            if (Time.unscaledTime >= _nextReconnectTime)
+            {
+                ConnectDevice();
+                _nextReconnectTime = Time.unscaledTime + Mathf.Max(0.1f, reconnectInterval);
+            }
+
+            if (_deviceId < 0)
+                return;
+        }
+        else if (!JSL.JslStillConnected(_deviceId))
+        {
+            if (_joyConSwingWasDriving)
+                PushDirection(MotionDirection.None);
+
+            _deviceId = -1;
+            return;
+        }
 
         if (onlyWhenTensionState && caster.CurrentState != BobberArcCaster.State.Tension)
         {
-            PushDirection(MotionDirection.None);
+            if (_joyConSwingWasDriving)
+                PushDirection(MotionDirection.None);
             return;
+        }
+
+        int preferredHandle = GetPreferredHandle();
+        if (preferredHandle >= 0 && preferredHandle != _deviceId)
+        {
+            _deviceId = preferredHandle;
+            _gyro = Vector3.zero;
+            _activeDirection = MotionDirection.None;
+            _directionRearmUntil = -1f;
+            _sideRearmed = true;
+            _sideNeutralSince = -1f;
+
+            if (logDirectionChanges)
+                Debug.Log($"JoyCon directional swing switched to handle: {_deviceId}");
         }
 
         float dt = Mathf.Max(0.0001f, Time.deltaTime);
@@ -93,14 +143,51 @@ public class JoyConDirectionalSwingInput : MonoBehaviour
 
         if (_handles.Length == 0)
         {
-            Debug.LogWarning("JoyConDirectionalSwingInput: no JoyShockLibrary device found.");
+            if (!_warnedMissingDevice)
+            {
+                Debug.LogWarning("JoyConDirectionalSwingInput: no JoyShockLibrary device found. Retrying...");
+                _warnedMissingDevice = true;
+            }
+
             _deviceId = -1;
-            enabled = false;
             return;
         }
 
-        _deviceId = _handles[Mathf.Clamp(deviceIndex, 0, _handles.Length - 1)];
+        _warnedMissingDevice = false;
+
+        if (useAnyConnectedDevice)
+        {
+            _deviceId = _handles[0];
+        }
+        else
+        {
+            _deviceId = _handles[Mathf.Clamp(deviceIndex, 0, _handles.Length - 1)];
+        }
+
         Debug.Log($"JoyConDirectionalSwingInput using device handle: {_deviceId}");
+    }
+
+    private int GetPreferredHandle()
+    {
+        if (followGestureDetectorLastTrigger && gestureDetector != null && gestureDetector.LastTriggerHandle >= 0)
+        {
+            int lastHandle = gestureDetector.LastTriggerHandle;
+            if (JSL.JslStillConnected(lastHandle))
+                return lastHandle;
+        }
+
+        if (_deviceId >= 0 && JSL.JslStillConnected(_deviceId))
+            return _deviceId;
+
+        if (_handles == null || _handles.Length == 0)
+            return -1;
+
+        if (useAnyConnectedDevice)
+        {
+            return _handles[0];
+        }
+
+        return _handles[Mathf.Clamp(deviceIndex, 0, _handles.Length - 1)];
     }
 
     private MotionDirection ResolveDirection(float upValue, float sideValue)
@@ -159,16 +246,6 @@ public class JoyConDirectionalSwingInput : MonoBehaviour
 
     private void PushDirection(MotionDirection direction)
     {
-        // Update held flags every frame (fishing uses this)
-        if (_activeDirection == direction && caster != null)
-        {
-            caster.SetDirectionalSwingHeld(
-                direction == MotionDirection.Up,
-                direction == MotionDirection.Left,
-                direction == MotionDirection.Right);
-            return;
-        }
-
         _activeDirection = direction;
 
         if (direction == MotionDirection.Left || direction == MotionDirection.Right)
@@ -182,10 +259,16 @@ public class JoyConDirectionalSwingInput : MonoBehaviour
 
         if (caster != null)
         {
+            bool joyConActive = direction != MotionDirection.None;
+            if (!joyConActive && !_joyConSwingWasDriving)
+                return;
+
             caster.SetDirectionalSwingHeld(
                 direction == MotionDirection.Up,
                 direction == MotionDirection.Left,
                 direction == MotionDirection.Right);
+
+            _joyConSwingWasDriving = joyConActive;
         }
     }
 

@@ -25,6 +25,9 @@ public class CursorCastTargeting : MonoBehaviour
 
     [Header("Raycast")]
     public float maxDistance = 100f;
+    [Header("Startup")]
+    public bool startAtPondCenter = true;
+    public float markerSurfaceOffset = 0.02f;
 
     public Vector3 CurrentTargetPoint { get; private set; }
     public bool HasTarget { get; private set; }
@@ -53,13 +56,15 @@ public class CursorCastTargeting : MonoBehaviour
         // start centered
         CursorPixel = new Vector2(Screen.width * 0.5f, Screen.height * 0.5f);
 
-        if (cam != null)
+        if (startAtPondCenter)
+        {
+            InitializeTargetOnWater();
+        }
+        else if (cam != null)
         {
             UpdateMarkerFromCursor();
             if (!HasTarget)
-            {
                 InitializeTargetOnWater();
-            }
         }
     }
 
@@ -88,7 +93,7 @@ public class CursorCastTargeting : MonoBehaviour
                 if (castMarker)
                 {
                     castMarker.gameObject.SetActive(true);
-                    castMarker.position = CurrentTargetPoint + Vector3.up * 0.02f;
+                    castMarker.position = CurrentTargetPoint + Vector3.up * markerSurfaceOffset;
                 }
             }
             else
@@ -154,7 +159,7 @@ public class CursorCastTargeting : MonoBehaviour
             if (castMarker)
             {
                 castMarker.gameObject.SetActive(true);
-                castMarker.position = hit.point + Vector3.up * 0.02f; // tiny lift
+                castMarker.position = hit.point + Vector3.up * markerSurfaceOffset; // tiny lift
             }
         }
         else
@@ -166,7 +171,7 @@ public class CursorCastTargeting : MonoBehaviour
                 if (castMarker)
                 {
                     castMarker.gameObject.SetActive(true);
-                    castMarker.position = clampedPoint + Vector3.up * 0.02f; // tiny lift
+                    castMarker.position = clampedPoint + Vector3.up * markerSurfaceOffset; // tiny lift
                 }
             }
             else
@@ -287,22 +292,74 @@ public class CursorCastTargeting : MonoBehaviour
         if (castMarker)
         {
             castMarker.gameObject.SetActive(true);
-            castMarker.position = newPoint + Vector3.up * 0.02f;
+            castMarker.position = newPoint + Vector3.up * markerSurfaceOffset;
         }
     }
 
     void InitializeTargetOnWater()
     {
-        if (waterCollider == null) return;
+        if (!TryGetInitialTargetPoint(out Vector3 initialTarget))
+            return;
 
-        CurrentTargetPoint = waterCollider.bounds.center;
+        CurrentTargetPoint = initialTarget;
         HasTarget = true;
+        _lastTargetPoint = CurrentTargetPoint;
+        _hasLastTarget = true;
 
         if (castMarker)
         {
             castMarker.gameObject.SetActive(true);
-            castMarker.position = CurrentTargetPoint + Vector3.up * 0.02f;
+            castMarker.position = CurrentTargetPoint + Vector3.up * markerSurfaceOffset;
         }
+
+        if (cam != null)
+        {
+            Vector3 projected = cam.WorldToScreenPoint(CurrentTargetPoint);
+            CursorPixel = new Vector2(
+                Mathf.Clamp(projected.x, 0f, Screen.width),
+                Mathf.Clamp(projected.y, 0f, Screen.height));
+        }
+    }
+
+    bool TryGetInitialTargetPoint(out Vector3 point)
+    {
+        if (TryGetPondCenterPoint(out point))
+            return true;
+
+        if (waterCollider != null)
+        {
+            point = waterCollider.bounds.center;
+            return true;
+        }
+
+        point = default;
+        return false;
+    }
+
+    bool TryGetPondCenterPoint(out Vector3 point)
+    {
+        PondManager pond = null;
+        if (bobberArcCaster != null)
+            pond = bobberArcCaster.pondManager;
+
+        if (pond == null)
+            pond = FindObjectOfType<PondManager>();
+
+        if (pond != null)
+        {
+            point = pond.transform.position;
+
+            // Prefer actual water surface Y so the marker sits on visible water.
+            if (waterCollider != null)
+                point.y = waterCollider.bounds.center.y;
+            else
+                point.y = pond.waterlevel;
+
+            return true;
+        }
+
+        point = default;
+        return false;
     }
 
     // Optional: simple on-screen dot showing where the virtual cursor is
