@@ -2697,6 +2697,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   PausePanel: {fileID: 465925337}
+  ControlsPanel: {fileID: 0}
 --- !u!4 &606330075
 Transform:
   m_ObjectHideFlags: 0
@@ -7301,6 +7302,7 @@ MonoBehaviour:
   fishPrefabs:
   - {fileID: 7196154191263375292, guid: 83e8391f15bad734ab3208fc4c46d905, type: 3}
   - {fileID: 7196154191263375292, guid: 5653e2282b255bd468ef71503ebbb22e, type: 3}
+  - {fileID: 2849092432556853643, guid: 438f9058cbdccc140a08fb91e15e80d0, type: 3}
   fishList: []
   radius: 6
   waterlevel: 9

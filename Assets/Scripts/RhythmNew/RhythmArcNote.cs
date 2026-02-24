@@ -1,5 +1,5 @@
 using UnityEngine;
-
+using FMODUnity;
 public class RhythmArcNote : MonoBehaviour
 {
     public enum NoteType { Flick, Slide }
@@ -25,6 +25,15 @@ public class RhythmArcNote : MonoBehaviour
     public float laneAngle = 90f;
     public int meshSegments = 16; 
 
+    [Header("Effects")]
+    [SerializeField] private EventReference perfectHitSoundEvent;
+    [SerializeField] private EventReference goodHitSoundEvent;
+    [SerializeField] private EventReference missSoundEvent;
+
+    [Header("Particle Effects")]
+    [SerializeField] private GameObject perfectHitParticleEffect;
+    [SerializeField] private GameObject goodHitParticleEffect;
+    [SerializeField] private GameObject missParticleEffect;
 
     private float _travelDuration;
     private float _spawnTime;
@@ -91,16 +100,46 @@ public class RhythmArcNote : MonoBehaviour
         _visuals.Redraw(currentRadius, noteThickness, laneAngle, meshSegments);
     }
 
-    public void OnHit()
+    public void OnPerfectHit()
     {
         // PLAY HIT ANIMATIONS AND SOUNDS HERE
+        RuntimeManager.PlayOneShot(perfectHitSoundEvent, transform.position);
+        if (perfectHitParticleEffect != null)        {
+            Vector3 effectPosition = transform.position + (Vector3)(GetDirectionVector(direction) * _outerRingRadius);
+            GameObject effect = Instantiate(perfectHitParticleEffect, effectPosition, Quaternion.identity);
+            effect.transform.SetParent(transform.parent);
+            effect.layer = gameObject.layer;
+        }
         Destroy(gameObject); 
+        
+    }
+
+    public void OnGoodHit()
+    {
+        // PLAY GOOD HIT ANIMATIONS AND SOUNDS HERE
+        
+        RuntimeManager.PlayOneShot(goodHitSoundEvent, transform.position);
+        if (goodHitParticleEffect != null)        {
+            Vector3 effectPosition = transform.position + (Vector3)(GetDirectionVector(direction) * _outerRingRadius);
+            GameObject effect = Instantiate(goodHitParticleEffect, effectPosition, Quaternion.identity);
+            effect.transform.SetParent(transform.parent);
+            effect.layer = gameObject.layer;
+        }
+        Destroy(gameObject);
     }
 
     public void OnMiss()
     {
         // PLAY MISS ANIMATIONS AND SOUNDS HERE
+        RuntimeManager.PlayOneShot(missSoundEvent, transform.position);
+        if (missParticleEffect != null)        {
+            Vector3 effectPosition = transform.position + (Vector3)(GetDirectionVector(direction) * _outerRingRadius);
+            GameObject effect = Instantiate(missParticleEffect, effectPosition, Quaternion.identity);
+            effect.transform.SetParent(transform.parent);
+            effect.layer = gameObject.layer;
+        }
         Destroy(gameObject);
+        
     }
 
     private float GetRotationFromDirection(FlickDirection dir) => dir switch {
@@ -109,5 +148,13 @@ public class RhythmArcNote : MonoBehaviour
         FlickDirection.Left => 90f,
         FlickDirection.Down => 180f,
         _ => 0f
+    };
+
+    private Vector2 GetDirectionVector(FlickDirection dir) => dir switch {
+        FlickDirection.Right => Vector2.right,
+        FlickDirection.Up => Vector2.up,
+        FlickDirection.Left => Vector2.left,
+        FlickDirection.Down => Vector2.down,
+        _ => Vector2.zero
     };
 }

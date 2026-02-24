@@ -151,10 +151,10 @@ public class RhythmJudge : MonoBehaviour
         switch (rating)
         {
             case JudgeRating.Perfect:
-                note.OnHit();
+                note.OnPerfectHit();
                 break;
             case JudgeRating.Good:
-                note.OnHit();
+                note.OnGoodHit();
                 break;
             case JudgeRating.Bad:
                 note.OnMiss();
