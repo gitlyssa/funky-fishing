@@ -69,7 +69,7 @@ public class JoyconGestureReader : MonoBehaviour
             yInput = noseDir.y * sensitivity * 2.0f;
         }
 
-        processor.RawInput = new Vector2(
+        processor.RodInput = new Vector2(
             Mathf.Clamp(xInput, -1.5f, 1.5f),
             Mathf.Clamp(yInput, -1.5f, 1.5f)
         );
@@ -94,6 +94,11 @@ public class JoyconGestureReader : MonoBehaviour
         bool downPressed = (state.buttons & (1 << JSL.ButtonMaskDown)) != 0;
 
         processor.RawReelButton = southPressed || downPressed;
+
+        float stickX = state.stickLX;
+        float stickY = state.stickLY;
+
+        processor.SpinInput = new Vector2(stickX, stickY);
 
     }
 }

@@ -11,6 +11,12 @@ public class RodLineVisualizer : MonoBehaviour
     public Transform waterSurface;          // drag your Water plane here
     public bool preventUnderWater = true;
     public float waterClearance = 0.02f;    // keep line slightly above surface
+    public bool allowUnderwaterTailWhenBobberDips = true;
+    public bool pullWholeLineWithBobberDip = true;
+    [Range(0f, 1f)] public float wholeLineDipInfluence = 0.85f;
+    public bool increaseSegmentsWhenBobberDips = true;
+    [Range(8, 128)] public int dippedSegments = 48;
+    [Range(0f, 0.5f)] public float underwaterTailPortion = 0.15f;
 
     [Header("Line Shape")]
     [Range(2, 64)] public int segments = 20;
@@ -81,12 +87,24 @@ public class RodLineVisualizer : MonoBehaviour
                 doLineSway = false;
         }
 
+        if (bobberArcCaster != null && bobberArcCaster.CurrentState == BobberArcCaster.State.Tension)
+        {
+            useSlack = 0f;
+            doLineSway = false;
+        }
+
         DrawSagLine(rodTip.position, bobber.position, useSlack, doLineSway);
     }
 
     void DrawSagLine(Vector3 a, Vector3 b, float slackAmount, bool applyLineSway)
     {
-        line.positionCount = segments;
+        bool bobberIsUnderwater = waterSurface != null && b.y < (waterSurface.position.y + waterClearance);
+        int drawSegments = segments;
+        if (increaseSegmentsWhenBobberDips && allowUnderwaterTailWhenBobberDips && pullWholeLineWithBobberDip && bobberIsUnderwater)
+            drawSegments = Mathf.Max(segments, dippedSegments);
+
+        drawSegments = Mathf.Max(2, drawSegments);
+        line.positionCount = drawSegments;
 
         float dist = Vector3.Distance(a, b);
         float sag = Mathf.Clamp(slackAmount * dist, 0f, maxSag);
@@ -110,9 +128,9 @@ public class RodLineVisualizer : MonoBehaviour
             sag = Mathf.Min(sag, maxAllowedSag);
         }
 
-        for (int i = 0; i < segments; i++)
+        for (int i = 0; i < drawSegments; i++)
         {
-            float t = i / (segments - 1f);
+            float t = i / (drawSegments - 1f);
 
             Vector3 p = Vector3.Lerp(a, b, t);
 
@@ -130,9 +148,27 @@ public class RodLineVisualizer : MonoBehaviour
                 p += lineRight * (swing * lineSwayAmplitude * swayWeight);
             }
 
-            // Extra safety: never let any point go below water
+            // Extra safety: never let points go below water, except when bobber dips underwater.
             if (preventUnderWater && waterSurface)
-                p.y = Mathf.Max(p.y, waterY);
+            {
+                bool allowUnderwaterDueToDip = allowUnderwaterTailWhenBobberDips && bobberIsUnderwater;
+                if (allowUnderwaterDueToDip && pullWholeLineWithBobberDip)
+                {
+                    float dipDepth = waterY - b.y;
+                    float influence = Mathf.Clamp01(wholeLineDipInfluence);
+                    float tailWeight = Mathf.SmoothStep(0f, 1f, t);
+                    float arcWeight = parabola * 0.5f;
+                    float pullWeight = Mathf.Clamp01((tailWeight * 0.75f) + (arcWeight * 0.45f));
+                    p.y -= dipDepth * influence * pullWeight;
+                }
+                else
+                {
+                    bool inTailSection = t >= (1f - Mathf.Clamp01(underwaterTailPortion));
+                    bool allowTailUnderwater = allowUnderwaterDueToDip && inTailSection;
+                    if (!allowTailUnderwater)
+                        p.y = Mathf.Max(p.y, waterY);
+                }
+            }
 
             line.SetPosition(i, p);
         }

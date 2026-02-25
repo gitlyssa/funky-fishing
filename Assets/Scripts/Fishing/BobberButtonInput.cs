@@ -1,11 +1,14 @@
 using UnityEngine;
 
+
 public class BobberButtonInput : MonoBehaviour
 {
     public BobberArcCaster caster;
 
     public KeyCode castKey = KeyCode.C;
     public KeyCode yankKey = KeyCode.Y;
+    [Header("Tension Key")]
+    public KeyCode tensionKey = KeyCode.H;
 
     void Update()
     {
@@ -13,5 +16,6 @@ public class BobberButtonInput : MonoBehaviour
 
         if (Input.GetKeyDown(castKey)) caster.Cast();
         if (Input.GetKeyDown(yankKey)) caster.Yank();
+        if (Input.GetKeyDown(tensionKey)) caster.RequestTensionToggleFromInput();
     }
 }

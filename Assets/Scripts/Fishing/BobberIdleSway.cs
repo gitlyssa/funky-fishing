@@ -32,6 +32,7 @@ public class BobberIdleSway : MonoBehaviour
     private float phaseA;
     private float phaseB;
     private Vector3 landedAnchor;
+    private Vector3 tensionAnchor;
     private Vector3 currentDrift;
     private BobberArcCaster.State lastState = BobberArcCaster.State.Idle;
 
@@ -54,6 +55,9 @@ public class BobberIdleSway : MonoBehaviour
         // If sway is off, gently return to hang point
         if (!swayEnabled)
         {
+            if (bobberArcCaster != null && bobberArcCaster.CurrentState != BobberArcCaster.State.Landed)
+                FishMovement.ClearBobberNibbleVerticalOverride(transform);
+
             if (hangPoint != null)
                 transform.position = Vector3.Lerp(transform.position, hangPoint.position, 1f - Mathf.Exp(-smooth * Time.deltaTime));
             return;
@@ -74,13 +78,47 @@ public class BobberIdleSway : MonoBehaviour
                 }
                 ApplyWaterMotion();
             }
+            else if (bobberArcCaster.CurrentState == BobberArcCaster.State.Tension)
+            {
+                if (bobberArcCaster.IsHookedFishDrivingBobber)
+                {
+                    // BobberArcCaster is actively driving bobber position from hooked fish motion.
+                }
+                else
+                {
+                    if (lastState != BobberArcCaster.State.Tension)
+                        tensionAnchor = transform.position;
+
+                    transform.position = tensionAnchor;
+                }
+            }
         }
         else
         {
             ApplyIdleSway();
         }
 
+        bool canApplyNibbleOverride =
+            bobberArcCaster == null ||
+            bobberArcCaster.CurrentState == BobberArcCaster.State.Landed;
+
+        if (canApplyNibbleOverride)
+            ApplyNibbleBobberVerticalOverride();
+        else
+            FishMovement.ClearBobberNibbleVerticalOverride(transform);
+
         lastState = bobberArcCaster != null ? bobberArcCaster.CurrentState : lastState;
+    }
+
+    private void ApplyNibbleBobberVerticalOverride()
+    {
+        if (FishMovement.TryGetBobberNibbleVerticalOverride(transform, out float targetY, out float followSpeed))
+        {
+            float k = 1f - Mathf.Exp(-Mathf.Max(0.1f, followSpeed) * Time.deltaTime);
+            Vector3 p = transform.position;
+            p.y = Mathf.Lerp(p.y, targetY, k);
+            transform.position = p;
+        }
     }
 
     private void ApplyIdleSway()

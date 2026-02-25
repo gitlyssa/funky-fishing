@@ -13,11 +13,11 @@ public class CursorCastTargeting : MonoBehaviour
     public Collider waterCollider;
     public BobberArcCaster bobberArcCaster;
 
-    [Header("Input Mode")]
-    public bool useJoyCon = false;
-
     [Header("Joy-Con Input Source")]
     public JslStickInput jslInput;
+
+    [Header("External Stick Input")]
+    public float externalStickTimeout = 0.2f;
 
     [Header("Joy-Con Cursor (stick-driven)")]
     public float cursorSpeed = 1200f;     // pixels/sec at full stick
@@ -25,6 +25,9 @@ public class CursorCastTargeting : MonoBehaviour
 
     [Header("Raycast")]
     public float maxDistance = 100f;
+    [Header("Startup")]
+    public bool startAtPondCenter = true;
+    public float markerSurfaceOffset = 0.02f;
 
     public Vector3 CurrentTargetPoint { get; private set; }
     public bool HasTarget { get; private set; }
@@ -36,6 +39,8 @@ public class CursorCastTargeting : MonoBehaviour
     private BobberArcCaster.State _lastCasterState = BobberArcCaster.State.Idle;
     private Vector3 _lastTargetPoint;
     private bool _hasLastTarget;
+    private Vector2 _externalStick;
+    private float _externalStickExpiresAt = -1f;
 
     void Reset()
     {
@@ -51,9 +56,15 @@ public class CursorCastTargeting : MonoBehaviour
         // start centered
         CursorPixel = new Vector2(Screen.width * 0.5f, Screen.height * 0.5f);
 
-        if (useJoyCon)
+        if (startAtPondCenter)
         {
             InitializeTargetOnWater();
+        }
+        else if (cam != null)
+        {
+            UpdateMarkerFromCursor();
+            if (!HasTarget)
+                InitializeTargetOnWater();
         }
     }
 
@@ -82,7 +93,7 @@ public class CursorCastTargeting : MonoBehaviour
                 if (castMarker)
                 {
                     castMarker.gameObject.SetActive(true);
-                    castMarker.position = CurrentTargetPoint + Vector3.up * 0.02f;
+                    castMarker.position = CurrentTargetPoint + Vector3.up * markerSurfaceOffset;
                 }
             }
             else
@@ -91,22 +102,32 @@ public class CursorCastTargeting : MonoBehaviour
             }
         }
 
-        if (useJoyCon)
-            UpdateTargetFromStick();
-        else
+        bool mouseActive = UpdateCursorPixel();
+
+        Vector2 stick = Vector2.zero;
+        bool stickActive = TryGetStick(out stick);
+
+        // Only apply the input source that's actively being used.
+        // This prevents snapping back to the mouse cursor when the stick returns to zero.
+        if (mouseActive)
         {
-            UpdateCursorPixel();
             UpdateMarkerFromCursor();
+        }
+        else if (stickActive)
+        {
+            UpdateTargetFromStick(stick);
         }
     }
 
-    void UpdateCursorPixel()
+    bool UpdateCursorPixel()
     {
 #if ENABLE_INPUT_SYSTEM
+        bool rightHeld = false;
+        bool rightDown = false;
         if (Mouse.current != null)
         {
-            bool rightHeld = Mouse.current.rightButton.isPressed;
-            bool rightDown = Mouse.current.rightButton.wasPressedThisFrame;
+            rightHeld = Mouse.current.rightButton.isPressed;
+            rightDown = Mouse.current.rightButton.wasPressedThisFrame;
             if (rightHeld || rightDown)
                 CursorPixel = Mouse.current.position.ReadValue();
         }
@@ -122,6 +143,8 @@ public class CursorCastTargeting : MonoBehaviour
             Mathf.Clamp(CursorPixel.x, 0, Screen.width),
             Mathf.Clamp(CursorPixel.y, 0, Screen.height)
         );
+
+        return rightHeld || rightDown;
     }
 
     void UpdateMarkerFromCursor()
@@ -136,7 +159,7 @@ public class CursorCastTargeting : MonoBehaviour
             if (castMarker)
             {
                 castMarker.gameObject.SetActive(true);
-                castMarker.position = hit.point + Vector3.up * 0.02f; // tiny lift
+                castMarker.position = hit.point + Vector3.up * markerSurfaceOffset; // tiny lift
             }
         }
         else
@@ -148,7 +171,7 @@ public class CursorCastTargeting : MonoBehaviour
                 if (castMarker)
                 {
                     castMarker.gameObject.SetActive(true);
-                    castMarker.position = clampedPoint + Vector3.up * 0.02f; // tiny lift
+                    castMarker.position = clampedPoint + Vector3.up * markerSurfaceOffset; // tiny lift
                 }
             }
             else
@@ -177,8 +200,18 @@ public class CursorCastTargeting : MonoBehaviour
         return true;
     }
 
-    void UpdateCursorFromStick()
+    bool TryGetStick(out Vector2 stick)
     {
+        stick = Vector2.zero;
+
+        // Optional external stick feed (e.g., Xbox right stick) can drive targeting.
+        if (Time.unscaledTime <= _externalStickExpiresAt)
+        {
+            stick = _externalStick;
+            if (stick != Vector2.zero)
+                return true;
+        }
+
         if (jslInput == null)
         {
             jslInput = FindObjectOfType<JslStickInput>();
@@ -189,23 +222,32 @@ public class CursorCastTargeting : MonoBehaviour
                     Debug.LogWarning("CursorCastTargeting: No JslStickInput found in scene.");
                     _warnedMissingJsl = true;
                 }
-                return;
+                return false;
             }
         }
 
-        if (!jslInput.Connected) return;
+        if (!jslInput.Connected) return false;
 
-        Vector2 stick = jslInput.Stick;
-        if (stick == Vector2.zero) return;
+        stick = jslInput.Stick;
+        return stick != Vector2.zero;
+    }
 
+    public void SetExternalStickInput(Vector2 stick)
+    {
+        _externalStick = stick;
+        _externalStickExpiresAt = Time.unscaledTime + Mathf.Max(0.02f, externalStickTimeout);
+    }
+
+    void UpdateCursorFromStick(Vector2 stick)
+    {
         CursorPixel += stick * cursorSpeed * Time.deltaTime;
     }
 
-    void UpdateTargetFromStick()
+    void UpdateTargetFromStick(Vector2 stick)
     {
         if (waterCollider == null)
         {
-            UpdateCursorFromStick();
+            UpdateCursorFromStick(stick);
             UpdateMarkerFromCursor();
             return;
         }
@@ -231,25 +273,6 @@ public class CursorCastTargeting : MonoBehaviour
 
         if (!HasTarget) return;
 
-        if (jslInput == null)
-        {
-            jslInput = FindObjectOfType<JslStickInput>();
-            if (jslInput == null)
-            {
-                if (!_warnedMissingJsl)
-                {
-                    Debug.LogWarning("CursorCastTargeting: No JslStickInput found in scene.");
-                    _warnedMissingJsl = true;
-                }
-                return;
-            }
-        }
-
-        if (!jslInput.Connected) return;
-
-        Vector2 stick = jslInput.Stick;
-        if (stick == Vector2.zero) return;
-
         Vector3 planeNormal = waterCollider.transform.up;
         Vector3 planeRight = Vector3.ProjectOnPlane(cam.transform.right, planeNormal).normalized;
         Vector3 planeForward = Vector3.ProjectOnPlane(cam.transform.forward, planeNormal).normalized;
@@ -269,22 +292,74 @@ public class CursorCastTargeting : MonoBehaviour
         if (castMarker)
         {
             castMarker.gameObject.SetActive(true);
-            castMarker.position = newPoint + Vector3.up * 0.02f;
+            castMarker.position = newPoint + Vector3.up * markerSurfaceOffset;
         }
     }
 
     void InitializeTargetOnWater()
     {
-        if (waterCollider == null) return;
+        if (!TryGetInitialTargetPoint(out Vector3 initialTarget))
+            return;
 
-        CurrentTargetPoint = waterCollider.bounds.center;
+        CurrentTargetPoint = initialTarget;
         HasTarget = true;
+        _lastTargetPoint = CurrentTargetPoint;
+        _hasLastTarget = true;
 
         if (castMarker)
         {
             castMarker.gameObject.SetActive(true);
-            castMarker.position = CurrentTargetPoint + Vector3.up * 0.02f;
+            castMarker.position = CurrentTargetPoint + Vector3.up * markerSurfaceOffset;
         }
+
+        if (cam != null)
+        {
+            Vector3 projected = cam.WorldToScreenPoint(CurrentTargetPoint);
+            CursorPixel = new Vector2(
+                Mathf.Clamp(projected.x, 0f, Screen.width),
+                Mathf.Clamp(projected.y, 0f, Screen.height));
+        }
+    }
+
+    bool TryGetInitialTargetPoint(out Vector3 point)
+    {
+        if (TryGetPondCenterPoint(out point))
+            return true;
+
+        if (waterCollider != null)
+        {
+            point = waterCollider.bounds.center;
+            return true;
+        }
+
+        point = default;
+        return false;
+    }
+
+    bool TryGetPondCenterPoint(out Vector3 point)
+    {
+        PondManager pond = null;
+        if (bobberArcCaster != null)
+            pond = bobberArcCaster.pondManager;
+
+        if (pond == null)
+            pond = FindObjectOfType<PondManager>();
+
+        if (pond != null)
+        {
+            point = pond.transform.position;
+
+            // Prefer actual water surface Y so the marker sits on visible water.
+            if (waterCollider != null)
+                point.y = waterCollider.bounds.center.y;
+            else
+                point.y = pond.waterlevel;
+
+            return true;
+        }
+
+        point = default;
+        return false;
     }
 
     // Optional: simple on-screen dot showing where the virtual cursor is

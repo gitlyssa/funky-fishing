@@ -1,0 +1,169 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &4897388239609443938
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 196477590658053399}
+  - component: {fileID: 3741604266135636105}
+  - component: {fileID: 5690868057350169890}
+  - component: {fileID: 1862889042809602855}
+  - component: {fileID: 7532979620623959317}
+  - component: {fileID: 3268027811624709382}
+  m_Layer: 6
+  m_Name: FlickSlidePrefab
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &196477590658053399
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4897388239609443938}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: -0, z: -0.01}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!33 &3741604266135636105
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4897388239609443938}
+  m_Mesh: {fileID: 4300000, guid: 28cf9dec78fcf1b488cbbcbd6727b433, type: 2}
+--- !u!23 &5690868057350169890
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4897388239609443938}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: 26c3778993039da4783074af8553f553, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_MaskInteraction: 0
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &1862889042809602855
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4897388239609443938}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 22e136db1ffc8a348a46941fac376706, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RhythmArcNote
+  type: 0
+  direction: 0
+  targetHitTime: 0
+  noteThickness: 0.2
+  laneAngle: 90
+  meshSegments: 8
+  perfectHitSoundEvent:
+    Guid:
+      Data1: 2007313463
+      Data2: 1189434961
+      Data3: 1175329411
+      Data4: 1377301339
+    Path: event:/Sfx/success
+  goodHitSoundEvent:
+    Guid:
+      Data1: 753235439
+      Data2: 1318754189
+      Data3: 242464441
+      Data4: 863583179
+    Path: event:/Sfx/okay
+  missSoundEvent:
+    Guid:
+      Data1: 1629115506
+      Data2: 1198902021
+      Data3: 466684056
+      Data4: -1135614962
+    Path: event:/Sfx/miss
+  perfectHitParticleEffect: {fileID: 6790922153684138783, guid: 55976ddcf08f2004cab48b01de8695af, type: 3}
+  goodHitParticleEffect: {fileID: 6790922153684138783, guid: 5055eeb53e549df4d8194abc0f3c4ef0, type: 3}
+  missParticleEffect: {fileID: 6790922153684138783, guid: 4bbabf215393a8a458b3982846a9d405, type: 3}
+  _visuals: {fileID: 0}
+  _renderer: {fileID: 5690868057350169890}
+  flickMaterial: {fileID: 2100000, guid: 2f0cedc9b3ff58e4a8cd52e18d709565, type: 2}
+  slideMaterial: {fileID: 2100000, guid: 26c3778993039da4783074af8553f553, type: 2}
+--- !u!114 &7532979620623959317
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4897388239609443938}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f22249121c439a4a8e04545b6d4d859, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ProceduralArc
+  innerRadius: 0.9
+  outerRadius: 1.1
+  arcAngle: 90
+  segments: 12
+--- !u!114 &3268027811624709382
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4897388239609443938}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 13ce4537667866544adf11e778715f9c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DynamicArc

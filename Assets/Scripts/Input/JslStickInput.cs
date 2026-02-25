@@ -29,8 +29,11 @@ public class JslStickInput : MonoBehaviour
 
     [Header("Device")]
     public int deviceIndex = 0;
+    public bool useAnyConnectedDevice = true;
+    [Min(0.1f)] public float reconnectInterval = 2f;
 
     [Header("Stick")]
+    public bool autoDetectStickSide = true;
     public bool useRightStick = false; // Joy-Cons typically use the single stick; keep false unless needed
     [Range(0f, 0.5f)] public float deadzone = 0.15f;
     public bool invertY = false;
@@ -38,16 +41,21 @@ public class JslStickInput : MonoBehaviour
     [Header("Debug")]
     public bool showDebugOverlay = true;
     public KeyCode toggleDebugKey = KeyCode.F3;
+    [Min(0.1f)] public float missingDeviceWarningInterval = 5f;
 
     public Vector2 Stick { get; private set; }  // -1..1 (approx)
     public bool Connected { get; private set; }
+    public int ActiveDeviceId { get; private set; } = -1;
 
     private int[] _handles = Array.Empty<int>();
-    private int _id;
+    private int _id = -1;
+    private float _nextReconnectTime;
+    private float _nextMissingDeviceWarningTime;
 
     void Start()
     {
         Connect();
+        _nextReconnectTime = Time.unscaledTime + Mathf.Max(0.1f, reconnectInterval);
     }
 
     void Update()
@@ -57,21 +65,70 @@ public class JslStickInput : MonoBehaviour
             showDebugOverlay = !showDebugOverlay;
         }
 
-        if (!Connected || !JslStillConnected(_id))
+        if (_handles.Length == 0 && Time.unscaledTime >= _nextReconnectTime)
+        {
+            Connect();
+            _nextReconnectTime = Time.unscaledTime + Mathf.Max(0.1f, reconnectInterval);
+        }
+
+        if (_handles.Length == 0)
         {
             Connected = false;
             Stick = Vector2.zero;
+            ActiveDeviceId = -1;
             return;
         }
 
-        var st = JslGetSimpleState(_id);
+        bool gotAnyState = false;
+        Vector2 rawStick = Vector2.zero;
+        float bestMagnitudeSq = -1f;
+        int bestHandle = -1;
 
-        float x = useRightStick ? st.stickRX : st.stickLX;
-        float y = useRightStick ? st.stickRY : st.stickLY;
+        if (useAnyConnectedDevice)
+        {
+            foreach (int handle in _handles)
+            {
+                if (!TryReadRawStick(handle, out Vector2 stick)) continue;
+                gotAnyState = true;
 
-        if (invertY) y = -y;
+                float magnitudeSq = stick.sqrMagnitude;
+                if (magnitudeSq > bestMagnitudeSq)
+                {
+                    bestMagnitudeSq = magnitudeSq;
+                    rawStick = stick;
+                    bestHandle = handle;
+                }
+            }
+        }
+        else
+        {
+            if (_id < 0 && _handles.Length > 0)
+                _id = _handles[Mathf.Clamp(deviceIndex, 0, _handles.Length - 1)];
 
-        Vector2 v = new Vector2(x, y);
+            if (TryReadRawStick(_id, out Vector2 stick))
+            {
+                gotAnyState = true;
+                rawStick = stick;
+                bestHandle = _id;
+            }
+        }
+
+        if (!gotAnyState)
+        {
+            Connected = false;
+            Stick = Vector2.zero;
+            ActiveDeviceId = -1;
+            if (Time.unscaledTime >= _nextReconnectTime)
+            {
+                Connect();
+                _nextReconnectTime = Time.unscaledTime + Mathf.Max(0.1f, reconnectInterval);
+            }
+            return;
+        }
+
+        if (invertY) rawStick.y = -rawStick.y;
+
+        Vector2 v = rawStick;
 
         // Deadzone
         float mag = v.magnitude;
@@ -80,6 +137,8 @@ public class JslStickInput : MonoBehaviour
 
         // Clamp just in case
         Stick = Vector2.ClampMagnitude(v, 1f);
+        Connected = true;
+        ActiveDeviceId = bestHandle;
     }
 
     [ContextMenu("Reconnect")]
@@ -91,14 +150,41 @@ public class JslStickInput : MonoBehaviour
 
         if (_handles.Length == 0)
         {
-            Debug.LogWarning("JslStickInput: No JoyShockLibrary devices found.");
+            if (Time.unscaledTime >= _nextMissingDeviceWarningTime)
+            {
+                Debug.LogWarning("JslStickInput: No JoyShockLibrary devices found.");
+                _nextMissingDeviceWarningTime = Time.unscaledTime + Mathf.Max(0.1f, missingDeviceWarningInterval);
+            }
             Connected = false;
+            ActiveDeviceId = -1;
+            _id = -1;
             return;
         }
 
         _id = _handles[Mathf.Clamp(deviceIndex, 0, _handles.Length - 1)];
+        ActiveDeviceId = _id;
         Connected = true;
-        Debug.Log($"JslStickInput: Connected handle={_id} (deviceIndex={deviceIndex}, total={_handles.Length})");
+        Debug.Log($"JslStickInput: Connected handles={_handles.Length}, selectedHandle={_id}, useAnyConnectedDevice={useAnyConnectedDevice}");
+    }
+
+    private bool TryReadRawStick(int deviceId, out Vector2 rawStick)
+    {
+        rawStick = Vector2.zero;
+
+        if (deviceId < 0 || !JslStillConnected(deviceId))
+            return false;
+
+        var st = JslGetSimpleState(deviceId);
+
+        Vector2 left = new Vector2(st.stickLX, st.stickLY);
+        Vector2 right = new Vector2(st.stickRX, st.stickRY);
+
+        if (autoDetectStickSide)
+            rawStick = left.sqrMagnitude >= right.sqrMagnitude ? left : right;
+        else
+            rawStick = useRightStick ? right : left;
+
+        return true;
     }
 
     void OnGUI()
@@ -106,6 +192,6 @@ public class JslStickInput : MonoBehaviour
         // quick visual debug (optional)
         if (!showDebugOverlay) return;
 
-        GUI.Label(new Rect(10, 10, 400, 22), $"JSL Connected={Connected} Stick={Stick}");
+        GUI.Label(new Rect(10, 10, 600, 22), $"JSL Connected={Connected} ActiveHandle={ActiveDeviceId} Stick={Stick}");
     }
 }
