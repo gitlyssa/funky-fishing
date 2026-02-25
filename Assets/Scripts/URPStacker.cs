@@ -5,6 +5,8 @@ public class URPStacker : MonoBehaviour
 {
     private Camera _overlayCam;
     private Camera _stackedBaseCam;
+    [SerializeField, Min(0.05f)] private float recheckInterval = 0.5f;
+    private float _nextRecheckTime;
 
     private void Awake()
     {
@@ -18,6 +20,21 @@ public class URPStacker : MonoBehaviour
 
     private void LateUpdate()
     {
+        if (_overlayCam == null)
+            return;
+
+        // Fast path: already stacked and still valid.
+        if (_stackedBaseCam != null)
+        {
+            UniversalAdditionalCameraData stackedData = _stackedBaseCam.GetUniversalAdditionalCameraData();
+            if (stackedData != null && stackedData.cameraStack.Contains(_overlayCam))
+                return;
+        }
+
+        if (Time.unscaledTime < _nextRecheckTime)
+            return;
+
+        _nextRecheckTime = Time.unscaledTime + Mathf.Max(0.05f, recheckInterval);
         EnsureStacked();
     }
 
@@ -49,6 +66,7 @@ public class URPStacker : MonoBehaviour
             baseData.cameraStack.Add(_overlayCam);
 
         _stackedBaseCam = baseCam;
+        _nextRecheckTime = Time.unscaledTime + Mathf.Max(0.05f, recheckInterval);
     }
 
     private Camera FindBaseCamera()

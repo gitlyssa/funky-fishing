@@ -18,6 +18,11 @@ public class RhythmJudge : MonoBehaviour
     public float perfectWindow = 0.1f;
     public float goodWindow = 0.3f;
     public float badWindow = 0.5f; // Beyond this is an automatic Miss
+
+    [Header("Debug")]
+    [SerializeField] private bool logNoteResolutions = false;
+    [SerializeField] private bool logReelOutcome = false;
+
     public static event Action<JudgeRating> OnNoteJudged;
 
     void Start()
@@ -150,7 +155,10 @@ public class RhythmJudge : MonoBehaviour
     private void ResolveNote(RhythmArcNote note, JudgeRating rating)
     {
         conductor.activeNotes.Remove(note);
-        Debug.Log($"Resolving Note: Type={note.Type}, Direction={note.Direction}, Rating={rating} (diff={conductor.songTime - note.TargetHitTime:F2})");
+        if (logNoteResolutions)
+        {
+            Debug.Log($"Resolving Note: Type={note.Type}, Direction={note.Direction}, Rating={rating} (diff={conductor.songTime - note.TargetHitTime:F2})");
+        }
         switch (rating)
         {
             case JudgeRating.Perfect:
@@ -193,13 +201,14 @@ public class RhythmJudge : MonoBehaviour
 
             if (finalProgress >= 1.0f)
             {
-
-                Debug.Log("<color=green>REEL CLEARED!</color>");
+                if (logReelOutcome)
+                    Debug.Log("<color=green>REEL CLEARED!</color>");
                 if (finalProgress > 1.0f)
                 {
                     float bonus = Mathf.Min(finalProgress - 1.0f, 1.0f); 
-   
-                    Debug.Log($"<color=gold>BONUS REACHED: {bonus * 100:F0}%</color>");
+
+                    if (logReelOutcome)
+                        Debug.Log($"<color=gold>BONUS REACHED: {bonus * 100:F0}%</color>");
                 }
 
                 reel.OnClear();

@@ -1,6 +1,5 @@
 using UnityEngine;
 using System.Collections.Generic;
-using System.Linq; 
 
 public class RhythmInputProcessorT : MonoBehaviour
 {
@@ -18,6 +17,11 @@ public class RhythmInputProcessorT : MonoBehaviour
     [Header("Reeling Smoothing")]
     public int smoothingWindowSize = 10; 
     private Queue<float> _spinVelocityBuffer = new Queue<float>();
+    private float _spinVelocitySum;
+
+    [Header("Debug")]
+    [SerializeField] private bool logHardwareConnections = true;
+    [SerializeField] private bool logRawSpinEveryFrame = false;
 
     public event System.Action<FlickDirection> OnValidFlick;
     public event System.Action<float> OnSpinAccumulated;
@@ -28,14 +32,17 @@ public class RhythmInputProcessorT : MonoBehaviour
         {
             _connectedHardware.Add(hardware);
             hardware.OnFlick += HandleHardwareFlick;
-            Debug.Log($"[Processor] Successfully added {hardware.GetType().Name}");
+            if (logHardwareConnections)
+                Debug.Log($"[Processor] Successfully added {hardware.GetType().Name}");
         }
     }
 
     public float GetSmoothedSpinVelocity()
     {
-        if (_spinVelocityBuffer.Count == 0) return 0f;
-        return _spinVelocityBuffer.Average();
+        if (_spinVelocityBuffer.Count == 0)
+            return 0f;
+
+        return _spinVelocitySum / _spinVelocityBuffer.Count;
     }
 
     private void HandleHardwareFlick(FlickDirection dir)
@@ -77,17 +84,21 @@ public class RhythmInputProcessorT : MonoBehaviour
         foreach (var hardware in _connectedHardware)
         {
             // We sum them up. If only one is used, the others add 0.
-            totalRawSpin += hardware.GetSpinVelocity();
-            Debug.Log($"[Processor] Raw spin from {hardware.GetType().Name}: {hardware.GetSpinVelocity()}");
+            float spin = hardware.GetSpinVelocity();
+            totalRawSpin += spin;
+
+            if (logRawSpinEveryFrame)
+                Debug.Log($"[Processor] Raw spin from {hardware.GetType().Name}: {spin}");
         }
 
         // 2. Manage the Sliding Window
         _spinVelocityBuffer.Enqueue(totalRawSpin);
+        _spinVelocitySum += totalRawSpin;
         if (_spinVelocityBuffer.Count > smoothingWindowSize)
         {
-            _spinVelocityBuffer.Dequeue();
+            float removed = _spinVelocityBuffer.Dequeue();
+            _spinVelocitySum -= removed;
         }
-        float smoothed = GetSmoothedSpinVelocity();
     }
 
     private bool CanPlayerAct() => true; // Add your game state logic here

@@ -43,7 +43,7 @@ public class RhythmPerformanceHud : MonoBehaviour
     private float _judgementAnimTime = -1f;
 
     private readonly Dictionary<int, float> _trackedNotes = new Dictionary<int, float>();
-    private readonly List<int> _removedIdsBuffer = new List<int>();
+    private readonly HashSet<int> _activeNoteIdsBuffer = new HashSet<int>();
 
     private bool _wasPlaybackActive;
 
@@ -290,7 +290,7 @@ public class RhythmPerformanceHud : MonoBehaviour
 
     private void ResolveRemovedNotes()
     {
-        _removedIdsBuffer.Clear();
+        _activeNoteIdsBuffer.Clear();
 
         for (int i = 0; i < _conductor.activeNotes.Count; i++)
         {
@@ -299,7 +299,7 @@ public class RhythmPerformanceHud : MonoBehaviour
                 continue;
 
             int id = note.GetInstanceID();
-            _removedIdsBuffer.Add(id);
+            _activeNoteIdsBuffer.Add(id);
         }
 
         List<int> trackedIds = ListPool.Get();
@@ -309,7 +309,7 @@ public class RhythmPerformanceHud : MonoBehaviour
         for (int i = 0; i < trackedIds.Count; i++)
         {
             int trackedId = trackedIds[i];
-            if (_removedIdsBuffer.Contains(trackedId))
+            if (_activeNoteIdsBuffer.Contains(trackedId))
                 continue;
 
             float targetHitTime = _trackedNotes[trackedId];
