@@ -77,6 +77,9 @@ public class RhythmConductor : MonoBehaviour
 
     void Update()
     {
+        if (Time.timeScale <= 0f)
+            return;
+
         if (rhythmMusicPlayer == null)
         {
             return;

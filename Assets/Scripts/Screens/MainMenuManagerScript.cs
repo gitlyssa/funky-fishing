@@ -3,7 +3,6 @@ using UnityEngine.SceneManagement;
 
 public class MainMenuManagerScript : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
     public void StartGame()
     {
         Debug.Log("Start Game");
@@ -14,5 +13,15 @@ public class MainMenuManagerScript : MonoBehaviour
     {
         Debug.Log("Controller Menu");
         SceneManager.LoadScene("ControllerMenu");
+    }
+
+    public void QuitGame()
+    {
+        Debug.Log("Quit Game");
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
+        Application.Quit();
+#endif
     }
 }

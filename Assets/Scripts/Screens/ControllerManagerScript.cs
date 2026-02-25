@@ -17,6 +17,7 @@ public class ControllerManagerScript : MonoBehaviour
     [SerializeField] private Color disconnectedColor = new Color(0.75f, 0f, 0f, 1f);
 
     [Header("Detection")]
+    [SerializeField] private bool enableControllerDetection = true;
     [SerializeField] private float refreshInterval = 0.1f;
     [SerializeField] private bool logDetection = false;
     [SerializeField] private bool preferWirelessGamepadAsJoyCon = true;
@@ -28,16 +29,25 @@ public class ControllerManagerScript : MonoBehaviour
 
     private void Awake()
     {
+        if (!enableControllerDetection)
+            return;
+
         AutoBindUiIfNeeded();
     }
 
     private void OnEnable()
     {
+        if (!enableControllerDetection)
+            return;
+
         RefreshControllerStatus(forceLog: false);
     }
 
     private void Update()
     {
+        if (!enableControllerDetection)
+            return;
+
         if (Time.unscaledTime < _nextRefreshTime)
             return;
 

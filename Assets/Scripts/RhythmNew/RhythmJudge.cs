@@ -34,6 +34,9 @@ public class RhythmJudge : MonoBehaviour
 
     void Update()
     {
+        if (Time.timeScale <= 0f)
+            return;
+
         // Flick notes are handled through on flick events, separate to the update loop
         //Anything under the update loop is essentially a state check, for continuous notes
 

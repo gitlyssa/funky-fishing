@@ -68,6 +68,9 @@ public class RhythmInputProcessorT : MonoBehaviour
 
     private void Update()
     {
+        if (Time.timeScale <= 0f)
+            return;
+
         if (_connectedHardware.Count == 0) return;
 
         float totalRawSpin = 0f;

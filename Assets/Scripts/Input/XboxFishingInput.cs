@@ -5,6 +5,8 @@ using UnityEngine.InputSystem.Controls;
 [DefaultExecutionOrder(200)]
 public class XboxFishingInput : MonoBehaviour
 {
+    private static float gameplayInputBlockedUntilRealtime;
+
     public enum PadButton
     {
         A,
@@ -48,24 +50,35 @@ public class XboxFishingInput : MonoBehaviour
     [SerializeField, Range(0.1f, 0.95f)] private float leftStickCardinalThreshold = 0.7f;
     [SerializeField, Range(0.1f, 0.95f)] private float rightStickCardinalThreshold = 0.7f;
 
+    [Header("UI Compatibility")]
+    [SerializeField] private bool suppressGameplayInputWhenPaused = true;
+
     private bool rtPrev;
     private bool ltPrev;
     private bool xboxSwingWasDriving;
 
+    public static void BlockGameplayInputForRealtimeSeconds(float seconds)
+    {
+        float until = Time.unscaledTime + Mathf.Max(0f, seconds);
+        if (until > gameplayInputBlockedUntilRealtime)
+            gameplayInputBlockedUntilRealtime = until;
+    }
+
     void Update()
     {
+        bool blockForPause = suppressGameplayInputWhenPaused && Time.timeScale <= 0f;
+        bool blockForGracePeriod = Time.unscaledTime < gameplayInputBlockedUntilRealtime;
+        if (blockForPause || blockForGracePeriod)
+        {
+            ReleaseGameplayOutputs();
+            SyncTriggerStateToCurrentPad();
+            return;
+        }
+
         var pad = Gamepad.current;
         if (pad == null)
         {
-            if (useRightStickForTargeting && targeting != null)
-                targeting.SetExternalStickInput(Vector2.zero);
-
-            // If Xbox was previously holding a swing direction, release it once.
-            if (caster != null && xboxSwingWasDriving)
-            {
-                caster.SetDirectionalSwingHeld(false, false, false);
-                xboxSwingWasDriving = false;
-            }
+            ReleaseGameplayOutputs();
             return;
         }
 
@@ -132,6 +145,35 @@ public class XboxFishingInput : MonoBehaviour
             caster.SetDirectionalSwingHeld(up, left, right);
             xboxSwingWasDriving = xboxSwingActive;
         }
+    }
+
+    private void ReleaseGameplayOutputs()
+    {
+        if (useRightStickForTargeting && targeting != null)
+            targeting.SetExternalStickInput(Vector2.zero);
+
+        if (caster != null && xboxSwingWasDriving)
+        {
+            caster.SetDirectionalSwingHeld(false, false, false);
+            xboxSwingWasDriving = false;
+        }
+    }
+
+    private void SyncTriggerStateToCurrentPad()
+    {
+        if (!useTriggerFallback)
+            return;
+
+        Gamepad pad = Gamepad.current;
+        if (pad == null)
+        {
+            rtPrev = false;
+            ltPrev = false;
+            return;
+        }
+
+        rtPrev = pad.rightTrigger.ReadValue() > triggerPressThreshold;
+        ltPrev = pad.leftTrigger.ReadValue() > triggerPressThreshold;
     }
 
     private void HandleCastYank(Gamepad pad)

@@ -11,6 +11,7 @@ public class RhythmMusicPlayer : MonoBehaviour
     private bool hasProcessedMusicEnd = false;
     private bool wasInTension = false;
     private bool sawPlaybackActiveInCurrentTension = false;
+    private bool isPausedForGame = false;
 
     void Awake()
     {
@@ -40,6 +41,9 @@ public class RhythmMusicPlayer : MonoBehaviour
     void Update()
     {
         if (!musicInstance.isValid())
+            return;
+
+        if (isPausedForGame)
             return;
 
         if (bobberArcCaster == null)
@@ -130,11 +134,30 @@ public class RhythmMusicPlayer : MonoBehaviour
         musicInstance.setTimelinePosition(0);
     }
 
+    public void PauseRhythmForGamePause()
+    {
+        if (!musicInstance.isValid())
+            return;
+
+        isPausedForGame = true;
+        musicInstance.setPaused(true);
+    }
+
+    public void ResumeRhythmFromGamePause()
+    {
+        if (!musicInstance.isValid())
+            return;
+
+        musicInstance.setPaused(false);
+        isPausedForGame = false;
+    }
+
     public void ForceStopPlaybackAndBeatmap()
     {
         hasProcessedMusicEnd = false;
         wasInTension = false;
         sawPlaybackActiveInCurrentTension = false;
+        isPausedForGame = false;
         StopRhythmPlayback();
 
         if (RhythmConductor.Instance != null)

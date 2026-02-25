@@ -28,6 +28,16 @@ public class KeyboardRhythmProvider : MonoBehaviour, IRhythmInputT
 
     void Update()
     {
+        if (Time.timeScale <= 0f)
+        {
+            _currentSpinVelocity = 0f;
+            _hasTriggeredFlick = false;
+            _virtualStick = Vector2.zero;
+            _lastVirtualStick = Vector2.zero;
+            _virtualReelStick = Vector2.zero;
+            return;
+        }
+
         HandleVirtualStick();
         HandleKeyboardSpin();
         HandleButtons();

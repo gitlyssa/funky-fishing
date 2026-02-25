@@ -575,6 +575,7 @@ public class FishMovement : MonoBehaviour
 
         if (s_nibblePullBobber == null)
         {
+            s_nibblePullOwner = null;
             s_nibblePullRestorePending = false;
             s_nibblePullActive = false;
             return false;
@@ -605,6 +606,20 @@ public class FishMovement : MonoBehaviour
         }
 
         return false;
+    }
+
+    public static void ClearBobberNibbleVerticalOverride(Transform bobberTransform)
+    {
+        if (bobberTransform == null)
+            return;
+
+        if (s_nibblePullBobber != bobberTransform)
+            return;
+
+        s_nibblePullOwner = null;
+        s_nibblePullBobber = null;
+        s_nibblePullActive = false;
+        s_nibblePullRestorePending = false;
     }
 
     private void SetBobberCollisionIgnored(bool ignore)

@@ -164,6 +164,7 @@ public class BobberArcCaster : MonoBehaviour
         ClearHookedFishLockState();
         if (pondManager != null)
             pondManager.RestoreFishAfterTension();
+        FishMovement.ClearBobberNibbleVerticalOverride(bobber);
 
         Vector3 from = bobber.position;            // launch from current (hanging) position
         Vector3 to = targetMarker.position + Vector3.up * castTargetYOffset;
@@ -344,6 +345,7 @@ public class BobberArcCaster : MonoBehaviour
             _preYankRoutine = null;
         }
         _isPreparingYank = false;
+        FishMovement.ClearBobberNibbleVerticalOverride(bobber);
 
         Vector3 to = bobberHangPoint ? bobberHangPoint.position : rodTip.position;
         StartLinearMove(bobber.position, to, yankDuration, yankEase);

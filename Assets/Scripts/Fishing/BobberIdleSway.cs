@@ -55,6 +55,9 @@ public class BobberIdleSway : MonoBehaviour
         // If sway is off, gently return to hang point
         if (!swayEnabled)
         {
+            if (bobberArcCaster != null && bobberArcCaster.CurrentState != BobberArcCaster.State.Landed)
+                FishMovement.ClearBobberNibbleVerticalOverride(transform);
+
             if (hangPoint != null)
                 transform.position = Vector3.Lerp(transform.position, hangPoint.position, 1f - Mathf.Exp(-smooth * Time.deltaTime));
             return;
@@ -95,7 +98,15 @@ public class BobberIdleSway : MonoBehaviour
             ApplyIdleSway();
         }
 
-        ApplyNibbleBobberVerticalOverride();
+        bool canApplyNibbleOverride =
+            bobberArcCaster == null ||
+            bobberArcCaster.CurrentState == BobberArcCaster.State.Landed;
+
+        if (canApplyNibbleOverride)
+            ApplyNibbleBobberVerticalOverride();
+        else
+            FishMovement.ClearBobberNibbleVerticalOverride(transform);
+
         lastState = bobberArcCaster != null ? bobberArcCaster.CurrentState : lastState;
     }
 

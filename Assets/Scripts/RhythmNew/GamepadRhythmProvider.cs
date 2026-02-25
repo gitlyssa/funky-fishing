@@ -23,14 +23,30 @@ public class GamepadRhythmProvider : MonoBehaviour, IRhythmInputT
     private float _accumulatedSpin;
     public float GetTotalAccumulatedSpin() => _accumulatedSpin;
     public void ResetAccumulatedSpin() => _accumulatedSpin = 0f;
-    public Vector2 GetReelStickDirection() => Gamepad.current.rightStick.ReadValue();
+    public Vector2 GetReelStickDirection() => Gamepad.current != null ? Gamepad.current.rightStick.ReadValue() : Vector2.zero;
 
     public Vector2 DirectionalInput => _leftStick;
 
 
     void Update()
     {
-        if (Gamepad.current == null) return;
+        if (Time.timeScale <= 0f)
+        {
+            _currentSpinVelocity = 0f;
+            _hasTriggeredFlick = false;
+            _lastLeftStick = Vector2.zero;
+            _leftStick = Vector2.zero;
+            return;
+        }
+
+        if (Gamepad.current == null)
+        {
+            _currentSpinVelocity = 0f;
+            _hasTriggeredFlick = false;
+            _lastLeftStick = Vector2.zero;
+            _leftStick = Vector2.zero;
+            return;
+        }
 
         HandleLeftStickFlick();
         HandleRightStickSpin();
@@ -105,6 +121,7 @@ public class GamepadRhythmProvider : MonoBehaviour, IRhythmInputT
 
     public bool GetButton(int index)
     {
+        if (Gamepad.current == null) return false;
         if (index == 0) return Gamepad.current.buttonSouth.isPressed;
         return false;
     }
