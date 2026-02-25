@@ -19,8 +19,10 @@ public class GamepadMenuNavigation : MonoBehaviour
 
     [Header("Navigation Input")]
     [SerializeField, Range(0.1f, 0.95f)] private float stickDeadzone = 0.55f;
+    [SerializeField, Range(0.05f, 0.95f)] private float joyConStickDeadzone = 0.22f;
     [SerializeField, Min(0.01f)] private float firstRepeatDelay = 0.25f;
     [SerializeField, Min(0.01f)] private float repeatDelay = 0.12f;
+    [SerializeField, Min(0.01f)] private float buttonRefreshInterval = 0.2f;
 
     [Header("Selection Dot")]
     [SerializeField] private string indicatorSymbol = "\u25CF";
@@ -42,6 +44,7 @@ public class GamepadMenuNavigation : MonoBehaviour
     private Vector2Int heldDirection;
     private bool holdingDirection;
     private float nextMoveTime;
+    private float nextButtonRefreshTime;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void EnsureInstance()
@@ -82,6 +85,7 @@ public class GamepadMenuNavigation : MonoBehaviour
         holdingDirection = false;
         heldDirection = Vector2Int.zero;
         nextMoveTime = 0f;
+        nextButtonRefreshTime = 0f;
         SetIndicatorVisible(false);
     }
 
@@ -105,7 +109,8 @@ public class GamepadMenuNavigation : MonoBehaviour
         }
 
         Gamepad gamepad = Gamepad.current;
-        if (gamepad == null)
+        bool joyConConnected = JoyConMenuInput.AnyConnected;
+        if (gamepad == null && !joyConConnected)
         {
             // Keep mouse/keyboard behavior untouched when no gamepad is connected.
             evt.sendNavigationEvents = true;
@@ -116,7 +121,17 @@ public class GamepadMenuNavigation : MonoBehaviour
         // Prevent built-in UI navigation from fighting this custom controller navigation.
         evt.sendNavigationEvents = false;
 
-        RefreshActiveButtons();
+        bool shouldRefreshButtons =
+            Time.unscaledTime >= nextButtonRefreshTime ||
+            activeButtons.Count == 0 ||
+            currentButton == null ||
+            !activeButtons.Contains(currentButton);
+
+        if (shouldRefreshButtons)
+        {
+            RefreshActiveButtons();
+            nextButtonRefreshTime = Time.unscaledTime + Mathf.Max(0.01f, buttonRefreshInterval);
+        }
         if (activeButtons.Count == 0)
         {
             currentButton = null;
@@ -131,8 +146,12 @@ public class GamepadMenuNavigation : MonoBehaviour
             return;
         }
 
-        HandleDirectionalNavigation(evt, gamepad);
-        HandleSubmit(evt, gamepad);
+        bool submitPressed =
+            (gamepad != null && gamepad.buttonSouth.wasPressedThisFrame) ||
+            JoyConMenuInput.SubmitPressedThisFrame;
+
+        HandleDirectionalNavigation(evt, gamepad, JoyConMenuInput.NavigationStick);
+        HandleSubmit(evt, submitPressed);
         UpdateIndicator();
     }
 
@@ -207,9 +226,9 @@ public class GamepadMenuNavigation : MonoBehaviour
         SetCurrentButton(evt, activeButtons[0]);
     }
 
-    private void HandleDirectionalNavigation(EventSystem evt, Gamepad gamepad)
+    private void HandleDirectionalNavigation(EventSystem evt, Gamepad gamepad, Vector2 joyConStick)
     {
-        Vector2Int direction = ReadMoveDirection(gamepad);
+        Vector2Int direction = ReadMoveDirection(gamepad, joyConStick);
         if (direction == Vector2Int.zero)
         {
             holdingDirection = false;
@@ -240,13 +259,29 @@ public class GamepadMenuNavigation : MonoBehaviour
             SetCurrentButton(evt, next);
     }
 
-    private Vector2Int ReadMoveDirection(Gamepad gamepad)
+    private Vector2Int ReadMoveDirection(Gamepad gamepad, Vector2 joyConStick)
     {
-        Vector2 dpad = gamepad.dpad.ReadValue();
-        Vector2 stick = gamepad.leftStick.ReadValue();
+        Vector2 raw = Vector2.zero;
+        bool usingJoyConInput = false;
+        if (gamepad != null)
+        {
+            Vector2 dpad = gamepad.dpad.ReadValue();
+            Vector2 stick = gamepad.leftStick.ReadValue();
+            raw = dpad.sqrMagnitude > 0.01f ? dpad : stick;
+            if (raw.sqrMagnitude < (stickDeadzone * stickDeadzone))
+            {
+                raw = joyConStick;
+                usingJoyConInput = true;
+            }
+        }
+        else
+        {
+            raw = joyConStick;
+            usingJoyConInput = true;
+        }
 
-        Vector2 raw = dpad.sqrMagnitude > 0.01f ? dpad : stick;
-        if (raw.sqrMagnitude < (stickDeadzone * stickDeadzone))
+        float deadzone = usingJoyConInput ? joyConStickDeadzone : stickDeadzone;
+        if (raw.sqrMagnitude < (deadzone * deadzone))
             return Vector2Int.zero;
 
         if (Mathf.Abs(raw.x) > Mathf.Abs(raw.y))
@@ -314,12 +349,12 @@ public class GamepadMenuNavigation : MonoBehaviour
         return activeButtons[nextIndex];
     }
 
-    private void HandleSubmit(EventSystem evt, Gamepad gamepad)
+    private void HandleSubmit(EventSystem evt, bool submitPressed)
     {
         if (currentButton == null)
             return;
 
-        if (!gamepad.buttonSouth.wasPressedThisFrame)
+        if (!submitPressed)
             return;
 
         ExecuteEvents.Execute(currentButton.gameObject, new BaseEventData(evt), ExecuteEvents.submitHandler);

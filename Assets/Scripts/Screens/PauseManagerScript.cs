@@ -124,6 +124,9 @@ public class PauseManager : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Escape))
             return true;
 
+        if (allowControllerPauseToggle && JoyConMenuInput.PausePressedThisFrame)
+            return true;
+
         if (!allowControllerPauseToggle)
             return false;
 

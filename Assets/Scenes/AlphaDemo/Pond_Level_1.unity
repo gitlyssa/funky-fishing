@@ -966,6 +966,7 @@ MonoBehaviour:
   useRightStickForSwing: 0
   leftStickCardinalThreshold: 0.7
   rightStickCardinalThreshold: 0.7
+  suppressGameplayInputWhenPaused: 1
 --- !u!4 &145753174 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1279437348525638701, guid: e2e682b966e3f644392ffbfab511e0e2, type: 3}
@@ -2804,6 +2805,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: '::'
   PausePanel: {fileID: 1889736252}
   ControlsPanel: {fileID: 1831822980}
+  allowControllerPauseToggle: 1
+  allowControllerCancelBack: 1
+  resumeInputBlockSeconds: 0.25
+  menuExitInputBlockSeconds: 0.35
+  pauseDefaultSelected: {fileID: 0}
+  controlsDefaultSelected: {fileID: 0}
+  pauseDefaultSelectedName: ResumeButton
+  controlsDefaultSelectedName: BackButtton
 --- !u!4 &606330075
 Transform:
   m_ObjectHideFlags: 0
@@ -8279,8 +8288,8 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5326612402367047607, guid: 8afcf6ad3ad8cb346849bf25d6f7dc19, type: 3}
       propertyPath: m_text
-      value: "                              Menu/UI\nConfirm/Select:                     
-        Down D-Pad / B\nCancel/Back                            Right D-Pad / A\nPause:                                                      
+      value: "                              Menu/UI\nConfirm/Select:\t\tRight D-Pad
+        / A\nCancel/Back:\t\tDown D-Pad / B\nPause:                                                      
         - / +\n\n                              Fishing\n1. Move the bobber using
         the joystick.\n2. Cast the rod using a forward throwing motion.\n3. Hook
         a fish using a quick backward motion.\n\n                             Rhythm\n1.
