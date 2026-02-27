@@ -28,6 +28,9 @@ public class BobberArcCaster : MonoBehaviour
     [Header("Yank / Retract")]
     public float yankDuration = 0.25f;
     public AnimationCurve yankEase = AnimationCurve.EaseInOut(0, 0, 1, 1);
+    [Header("Hook Detection")]
+    public bool useNibbleBasedHooking = true;
+    public bool allowRadiusHookFallback = false;
 
     [Header("Tension Entry (Input)")]
     public bool allowManualTensionEntry = false;
@@ -196,11 +199,9 @@ public class BobberArcCaster : MonoBehaviour
             return;
         }
 
-        if (CurrentState == State.Landed && pondManager != null)
+        if (CurrentState == State.Landed)
         {
-            GameObject hookQueryBobber = GetHookQueryBobber();
-            GameObject fish = hookQueryBobber != null ? pondManager.GetClosestFish(hookQueryBobber) : null;
-            if (fish != null)
+            if (TryFindHookableFish(out GameObject fish))
             {
                 _hookedFish = fish;
                 Debug.Log("Fish hooked! Entering tension state.");
@@ -213,7 +214,7 @@ public class BobberArcCaster : MonoBehaviour
         ClearHookedFishLockState();
         if (pondManager != null)
             pondManager.RestoreFishAfterTension();
-        Debug.Log("No fish nearby. Normal yank.");
+        Debug.Log("No hook condition met. Normal yank.");
         StartYank();
     }
 
@@ -318,6 +319,38 @@ public class BobberArcCaster : MonoBehaviour
             return pondManager.playerBobber;
 
         return null;
+    }
+
+    private bool TryFindHookableFish(out GameObject fish)
+    {
+        fish = null;
+
+        GameObject hookQueryBobber = GetHookQueryBobber();
+        if (hookQueryBobber == null)
+            return false;
+
+        if (useNibbleBasedHooking)
+        {
+            if (FishMovement.TryGetHookableNibbleFish(
+                    hookQueryBobber.transform,
+                    out fish,
+                    out bool fromActiveNibble))
+            {
+                Debug.Log(fromActiveNibble
+                    ? "Fish hooked from active nibble."
+                    : "Fish hooked from nibble timing window.");
+                return true;
+            }
+
+            if (!allowRadiusHookFallback)
+                return false;
+        }
+
+        if (pondManager == null)
+            return false;
+
+        fish = pondManager.GetClosestFish(hookQueryBobber);
+        return fish != null;
     }
 
     // Optional external driver (e.g., Joy-Con motion) for W/A/D directional swing.

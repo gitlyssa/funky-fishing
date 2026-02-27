@@ -20,6 +20,7 @@ public class RhythmReelNote : MonoBehaviour
     [SerializeField] private float _accumulatedSpin = 0f;
     [SerializeField] private float _lastRotationCheckpoint = 0f;
     [SerializeField] private bool _isResolved = false;
+    [SerializeField] private bool logRotationCompletions = false;
 
     // State for Visuals to read
     public ReelPhase CurrentPhase { get; private set; } = ReelPhase.None;
@@ -79,7 +80,8 @@ public class RhythmReelNote : MonoBehaviour
     private void OnRotationComplete()
     {
         // we can have some effects for every rotation the player completes 
-        Debug.Log("Full Rotation Completed!");
+        if (logRotationCompletions)
+            Debug.Log("Full Rotation Completed!");
     }
 
     public void OnClear()

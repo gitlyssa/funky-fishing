@@ -81,6 +81,8 @@ public class FishMovement : MonoBehaviour
     private static float s_nibblePullReturnSpeed;
     private static bool s_nibblePullActive;
     private static bool s_nibblePullRestorePending;
+    private static FishMovement s_recentNibblePullOwner;
+    private static Transform s_recentNibblePullBobber;
 
     private void Awake()
     {
@@ -536,6 +538,8 @@ public class FishMovement : MonoBehaviour
         s_nibblePullDownSpeed = Mathf.Max(0.1f, nibbleBobberPullDownSpeed);
         s_nibblePullReturnSpeed = Mathf.Max(0.1f, nibbleBobberReturnSpeed);
         s_nibblePullActive = true;
+        s_recentNibblePullOwner = this;
+        s_recentNibblePullBobber = bobber;
 
         FMODUnity.RuntimeManager.PlayOneShot("event:/Sfx/bite");
 
@@ -553,6 +557,8 @@ public class FishMovement : MonoBehaviour
 
         s_nibblePullTargetY = rb.position.y + nibbleBobberVerticalOffset;
         s_nibblePullActive = true;
+        s_recentNibblePullOwner = this;
+        s_recentNibblePullBobber = bobber;
     }
 
     private void EndBobberNibblePull()
@@ -560,9 +566,49 @@ public class FishMovement : MonoBehaviour
         if (s_nibblePullOwner != this)
             return;
 
+        s_recentNibblePullOwner = this;
+        s_recentNibblePullBobber = bobber;
         s_nibblePullOwner = null;
         s_nibblePullActive = false;
         s_nibblePullRestorePending = s_nibblePullBobber != null;
+    }
+
+    public static bool TryGetHookableNibbleFish(
+        Transform bobberTransform,
+        out GameObject fish,
+        out bool fromActiveNibble)
+    {
+        fish = null;
+        fromActiveNibble = false;
+
+        if (bobberTransform == null)
+            return false;
+
+        FishMovement owner = null;
+        if (s_nibblePullActive && s_nibblePullOwner != null && s_nibblePullBobber == bobberTransform)
+        {
+            owner = s_nibblePullOwner;
+            fromActiveNibble = true;
+        }
+        else if (s_nibblePullRestorePending && s_nibblePullBobber == bobberTransform)
+        {
+            // Match the hook window to the bobber's physical return phase.
+            if (Mathf.Abs(bobberTransform.position.y - s_nibblePullRestY) <= 0.01f)
+            {
+                s_nibblePullRestorePending = false;
+                s_nibblePullBobber = null;
+            }
+            else
+            {
+                owner = s_recentNibblePullOwner;
+            }
+        }
+
+        if (owner == null)
+            return false;
+
+        fish = owner.gameObject;
+        return fish != null && fish.activeInHierarchy;
     }
 
     public static bool TryGetBobberNibbleVerticalOverride(Transform bobberTransform, out float targetY, out float followSpeed)
@@ -620,6 +666,12 @@ public class FishMovement : MonoBehaviour
         s_nibblePullBobber = null;
         s_nibblePullActive = false;
         s_nibblePullRestorePending = false;
+
+        if (s_recentNibblePullBobber == bobberTransform)
+        {
+            s_recentNibblePullOwner = null;
+            s_recentNibblePullBobber = null;
+        }
     }
 
     private void SetBobberCollisionIgnored(bool ignore)
