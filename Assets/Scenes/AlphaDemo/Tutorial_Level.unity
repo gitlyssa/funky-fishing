@@ -3843,9 +3843,9 @@ MonoBehaviour:
   linAccelSmooth: 25
   gyroSmooth: 20
   castForwardLinG: 0.4
-  castGyroDps: 160
+  castGyroDps: 100
   yankBackLinG: 0.4
-  yankGyroDps: 160
+  yankGyroDps: 100
   minTimeBetweenCastAndYank: 0.1
   cooldownAfterTrigger: 0.1
   caster: {fileID: 0}
@@ -4026,6 +4026,8 @@ MonoBehaviour:
   hideDuringRhythmMode: 1
   hideWhenPausedInPondLevel1: 1
   pondLevelSceneName: Tutorial_Level
+  hideInTutorialLevel: 1
+  tutorialSceneName: Tutorial_Level
   panelSize: {x: 340, y: 320}
   panelOffset: {x: -24, y: -24}
   fontSize: 24
@@ -5597,6 +5599,8 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+  useNibbleBasedHooking: 1
+  allowRadiusHookFallback: 0
   allowManualTensionEntry: 0
   lockHookedFishToBobber: 1
   hookedFishFrontPadding: 0

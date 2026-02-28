@@ -5,6 +5,22 @@ using UnityEngine.SceneManagement;
 
 public class FishingSessionHud : MonoBehaviour
 {
+    public struct SessionSummary
+    {
+        public int FishCaught;
+        public int HighScore;
+        public int SessionScore;
+        public int SessionBestCombo;
+        public int SessionRunsCompleted;
+        public int LastCatchScore;
+        public int LastCatchBestCombo;
+        public int LastCatchPerfect;
+        public int LastCatchGood;
+        public int LastCatchMiss;
+        public float LastCatchAccuracy;
+        public int AverageScorePerCatch;
+    }
+
     [Header("Toggle")]
     [SerializeField] private bool hudEnabled = true;
 
@@ -72,6 +88,11 @@ public class FishingSessionHud : MonoBehaviour
         lastCatchMiss = 0;
         lastCatchBestCombo = 0;
         lastCatchAccuracy = 0f;
+    }
+
+    public static void ResetSessionForLevelRestart()
+    {
+        ResetSessionStats();
     }
 
     private void Awake()
@@ -236,6 +257,29 @@ public class FishingSessionHud : MonoBehaviour
     {
         hudEnabled = enabled;
         ApplyHudVisibility(IsRhythmVisible());
+    }
+
+    public static SessionSummary GetSessionSummary()
+    {
+        int avgScore = sessionFishCaught > 0
+            ? Mathf.RoundToInt((float)sessionTotalScore / sessionFishCaught)
+            : 0;
+
+        return new SessionSummary
+        {
+            FishCaught = sessionFishCaught,
+            HighScore = sessionHighScore,
+            SessionScore = sessionTotalScore,
+            SessionBestCombo = sessionBestCombo,
+            SessionRunsCompleted = sessionRunsCompleted,
+            LastCatchScore = lastCatchScore,
+            LastCatchBestCombo = lastCatchBestCombo,
+            LastCatchPerfect = lastCatchPerfect,
+            LastCatchGood = lastCatchGood,
+            LastCatchMiss = lastCatchMiss,
+            LastCatchAccuracy = lastCatchAccuracy,
+            AverageScorePerCatch = avgScore
+        };
     }
 
     private string GetLetterGrade(float accuracy)
