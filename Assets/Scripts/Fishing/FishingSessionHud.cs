@@ -17,6 +17,8 @@ public class FishingSessionHud : MonoBehaviour
     [SerializeField] private bool hideDuringRhythmMode = true;
     [SerializeField] private bool hideWhenPausedInPondLevel1 = true;
     [SerializeField] private string pondLevelSceneName = "Pond_Level_1";
+    [SerializeField] private bool hideInTutorialLevel = true;
+    [SerializeField] private string tutorialSceneName = "Tutorial_Level";
     [SerializeField] private Vector2 panelSize = new Vector2(308f, 290f);
     [SerializeField] private Vector2 panelOffset = new Vector2(-24f, -24f);
     [SerializeField] private int fontSize = 22;
@@ -307,7 +309,8 @@ public class FishingSessionHud : MonoBehaviour
             return;
 
         bool hideForPause = hideWhenPausedInPondLevel1 && IsPausedInPondLevel();
-        bool shouldShow = hudEnabled && (!hideDuringRhythmMode || !rhythmVisible) && !hideForPause;
+        bool hideForTutorial = hideInTutorialLevel && IsInTutorialLevel();
+        bool shouldShow = hudEnabled && (!hideDuringRhythmMode || !rhythmVisible) && !hideForPause && !hideForTutorial;
         canvas.enabled = shouldShow;
     }
 
@@ -318,5 +321,13 @@ public class FishingSessionHud : MonoBehaviour
 
         Scene activeScene = SceneManager.GetActiveScene();
         return activeScene.name == pondLevelSceneName;
+    }
+
+    private bool IsInTutorialLevel()
+    {
+        Scene tutorialScene = SceneManager.GetSceneByName(tutorialSceneName);
+        return tutorialScene.IsValid() &&
+               tutorialScene.isLoaded &&
+               gameObject.scene == tutorialScene;
     }
 }

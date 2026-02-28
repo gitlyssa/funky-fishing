@@ -24,6 +24,7 @@ public class RhythmJudge : MonoBehaviour
     [SerializeField] private bool logReelOutcome = false;
 
     public static event Action<JudgeRating> OnNoteJudged;
+    public static event Action<JudgeRating, RhythmArcNote.NoteType, FlickDirection> OnDetailedNoteJudged;
 
     void Start()
     {
@@ -154,6 +155,8 @@ public class RhythmJudge : MonoBehaviour
 
     private void ResolveNote(RhythmArcNote note, JudgeRating rating)
     {
+        RhythmArcNote.NoteType noteType = note.Type;
+        FlickDirection direction = note.Direction;
         conductor.activeNotes.Remove(note);
         if (logNoteResolutions)
         {
@@ -176,6 +179,7 @@ public class RhythmJudge : MonoBehaviour
         }
 
         OnNoteJudged?.Invoke(rating);
+        OnDetailedNoteJudged?.Invoke(rating, noteType, direction);
     }
 
     private void CheckReelNotes()

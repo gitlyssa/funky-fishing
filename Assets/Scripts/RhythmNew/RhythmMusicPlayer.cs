@@ -12,6 +12,7 @@ public class RhythmMusicPlayer : MonoBehaviour
     private bool wasInTension = false;
     private bool sawPlaybackActiveInCurrentTension = false;
     private bool isPausedForGame = false;
+    private bool tutorialLoopMode = false;
 
     void Awake()
     {
@@ -62,6 +63,7 @@ public class RhythmMusicPlayer : MonoBehaviour
         {
             hasProcessedMusicEnd = false;
             sawPlaybackActiveInCurrentTension = false;
+            tutorialLoopMode = false;
             StopRhythmPlayback();
         }
 
@@ -84,6 +86,14 @@ public class RhythmMusicPlayer : MonoBehaviour
 
             // If tension is active but playback has not started yet, retry a fresh start.
             if (!sawPlaybackActiveInCurrentTension && playbackState == PLAYBACK_STATE.STOPPED)
+            {
+                StartRhythmPlayback();
+                wasInTension = bobberArcCaster != null &&
+                               bobberArcCaster.CurrentState == BobberArcCaster.State.Tension;
+                return;
+            }
+
+            if (tutorialLoopMode && playbackState == PLAYBACK_STATE.STOPPED)
             {
                 StartRhythmPlayback();
                 wasInTension = bobberArcCaster != null &&
@@ -117,7 +127,8 @@ public class RhythmMusicPlayer : MonoBehaviour
     {
         hasProcessedMusicEnd = false;
 
-        if (RhythmConductor.Instance != null)
+        // Keep tutorial practice notes alive across music loops.
+        if (RhythmConductor.Instance != null && !tutorialLoopMode)
             RhythmConductor.Instance.ResetBeatmapForReplay();
 
         StopRhythmPlayback();
@@ -158,6 +169,7 @@ public class RhythmMusicPlayer : MonoBehaviour
         wasInTension = false;
         sawPlaybackActiveInCurrentTension = false;
         isPausedForGame = false;
+        tutorialLoopMode = false;
         StopRhythmPlayback();
 
         if (RhythmConductor.Instance != null)
@@ -168,6 +180,11 @@ public class RhythmMusicPlayer : MonoBehaviour
     {
         if (bobberArcCaster == null)
             bobberArcCaster = FindObjectOfType<BobberArcCaster>();
+    }
+
+    public void SetTutorialLoopMode(bool enabled)
+    {
+        tutorialLoopMode = enabled;
     }
 
     void OnDestroy()
