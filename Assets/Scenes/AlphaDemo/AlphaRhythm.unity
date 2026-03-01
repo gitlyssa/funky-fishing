@@ -684,6 +684,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c6c8cdb31ba5df64a860c467e8ee323a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::URPStacker
+  recheckInterval: 0.5
 --- !u!1 &281680487
 GameObject:
   m_ObjectHideFlags: 0
@@ -13490,6 +13491,8 @@ MonoBehaviour:
   perfectWindow: 0.1
   goodWindow: 0.3
   badWindow: 0.5
+  logNoteResolutions: 0
+  logReelOutcome: 0
 --- !u!4 &1610214995
 Transform:
   m_ObjectHideFlags: 0
@@ -13716,6 +13719,8 @@ MonoBehaviour:
   globalFlickThreshold: 2
   directionWindow: 45
   smoothingWindowSize: 10
+  logHardwareConnections: 1
+  logRawSpinEveryFrame: 0
 --- !u!114 &1949879681
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -13728,13 +13733,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 23c5872e046245a45bc4f7382d31d413, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::KeyboardRhythmProvider
-  flickSoundEvent:
-    Guid:
-      Data1: 0
-      Data2: 0
-      Data3: 0
-      Data4: 0
-    Path: 
   lerpSpeed: 50
   flickVelocityThreshold: 10
   reelLerpSpeed: 15
@@ -13793,6 +13791,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::JoyconRhythmProvider
   deviceId: 0
+  useAnyConnectedDevice: 1
+  deviceIndex: 0
+  reconnectInterval: 1.5
   flickThreshold: 2.5
   resetThreshold: 1.2
   holdingDeadzone: 0.4

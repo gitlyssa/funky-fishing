@@ -61,8 +61,6 @@ public class RhythmConductor : MonoBehaviour
 
         // Load the beatmap and parse it into NoteData objects
         LoadBeatmapFromCSV();
-        _chart.Sort((a, b) => a.hitTime.CompareTo(b.hitTime));
-        CacheBeatmapTemplates();
     }
 
     
@@ -168,9 +166,21 @@ public class RhythmConductor : MonoBehaviour
         songTime = 0f;
     }
 
+    public void SetBeatmapFile(TextAsset newBeatmapFile)
+    {
+        beatmapFile = newBeatmapFile;
+        LoadBeatmapFromCSV();
+        ResetBeatmapForReplay();
+    }
+
 
     private void LoadBeatmapFromCSV()
     {
+        _chart.Clear();
+        _reelQueue.Clear();
+        _chartTemplate.Clear();
+        _reelTemplate.Clear();
+
         if (beatmapFile == null)
         {
             Debug.LogError("Beatmap file not assigned!");
@@ -210,6 +220,8 @@ public class RhythmConductor : MonoBehaviour
             }
         }
 
+        _chart.Sort((a, b) => a.hitTime.CompareTo(b.hitTime));
+        CacheBeatmapTemplates();
         Debug.Log($"Loaded {_chart.Count} notes from beatmap.");
     }
 
