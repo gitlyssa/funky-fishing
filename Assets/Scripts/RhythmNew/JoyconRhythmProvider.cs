@@ -7,7 +7,9 @@ public class JoyconRhythmProvider : MonoBehaviour, IRhythmInputT
     public event Action<int> OnButtonDown;
 
     [Header("Connection")]
-    public int deviceId = -1;
+    public int rodDeviceId = -1;   // Joy-Con 1: Flicks & Buttons
+    public int crankDeviceId = -1; // Joy-Con 2: Accelerometer Reeling
+    [SerializeField] private bool autoAssignDualMode = true;
     [SerializeField] private bool useAnyConnectedDevice = true;
     [SerializeField] private int deviceIndex = 0;
     [SerializeField, Min(0.1f)] private float reconnectInterval = 1.5f;
@@ -88,16 +90,29 @@ public class JoyconRhythmProvider : MonoBehaviour, IRhythmInputT
         if (!TryEnsureActiveDevice())
             return;
 
-        JSL.JOY_SHOCK_STATE state = JSL.JslGetSimpleState(deviceId);
-        JSL.MOTION_STATE motion = JSL.JslGetMotionState(deviceId);
-        JSL.IMU_STATE imu = JSL.JslGetIMUState(deviceId);
+        if (rodDeviceId >= 0)
+        {
+            JSL.JOY_SHOCK_STATE rodState = JSL.JslGetSimpleState(rodDeviceId);
+            JSL.MOTION_STATE rodMotion = JSL.JslGetMotionState(rodDeviceId);
+            JSL.IMU_STATE rodImu = JSL.JslGetIMUState(rodDeviceId);
 
-        // HandleMotionFlick2(motion, imu);    // Accelerometer Logic
-        // HandleThumbstickReel(state);  // Physical Stick Logic
-        HandleAccelerometerCrank(motion);  // Crank Logic
-        HandleButtons(state);
+            HandleMotionFlick2(rodMotion, rodImu);
+            HandleButtons(rodState);
+            
+            HandleThumbstickReel(rodState);
+            _lastSimpleState = rodState;
+            
+        }
 
-        _lastSimpleState = state;
+        // --- POLL CRANK DEVICE (Circular Motion) ---
+        if (crankDeviceId >= 0)
+        {
+            JSL.MOTION_STATE crankMotion = JSL.JslGetMotionState(crankDeviceId);
+            HandleAccelerometerCrank(crankMotion);
+            
+        }
+
+        
     }
 
 
@@ -257,64 +272,65 @@ public class JoyconRhythmProvider : MonoBehaviour, IRhythmInputT
             OnButtonDown?.Invoke(0);
     }
 
-    private void StopRumble() => JSL.JslSetRumble(deviceId, 0, 0);
+    private void StopRumble() => JSL.JslSetRumble(rodDeviceId, 0, 0);
     public bool IsHoldingDirection(FlickDirection direction) => GetDirectionFromVector(_virtualStick) == direction;
     public float GetSpinVelocity() => _currentSpinVelocity;
     public float GetTotalAccumulatedSpin() => _accumulatedSpin;
     public void ResetAccumulatedSpin() => _accumulatedSpin = 0f;
     public Vector2 GetReelStickDirection() => _reelStick;
     private bool TryEnsureActiveDevice()
-    {
-        if (deviceId >= 0 && JSL.JslStillConnected(deviceId))
-            return true;
+{
 
-        if (Time.unscaledTime >= _nextReconnectTime)
-            ReconnectDevices();
+    if (rodDeviceId >= 0 && JSL.JslStillConnected(rodDeviceId))
+        return true;
 
-        if (deviceId >= 0 && JSL.JslStillConnected(deviceId))
-            return true;
+    if (Time.unscaledTime >= _nextReconnectTime)
+        ReconnectDevices();
 
-        _currentSpinVelocity = 0f;
-        return false;
-    }
+
+    if (rodDeviceId >= 0 && JSL.JslStillConnected(rodDeviceId))
+        return true;
+
+    _currentSpinVelocity = 0f;
+    return false;
+}
 
     private void ReconnectDevices()
     {
         int count = JSL.JslConnectDevices();
+        
+        rodDeviceId = -1;
+        crankDeviceId = -1;
+
         if (count <= 0)
         {
             _connectedHandles = Array.Empty<int>();
-            deviceId = -1;
             _nextReconnectTime = Time.unscaledTime + Mathf.Max(0.1f, reconnectInterval);
-
             if (!_warnedMissingDevices)
             {
-                Debug.LogWarning("JoyconRhythmProvider: no JoyShockLibrary devices found.");
+                Debug.LogWarning("JoyconRhythmProvider: No devices found.");
                 _warnedMissingDevices = true;
             }
             return;
         }
 
         int copiedCount = JSL.JslGetConnectedDeviceHandles(_handlesBuffer, _handlesBuffer.Length);
-        copiedCount = Mathf.Clamp(copiedCount, 0, _handlesBuffer.Length);
-
         _connectedHandles = new int[copiedCount];
         Array.Copy(_handlesBuffer, _connectedHandles, copiedCount);
+        
         _warnedMissingDevices = false;
         _nextReconnectTime = Time.unscaledTime + Mathf.Max(0.1f, reconnectInterval);
 
-        if (useAnyConnectedDevice)
+        if (_connectedHandles.Length >= 2)
         {
-            deviceId = FindFirstConnectedHandle(_connectedHandles);
+            rodDeviceId = _connectedHandles[0];
+            crankDeviceId = _connectedHandles[1];
+            Debug.Log($"[Dual Mode] Rod ID: {rodDeviceId}, Crank ID: {crankDeviceId}");
         }
-        else if (_connectedHandles.Length > 0)
+        else if (_connectedHandles.Length == 1)
         {
-            int idx = Mathf.Clamp(deviceIndex, 0, _connectedHandles.Length - 1);
-            deviceId = _connectedHandles[idx];
-        }
-        else
-        {
-            deviceId = -1;
+            rodDeviceId = _connectedHandles[0];
+            Debug.Log($"[Single Mode] Rod ID: {rodDeviceId}");
         }
     }
 
@@ -332,13 +348,11 @@ public class JoyconRhythmProvider : MonoBehaviour, IRhythmInputT
 
     public bool GetButton(int index)
     {
-        if (index != 0)
+
+        if (index != 0 || rodDeviceId < 0 || !JSL.JslStillConnected(rodDeviceId))
             return false;
 
-        if (deviceId < 0 || !JSL.JslStillConnected(deviceId))
-            return false;
-
-        return (JSL.JslGetSimpleState(deviceId).buttons & (1 << JSL.ButtonMaskDown)) != 0;
+        return (JSL.JslGetSimpleState(rodDeviceId).buttons & (1 << JSL.ButtonMaskDown)) != 0;
     }
 
     private FlickDirection GetDirectionFromAccel(Vector3 acc)
