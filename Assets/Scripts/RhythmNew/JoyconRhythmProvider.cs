@@ -13,9 +13,22 @@ public class JoyconRhythmProvider : MonoBehaviour, IRhythmInputT
     [SerializeField, Min(0.1f)] private float reconnectInterval = 1.5f;
 
     [Header("Joycon Flick Settings")]
-    public float flickThreshold = 2.5f; // G-force threshold (1.0 is gravity)
-    public float resetThreshold = 1.2f; // Must drop below this to flick again
+
+    public float flickThreshold = 2.5f; // Minimum acceleration magnitude to register a flick
+    public float resetThreshold = 1.5f; // Acceleration magnitude below which we
     public float holdingDeadzone = 0.4f;
+    public float enterThreshold = 3.0f; 
+    public float exitThreshold = 1.5f;  
+
+    public float gyroSnapThreshold = 150f; // Degrees per second to trigger snap
+    public float gyroSnapResetThreshold = 80f; // Degrees per second to reset snap state
+    private Vector3 _peakDirectionVector = Vector3.zero;
+    private bool _isAwaitingSnap = false;
+
+    [Header("Simplified Gyro Gate")]
+    public float gyroEntryDps = 170f; 
+    public float gyroNeutralDps = 60f; 
+
 
     [Header("Reel Settings")]
     public float deadzone = 0.15f;
@@ -25,12 +38,27 @@ public class JoyconRhythmProvider : MonoBehaviour, IRhythmInputT
     private float _nextReconnectTime;
     private bool _warnedMissingDevices;
 
+    [Header("Flick Variables")]
     private Vector2 _virtualStick; // Derived from Gravity Tilt
+    private bool _isFlicking;
+    private Vector3 _lastFlickVector; // For direction consistency checks
+
+    private Vector3 _lastGyroVector; // For snap direction consistency
+
+    [Header("Rebound Protection")]
+    public float reboundLockoutTime = 0.08f; // 80ms window to ignore rebounds
+    public float requiredIntensityRatio = 0.6f; // New flick must be 60% as strong as previous peak
+
+    private float _lockoutTimer = 0f;
+    private float _lastPeakSpeed = 0f;
+    public float directionChangeThreshold = -0.2f; // -1 is perfectly opposite
+
+    [Header("Reel Variables")]
     private Vector2 _reelStick;    // Derived from Physical Thumbstick
     private float _currentSpinVelocity;
     private float _lastReelAngle;
     private float _accumulatedSpin;
-    private bool _isFlicking;
+    
     private JSL.JOY_SHOCK_STATE _lastSimpleState;
 
     private void Start()
@@ -56,14 +84,162 @@ public class JoyconRhythmProvider : MonoBehaviour, IRhythmInputT
 
         JSL.JOY_SHOCK_STATE state = JSL.JslGetSimpleState(deviceId);
         JSL.MOTION_STATE motion = JSL.JslGetMotionState(deviceId);
+        JSL.IMU_STATE imu = JSL.JslGetIMUState(deviceId);
 
-        HandleMotionFlick(motion);    // Accelerometer Logic
+        HandleMotionFlick2(motion, imu);    // Accelerometer Logic
         HandleThumbstickReel(state);  // Physical Stick Logic
         HandleButtons(state);
 
         _lastSimpleState = state;
     }
 
+    // private void GyroSnap(JSL.MOTION_STATE motion)
+    //     {
+    //         Vector3 gyro = new Vector3(
+    //             motion.gyroX, 
+    //             motion.gyroY, 
+    //             motion.gyroZ
+    //         );
+            
+
+    //     }
+
+    private void HandleMotionFlick2(JSL.MOTION_STATE motion, JSL.IMU_STATE imu)
+    {
+        Vector2 userAcc2D = new Vector2(
+            motion.accelX - motion.gravX,
+            motion.accelY - motion.gravY
+        );
+
+        // get gyro for flick logic
+        Vector3 gyroVel = new Vector3(
+            -imu.gyroY,
+            imu.gyroX
+        );
+
+        float gyroSpeed = gyroVel.magnitude;
+        float force = userAcc2D.magnitude;
+
+        _lockoutTimer -= Time.deltaTime;
+
+        if (_isFlicking)
+        {
+
+            // Track the peak of the CURRENT flick to compare against rebounds later
+            if (gyroSpeed > _lastPeakSpeed) _lastPeakSpeed = gyroSpeed;
+
+            // 1. DIRECTIONAL BREAK (Only if outside lockout)
+            if (_lockoutTimer <= 0)
+            {
+                float dot = Vector2.Dot(gyroVel.normalized, _lastFlickVector.normalized);
+                
+                // Only allow a flip if it's a STRONG intentional move in the opposite direction
+                if (dot < directionChangeThreshold && gyroSpeed > (_lastPeakSpeed * requiredIntensityRatio))
+                {
+                    _isFlicking = false; // "Short-circuit" for a rapid new note
+                }
+            }
+
+
+            if (gyroSpeed < gyroNeutralDps)
+            {
+                _isFlicking = false;
+                _lastPeakSpeed = 0f;
+            }
+            return; 
+        }
+        if (gyroSpeed > gyroEntryDps && _lockoutTimer <= 0  )
+        {
+            FlickDirection dir = GetDirectionFromGyro(gyroVel);
+            if (dir != FlickDirection.None)
+            {
+                OnFlick?.Invoke(dir);
+                _isFlicking = true; 
+                _lastFlickVector = gyroVel;
+                _lastPeakSpeed = gyroSpeed;
+                _lockoutTimer = reboundLockoutTime; // START THE GUARD
+            }
+        }
+
+        // if (_isFlicking)
+        // {
+            
+        //     if (force < exitThreshold)
+        //     {
+        //         _isFlicking = false;
+        //     }
+        //     return; 
+        // }
+
+
+        // if (force > enterThreshold)
+        // {
+        //     FlickDirection dir = GetDirectionFromAccel(userAcc2D);
+        //     if (dir != FlickDirection.None)
+        //     {
+        //         OnFlick?.Invoke(dir);
+        //         _isFlicking = true; 
+
+        //     }
+        // }
+    }
+    private void HandleMotionFlick(JSL.MOTION_STATE motion)
+    {
+        Vector3 userAcc = new Vector3(
+            motion.accelX - motion.gravX,
+            motion.accelY - motion.gravY,
+            motion.accelZ - motion.gravZ
+        );
+
+        float force = userAcc.magnitude;
+
+        if (force > flickThreshold && !_isFlicking)
+        {
+            FlickDirection dir = GetDirectionFromAccel(userAcc);
+            if (dir != FlickDirection.None)
+            {
+                OnFlick?.Invoke(dir);
+                _isFlicking = true;
+            }
+        }
+
+        if (force < resetThreshold)
+            _isFlicking = false;
+    }
+    private void HandleThumbstickReel(JSL.JOY_SHOCK_STATE state)
+    {
+        _reelStick = new Vector2(state.stickLX + state.stickRX, state.stickLY + state.stickRY);
+
+        if (_reelStick.magnitude > deadzone)
+        {
+            float currentAngle = Mathf.Atan2(_reelStick.y, _reelStick.x) * Mathf.Rad2Deg;
+            float delta = Mathf.DeltaAngle(_lastReelAngle, currentAngle);
+
+            _currentSpinVelocity = delta / Mathf.Max(0.0001f, Time.deltaTime);
+            _lastReelAngle = currentAngle;
+            _accumulatedSpin += delta;
+        }
+        else
+        {
+            _currentSpinVelocity = 0f;
+        }
+    }
+
+    private void HandleButtons(JSL.JOY_SHOCK_STATE state)
+    {
+        bool isDown = (state.buttons & (1 << JSL.ButtonMaskDown)) != 0;
+        bool wasDown = (_lastSimpleState.buttons & (1 << JSL.ButtonMaskDown)) != 0;
+
+        if (isDown && !wasDown)
+            OnButtonDown?.Invoke(0);
+    }
+
+    private void StopRumble() => JSL.JslSetRumble(deviceId, 0, 0);
+    public bool IsHoldingDirection(FlickDirection direction) => GetDirectionFromVector(_virtualStick) == direction;
+    public float GetSpinVelocity() => _currentSpinVelocity;
+    public float GetTotalAccumulatedSpin() => _accumulatedSpin;
+    public void ResetAccumulatedSpin() => _accumulatedSpin = 0f;
+    public Vector2 GetReelStickDirection() => _reelStick;
     private bool TryEnsureActiveDevice()
     {
         if (deviceId >= 0 && JSL.JslStillConnected(deviceId))
@@ -131,65 +307,6 @@ public class JoyconRhythmProvider : MonoBehaviour, IRhythmInputT
         return -1;
     }
 
-    private void HandleMotionFlick(JSL.MOTION_STATE motion)
-    {
-        Vector3 userAcc = new Vector3(
-            motion.accelX - motion.gravX,
-            motion.accelY - motion.gravY,
-            motion.accelZ - motion.gravZ
-        );
-
-        float force = userAcc.magnitude;
-
-        if (force > flickThreshold && !_isFlicking)
-        {
-            FlickDirection dir = GetDirectionFromAccel(userAcc);
-            if (dir != FlickDirection.None)
-            {
-                OnFlick?.Invoke(dir);
-                _isFlicking = true;
-            }
-        }
-
-        if (force < resetThreshold)
-            _isFlicking = false;
-    }
-
-    private void HandleThumbstickReel(JSL.JOY_SHOCK_STATE state)
-    {
-        _reelStick = new Vector2(state.stickLX + state.stickRX, state.stickLY + state.stickRY);
-
-        if (_reelStick.magnitude > deadzone)
-        {
-            float currentAngle = Mathf.Atan2(_reelStick.y, _reelStick.x) * Mathf.Rad2Deg;
-            float delta = Mathf.DeltaAngle(_lastReelAngle, currentAngle);
-
-            _currentSpinVelocity = delta / Mathf.Max(0.0001f, Time.deltaTime);
-            _lastReelAngle = currentAngle;
-            _accumulatedSpin += delta;
-        }
-        else
-        {
-            _currentSpinVelocity = 0f;
-        }
-    }
-
-    private void HandleButtons(JSL.JOY_SHOCK_STATE state)
-    {
-        bool isDown = (state.buttons & (1 << JSL.ButtonMaskDown)) != 0;
-        bool wasDown = (_lastSimpleState.buttons & (1 << JSL.ButtonMaskDown)) != 0;
-
-        if (isDown && !wasDown)
-            OnButtonDown?.Invoke(0);
-    }
-
-    private void StopRumble() => JSL.JslSetRumble(deviceId, 0, 0);
-    public bool IsHoldingDirection(FlickDirection direction) => GetDirectionFromVector(_virtualStick) == direction;
-    public float GetSpinVelocity() => _currentSpinVelocity;
-    public float GetTotalAccumulatedSpin() => _accumulatedSpin;
-    public void ResetAccumulatedSpin() => _accumulatedSpin = 0f;
-    public Vector2 GetReelStickDirection() => _reelStick;
-
     public bool GetButton(int index)
     {
         if (index != 0)
@@ -205,6 +322,19 @@ public class JoyconRhythmProvider : MonoBehaviour, IRhythmInputT
     {
         float x = acc.x;
         float y = acc.y;
+        float absX = Mathf.Abs(x);
+        float absY = Mathf.Abs(y);
+
+        if (absX > absY)
+            return x > 0 ? FlickDirection.Right : FlickDirection.Left;
+
+        return y > 0 ? FlickDirection.Up : FlickDirection.Down;
+    }
+
+    private FlickDirection GetDirectionFromGyro(Vector3 gyroVelocity)
+    {
+        float x = gyroVelocity.x;
+        float y = gyroVelocity.y;
         float absX = Mathf.Abs(x);
         float absY = Mathf.Abs(y);
 

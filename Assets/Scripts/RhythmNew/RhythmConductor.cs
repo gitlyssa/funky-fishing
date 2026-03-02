@@ -108,7 +108,7 @@ public class RhythmConductor : MonoBehaviour
             //     {
             //         startTime = songTime + 2.0f,
             //         duration = 3.0f,
-            //         goalDegrees = (Random.value > 0.5f) ? 720f : -720f, // 2 full spins in either direction
+            //         goalDegrees = (UnityEngine.Random.value > 0.5f) ? 720f : -720f, // 2 full spins in either direction
             //         leadInTime = 1.0f
             //     };
             //     SpawnReel(testReel);
