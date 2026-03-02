@@ -136,12 +136,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RhythmProfile
   musicEvent:
     Guid:
-      Data1: -1233211620
-      Data2: 1195024357
-      Data3: -255170375
-      Data4: -1468407509
-    Path: event:/Music/TestMusic
-  beatmapFile: {fileID: 4900000, guid: 186b95cc29ced7a47baea78a9e6e09f0, type: 3}
+      Data1: 1815795368
+      Data2: 1074115134
+      Data3: -1093406294
+      Data4: 21482842
+    Path: event:/Music/Fish2
+  beatmapFile: {fileID: 4900000, guid: 351f536584ebbbf479bc5fa7e44736bc, type: 3}
 --- !u!1001 &4692308055997896240
 PrefabInstance:
   m_ObjectHideFlags: 0
