@@ -13811,7 +13811,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c2fde3299ae6f724f8fc4e41a81edb00, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::JoyconRhythmProvider
-  deviceId: 0
+  rodDeviceId: -1
+  crankDeviceId: -1
+  autoAssignDualMode: 1
   useAnyConnectedDevice: 1
   deviceIndex: 0
   reconnectInterval: 1.5
@@ -13825,6 +13827,8 @@ MonoBehaviour:
   gyroEntryDps: 140
   gyroNeutralDps: 80
   deadzone: 0.15
+  crankRadiusThreshold: 0.2
+  accelFilterSmoothing: 15
   reboundLockoutTime: 0.08
   requiredIntensityRatio: 0.6
   directionChangeThreshold: -0.2
