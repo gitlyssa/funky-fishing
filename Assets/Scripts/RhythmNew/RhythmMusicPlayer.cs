@@ -29,13 +29,7 @@ public class RhythmMusicPlayer : MonoBehaviour
 
     void Start()
     {
-        if (musicEvent.IsNull)
-        {
-            Debug.LogError("RhythmMusicPlayer has no FMOD music event assigned.");
-            return;
-        }
-
-        musicInstance = RuntimeManager.CreateInstance(musicEvent);
+        RecreateMusicInstance();
         ResolveBobberArcCaster();
     }
 
@@ -176,12 +170,33 @@ public class RhythmMusicPlayer : MonoBehaviour
             RhythmConductor.Instance.ResetBeatmapForReplay();
     }
 
+    public void SetMusicEvent(EventReference newMusicEvent)
+    {
+        musicEvent = newMusicEvent;
+        RecreateMusicInstance();
+    }
+
     private void ResolveBobberArcCaster()
     {
         if (bobberArcCaster == null)
             bobberArcCaster = FindObjectOfType<BobberArcCaster>();
     }
 
+    private void RecreateMusicInstance()
+    {
+        if (musicInstance.isValid())
+        {
+            musicInstance.stop(FMOD.Studio.STOP_MODE.IMMEDIATE);
+            musicInstance.release();
+        }
+
+        if (musicEvent.IsNull)
+        {
+            Debug.LogError("RhythmMusicPlayer has no FMOD music event assigned.");
+            return;
+        }
+
+        musicInstance = RuntimeManager.CreateInstance(musicEvent);
     public void SetTutorialLoopMode(bool enabled)
     {
         tutorialLoopMode = enabled;
