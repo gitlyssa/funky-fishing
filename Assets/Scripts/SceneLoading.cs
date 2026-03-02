@@ -99,8 +99,8 @@ public class SceneLoading : MonoBehaviour
             if (rhythmProfile != null)
             {
                 string beatmapName = rhythmProfile.beatmapFile != null ? rhythmProfile.beatmapFile.name : "null";
-                string musicEventPath = rhythmProfile.musicEvent.IsNull ? "null" : rhythmProfile.musicEvent.Path;
-                Debug.Log($"Fish '{fishToMigrate.name}' RhythmProfile values -> beatmapFile: {beatmapName}, musicEvent: {musicEventPath}");
+                string musicEventInfo = rhythmProfile.musicEvent.IsNull ? "null" : rhythmProfile.musicEvent.ToString();
+                Debug.Log($"Fish '{fishToMigrate.name}' RhythmProfile values -> beatmapFile: {beatmapName}, musicEvent: {musicEventInfo}");
             }
             else
             {
