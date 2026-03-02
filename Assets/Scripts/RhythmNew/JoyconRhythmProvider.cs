@@ -32,6 +32,12 @@ public class JoyconRhythmProvider : MonoBehaviour, IRhythmInputT
 
     [Header("Reel Settings")]
     public float deadzone = 0.15f;
+    [Header("Accelerometer Crank Settings")]
+    public float crankRadiusThreshold = 0.2f; // Minimum "size" of the circle to count
+    public float accelFilterSmoothing = 15f; // To smooth out shaky hands
+
+    private Vector2 _smoothedAccel;
+    private float _lastCrankAngle;
 
     private readonly int[] _handlesBuffer = new int[16];
     private int[] _connectedHandles = Array.Empty<int>();
@@ -86,23 +92,14 @@ public class JoyconRhythmProvider : MonoBehaviour, IRhythmInputT
         JSL.MOTION_STATE motion = JSL.JslGetMotionState(deviceId);
         JSL.IMU_STATE imu = JSL.JslGetIMUState(deviceId);
 
-        HandleMotionFlick2(motion, imu);    // Accelerometer Logic
-        HandleThumbstickReel(state);  // Physical Stick Logic
+        // HandleMotionFlick2(motion, imu);    // Accelerometer Logic
+        // HandleThumbstickReel(state);  // Physical Stick Logic
+        HandleAccelerometerCrank(motion);  // Crank Logic
         HandleButtons(state);
 
         _lastSimpleState = state;
     }
 
-    // private void GyroSnap(JSL.MOTION_STATE motion)
-    //     {
-    //         Vector3 gyro = new Vector3(
-    //             motion.gyroX, 
-    //             motion.gyroY, 
-    //             motion.gyroZ
-    //         );
-            
-
-    //     }
 
     private void HandleMotionFlick2(JSL.MOTION_STATE motion, JSL.IMU_STATE imu)
     {
@@ -125,18 +122,18 @@ public class JoyconRhythmProvider : MonoBehaviour, IRhythmInputT
         if (_isFlicking)
         {
 
-            // Track the peak of the CURRENT flick to compare against rebounds later
+
             if (gyroSpeed > _lastPeakSpeed) _lastPeakSpeed = gyroSpeed;
 
-            // 1. DIRECTIONAL BREAK (Only if outside lockout)
+
             if (_lockoutTimer <= 0)
             {
                 float dot = Vector2.Dot(gyroVel.normalized, _lastFlickVector.normalized);
                 
-                // Only allow a flip if it's a STRONG intentional move in the opposite direction
+                
                 if (dot < directionChangeThreshold && gyroSpeed > (_lastPeakSpeed * requiredIntensityRatio))
                 {
-                    _isFlicking = false; // "Short-circuit" for a rapid new note
+                    _isFlicking = false; 
                 }
             }
 
@@ -222,6 +219,32 @@ public class JoyconRhythmProvider : MonoBehaviour, IRhythmInputT
         else
         {
             _currentSpinVelocity = 0f;
+        }
+    }
+
+    private void HandleAccelerometerCrank(JSL.MOTION_STATE motion)
+    {
+
+        Vector2 rawInput = new Vector2(motion.accelX - motion.gravX, motion.accelY - motion.gravY);
+
+        _smoothedAccel = Vector2.Lerp(_smoothedAccel, rawInput, Time.deltaTime * accelFilterSmoothing);
+
+        if (_smoothedAccel.magnitude > crankRadiusThreshold)
+        {
+            float currentAngle = Mathf.Atan2(_smoothedAccel.y, _smoothedAccel.x) * Mathf.Rad2Deg;
+            
+            float delta = Mathf.DeltaAngle(_lastCrankAngle, currentAngle);
+
+            _currentSpinVelocity = delta / Mathf.Max(0.0001f, Time.deltaTime);
+            _accumulatedSpin += delta;
+            _lastCrankAngle = currentAngle;
+
+            float rad = currentAngle * Mathf.Deg2Rad;
+            _reelStick = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad));
+        }
+        else
+        {
+            _currentSpinVelocity = Mathf.MoveTowards(_currentSpinVelocity, 0, Time.deltaTime * 100f);
         }
     }
 
