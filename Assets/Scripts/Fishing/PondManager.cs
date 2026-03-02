@@ -8,8 +8,18 @@ using UnityEngine.SceneManagement;
 
 public class PondManager : MonoBehaviour
 {
+    [System.Serializable]
+    public class FishSpawnEntry
+    {
+        public GameObject prefab;
+        [Min(0)] public int count = 1;
+    }
+
     // array of fish prefabs
     public GameObject[] fishPrefabs;
+    [Header("Spawn Plan (Preferred)")]
+    public List<FishSpawnEntry> initialSpawnPlan = new List<FishSpawnEntry>();
+
     // list of spawned fish
     public List<GameObject> fishList;
 
@@ -112,17 +122,15 @@ public class PondManager : MonoBehaviour
         pondCenter = transform.position;
         fishList = new List<GameObject>();
         _lastDisableFishFishCollisions = disableFishFishCollisions;
-        // Spawn initial fish at random positions in pond.
-        for (int i = 0; i < initialFishCount; i++)
-        {   
 
-            // x^2 + z^2 < radius^2
-            Vector2 randomCircle = Random.insideUnitCircle * radius;
-            Vector3 randomPosition = new Vector3(pondCenter.x + randomCircle.x, 
-            waterlevel, 
-            pondCenter.z + randomCircle.y);
+        // Preferred startup behavior: spawn exact counts per fish type.
+        bool usedSpawnPlan = SpawnInitialFishFromPlan();
 
-            SpawnFish(-1, randomPosition);
+        // Backward-compatible fallback: if no plan is configured, use old random count spawning.
+        if (!usedSpawnPlan)
+        {
+            for (int i = 0; i < initialFishCount; i++)
+                SpawnFish(GetRandomSpawnPrefab(), GetRandomSpawnPosition());
         }
 
         ApplyFishFishCollisionSetting();
@@ -135,12 +143,7 @@ public class PondManager : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.R))
         {
-            Vector2 randomCircle = Random.insideUnitCircle * radius;
-            Vector3 randomPosition = new Vector3(pondCenter.x + randomCircle.x, 
-            waterlevel, 
-            pondCenter.z + randomCircle.y);
-
-            SpawnFish(-1, randomPosition);
+            SpawnFish(GetRandomSpawnPrefab(), GetRandomSpawnPosition());
         }
 
         if (Input.GetKeyDown(KeyCode.T))
@@ -169,22 +172,103 @@ public class PondManager : MonoBehaviour
             _lastDisableFishFishCollisions = disableFishFishCollisions;
         }
     }
-    void SpawnFish(int fishIndex, Vector3 position)
+    private bool SpawnInitialFishFromPlan()
     {
-        if (fishIndex < 0)
+        bool spawnedAny = false;
+        if (initialSpawnPlan == null || initialSpawnPlan.Count == 0)
+            return false;
+
+        for (int i = 0; i < initialSpawnPlan.Count; i++)
         {
-            // spawn random fish
-            int randomIndex = Random.Range(0, fishPrefabs.Length);
-            fishIndex = randomIndex;
+            FishSpawnEntry entry = initialSpawnPlan[i];
+            if (entry == null || entry.prefab == null)
+                continue;
+
+            int count = Mathf.Max(0, entry.count);
+            for (int n = 0; n < count; n++)
+            {
+                SpawnFish(entry.prefab, GetRandomSpawnPosition());
+                spawnedAny = true;
+            }
         }
-        GameObject fish = Instantiate(fishPrefabs[fishIndex], position, Quaternion.identity);
+
+        return spawnedAny;
+    }
+
+    private Vector3 GetRandomSpawnPosition()
+    {
+        Vector2 randomCircle = Random.insideUnitCircle * radius;
+        return new Vector3(
+            pondCenter.x + randomCircle.x,
+            waterlevel,
+            pondCenter.z + randomCircle.y);
+    }
+
+    private GameObject GetRandomSpawnPrefab()
+    {
+        if (TryGetWeightedSpawnPrefabFromPlan(out GameObject plannedPrefab))
+            return plannedPrefab;
+
+        if (fishPrefabs == null || fishPrefabs.Length == 0)
+            return null;
+
+        int randomIndex = Random.Range(0, fishPrefabs.Length);
+        return fishPrefabs[randomIndex];
+    }
+
+    private bool TryGetWeightedSpawnPrefabFromPlan(out GameObject prefab)
+    {
+        prefab = null;
+        if (initialSpawnPlan == null || initialSpawnPlan.Count == 0)
+            return false;
+
+        int totalWeight = 0;
+        for (int i = 0; i < initialSpawnPlan.Count; i++)
+        {
+            FishSpawnEntry entry = initialSpawnPlan[i];
+            if (entry == null || entry.prefab == null)
+                continue;
+            totalWeight += Mathf.Max(0, entry.count);
+        }
+
+        if (totalWeight <= 0)
+            return false;
+
+        int pick = Random.Range(0, totalWeight);
+        for (int i = 0; i < initialSpawnPlan.Count; i++)
+        {
+            FishSpawnEntry entry = initialSpawnPlan[i];
+            if (entry == null || entry.prefab == null)
+                continue;
+
+            int weight = Mathf.Max(0, entry.count);
+            if (pick < weight)
+            {
+                prefab = entry.prefab;
+                return true;
+            }
+            pick -= weight;
+        }
+
+        return false;
+    }
+
+    void SpawnFish(GameObject fishPrefab, Vector3 position)
+    {
+        if (fishPrefab == null)
+        {
+            Debug.LogWarning("PondManager could not spawn fish: no prefab available.");
+            return;
+        }
+
+        GameObject fish = Instantiate(fishPrefab, position, Quaternion.identity);
         SceneManager.MoveGameObjectToScene(fish, gameObject.scene);
 
         // Keep spawn data sane: hooked fish should carry rhythm data.
         if (fish.GetComponent<RhythmProfile>() == null && fish.GetComponentInChildren<RhythmProfile>(true) == null)
         {
             Debug.LogWarning(
-                $"Spawned fish prefab '{fishPrefabs[fishIndex].name}' without RhythmProfile. " +
+                $"Spawned fish prefab '{fishPrefab.name}' without RhythmProfile. " +
                 "Fish-specific beatmap/music switching will not occur.");
         }
 

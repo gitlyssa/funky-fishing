@@ -33,6 +33,7 @@ public class TutorialStartGate : MonoBehaviour
     [SerializeField, Min(0f)] private float yankHintDelayAfterLandSeconds = 1.25f;
     [SerializeField, Range(1f, 2f)] private float catchHintDelayAfterSpawnSeconds = 1.5f;
     [SerializeField, Min(0.01f)] private float targetMoveDistanceThreshold = 0.3f;
+    [SerializeField, Min(1)] private int tutorialCatchFishSpawnCount = 3;
 
     [Header("Copy")]
     [SerializeField, TextArea(3, 8)] private string welcomeMessage =
@@ -529,21 +530,26 @@ public class TutorialStartGate : MonoBehaviour
         if (pondManager.fishList == null)
             pondManager.fishList = new List<GameObject>();
 
-        Vector2 randomCircle = Random.insideUnitCircle * pondManager.radius;
-        Vector3 spawnPosition = new Vector3(
-            pondManager.transform.position.x + randomCircle.x,
-            pondManager.waterlevel,
-            pondManager.transform.position.z + randomCircle.y);
+        int spawnCount = Mathf.Max(1, tutorialCatchFishSpawnCount);
+        for (int i = 0; i < spawnCount; i++)
+        {
+            Vector2 randomCircle = Random.insideUnitCircle * pondManager.radius;
+            Vector3 spawnPosition = new Vector3(
+                pondManager.transform.position.x + randomCircle.x,
+                pondManager.waterlevel,
+                pondManager.transform.position.z + randomCircle.y);
 
-        int randomIndex = Random.Range(0, pondManager.fishPrefabs.Length);
-        GameObject fish = Instantiate(pondManager.fishPrefabs[randomIndex], spawnPosition, Quaternion.identity);
-        SceneManager.MoveGameObjectToScene(fish, pondManager.gameObject.scene);
+            int randomIndex = Random.Range(0, pondManager.fishPrefabs.Length);
+            GameObject fish = Instantiate(pondManager.fishPrefabs[randomIndex], spawnPosition, Quaternion.identity);
+            SceneManager.MoveGameObjectToScene(fish, pondManager.gameObject.scene);
 
-        FishMovement movement = fish.GetComponent<FishMovement>();
-        if (movement != null)
-            movement.pondManager = pondManager;
+            FishMovement movement = fish.GetComponent<FishMovement>();
+            if (movement != null)
+                movement.pondManager = pondManager;
 
-        pondManager.fishList.Add(fish);
+            pondManager.fishList.Add(fish);
+        }
+
         tutorialFishSpawned = true;
         return true;
     }

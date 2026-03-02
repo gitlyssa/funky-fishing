@@ -230,4 +230,4 @@ MonoBehaviour:
       Data3: -255170375
       Data4: -1468407509
     Path: event:/Music/TestMusic
-  beatmapFile: {fileID: 4900000, guid: 2622ccf281eec6c40902cddcb598eb8d, type: 3}
+  beatmapFile: {fileID: 4900000, guid: e493b95c1f67d084199d9055aeb3400d, type: 3}

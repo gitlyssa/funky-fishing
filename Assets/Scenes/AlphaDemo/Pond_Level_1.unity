@@ -7552,6 +7552,13 @@ MonoBehaviour:
   - {fileID: 7196154191263375292, guid: f41a92bab64cbcb4ab800c165336e8c3, type: 3}
   - {fileID: 7196154191263375292, guid: bea10afbe5d8d9a4faf148209259d649, type: 3}
   - {fileID: 2849092432556853643, guid: 1637cbe7bdfbc4540a2d1ef47f419d3e, type: 3}
+  initialSpawnPlan:
+  - prefab: {fileID: 2849092432556853643, guid: 1637cbe7bdfbc4540a2d1ef47f419d3e, type: 3}
+    count: 1
+  - prefab: {fileID: 7196154191263375292, guid: f41a92bab64cbcb4ab800c165336e8c3, type: 3}
+    count: 2
+  - prefab: {fileID: 7196154191263375292, guid: bea10afbe5d8d9a4faf148209259d649, type: 3}
+    count: 2
   fishList: []
   radius: 6
   waterlevel: 9
