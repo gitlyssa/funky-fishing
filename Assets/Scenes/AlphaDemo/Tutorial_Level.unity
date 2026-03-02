@@ -3845,7 +3845,7 @@ MonoBehaviour:
   castForwardLinG: 0.4
   castGyroDps: 100
   yankBackLinG: 0.4
-  yankGyroDps: 100
+  yankGyroDps: 150
   minTimeBetweenCastAndYank: 0.1
   cooldownAfterTrigger: 0.1
   caster: {fileID: 0}
@@ -3905,9 +3905,9 @@ MonoBehaviour:
   sideGyroAxis: 1
   sideGyroSign: -1
   gyroSmooth: 45
-  upEnterDps: 200
+  upEnterDps: 150
   upExitDps: 110
-  sideEnterDps: 300
+  sideEnterDps: 200
   sideExitDps: 110
   upPriorityBias: 1.05
   directionRearmDelay: 0.08
@@ -7552,6 +7552,7 @@ MonoBehaviour:
   - {fileID: 7196154191263375292, guid: f41a92bab64cbcb4ab800c165336e8c3, type: 3}
   - {fileID: 7196154191263375292, guid: bea10afbe5d8d9a4faf148209259d649, type: 3}
   - {fileID: 2849092432556853643, guid: 1637cbe7bdfbc4540a2d1ef47f419d3e, type: 3}
+  initialSpawnPlan: []
   fishList: []
   radius: 6
   waterlevel: 9

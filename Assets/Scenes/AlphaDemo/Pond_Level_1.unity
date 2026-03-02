@@ -3845,7 +3845,7 @@ MonoBehaviour:
   castForwardLinG: 0.4
   castGyroDps: 100
   yankBackLinG: 0.4
-  yankGyroDps: 100
+  yankGyroDps: 150
   minTimeBetweenCastAndYank: 0.1
   cooldownAfterTrigger: 0.1
   caster: {fileID: 0}
