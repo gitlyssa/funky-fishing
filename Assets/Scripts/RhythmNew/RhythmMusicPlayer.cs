@@ -197,6 +197,8 @@ public class RhythmMusicPlayer : MonoBehaviour
         }
 
         musicInstance = RuntimeManager.CreateInstance(musicEvent);
+    }
+    
     public void SetTutorialLoopMode(bool enabled)
     {
         tutorialLoopMode = enabled;
