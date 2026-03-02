@@ -179,6 +179,15 @@ public class PondManager : MonoBehaviour
         }
         GameObject fish = Instantiate(fishPrefabs[fishIndex], position, Quaternion.identity);
         SceneManager.MoveGameObjectToScene(fish, gameObject.scene);
+
+        // Keep spawn data sane: hooked fish should carry rhythm data.
+        if (fish.GetComponent<RhythmProfile>() == null && fish.GetComponentInChildren<RhythmProfile>(true) == null)
+        {
+            Debug.LogWarning(
+                $"Spawned fish prefab '{fishPrefabs[fishIndex].name}' without RhythmProfile. " +
+                "Fish-specific beatmap/music switching will not occur.");
+        }
+
         //append to fish list
         fish.GetComponent<FishMovement>().pondManager = this;
         fishList.Add(fish);

@@ -131,7 +131,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 7196154191263375292}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4f78ae44095e2b44284ba7c0e3526172, type: 3}
+  m_Script: {fileID: 11500000, guid: 703d4526ec95d9d4db0fd7f1281576af, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RhythmProfile
   musicEvent:
@@ -141,7 +141,7 @@ MonoBehaviour:
       Data3: -255170375
       Data4: -1468407509
     Path: event:/Music/TestMusic
-  beatmapFile: {fileID: 4900000, guid: 1f4d08b3577c45043ac48e383d7e188b, type: 3}
+  beatmapFile: {fileID: 4900000, guid: e493b95c1f67d084199d9055aeb3400d, type: 3}
 --- !u!1001 &4692308055997896240
 PrefabInstance:
   m_ObjectHideFlags: 0

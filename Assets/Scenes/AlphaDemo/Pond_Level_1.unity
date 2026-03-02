@@ -7549,9 +7549,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PondManager
   fishPrefabs:
-  - {fileID: 7196154191263375292, guid: 83e8391f15bad734ab3208fc4c46d905, type: 3}
-  - {fileID: 7196154191263375292, guid: 5653e2282b255bd468ef71503ebbb22e, type: 3}
-  - {fileID: 2849092432556853643, guid: 438f9058cbdccc140a08fb91e15e80d0, type: 3}
+  - {fileID: 7196154191263375292, guid: f41a92bab64cbcb4ab800c165336e8c3, type: 3}
+  - {fileID: 7196154191263375292, guid: bea10afbe5d8d9a4faf148209259d649, type: 3}
+  - {fileID: 2849092432556853643, guid: 1637cbe7bdfbc4540a2d1ef47f419d3e, type: 3}
   fishList: []
   radius: 6
   waterlevel: 9

@@ -94,6 +94,8 @@ public class SceneLoading : MonoBehaviour
         if (fishToMigrate != null)
         {
             rhythmProfile = fishToMigrate.GetComponent<RhythmProfile>();
+            if (rhythmProfile == null)
+                rhythmProfile = fishToMigrate.GetComponentInChildren<RhythmProfile>(true);
             if (rhythmProfile != null)
             {
                 string beatmapName = rhythmProfile.beatmapFile != null ? rhythmProfile.beatmapFile.name : "null";
