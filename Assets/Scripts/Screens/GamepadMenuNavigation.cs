@@ -14,7 +14,8 @@ public class GamepadMenuNavigation : MonoBehaviour
         "MainMenu",
         "PondSelect",
         "ControllerMenu",
-        "Pond_Level_1"
+        "Pond_Level_1",
+        "Tutorial_Level"
     };
 
     [Header("Navigation Input")]
@@ -161,7 +162,7 @@ public class GamepadMenuNavigation : MonoBehaviour
         if (!enabledScenes.Contains(sceneName))
             return false;
 
-        if (sceneName == "Pond_Level_1")
+        if (sceneName == "Pond_Level_1" || sceneName == "Tutorial_Level")
             return Time.timeScale <= 0f;
 
         return true;

@@ -48,6 +48,23 @@ public class RhythmConductor : MonoBehaviour
     private readonly List<ReelData> _reelTemplate = new List<ReelData>();
     public TextAsset beatmapFile; // Reference to the CSV file
 
+    [Header("Tutorial Practice (Runtime)")]
+    [SerializeField] private bool tutorialUpPracticeActive;
+    [SerializeField] private FlickDirection tutorialPracticeDirection = FlickDirection.Up;
+    [SerializeField] private bool tutorialPracticeUseSequence;
+    [SerializeField] private float tutorialPracticeBpm = 99f;
+    [SerializeField] private int tutorialPracticeGroupSize = 3;
+    [SerializeField] private int tutorialPracticeGroupRestBeats = 2;
+    [SerializeField] private int tutorialPracticeNoteBeatSpacing = 1;
+    [SerializeField] private bool tutorialPracticeSpawnPaused;
+
+    private float tutorialBeatInterval = 60f / 99f;
+    private float tutorialNextHitTime = -1f;
+    private int tutorialSpawnedInCurrentGroup;
+    private FlickDirection[] tutorialPracticeSequence = new FlickDirection[0];
+    private int tutorialPracticeSequenceIndex;
+    private float tutorialPracticeClock = 0f;
+
 
     void Start()
     {
@@ -83,8 +100,18 @@ public class RhythmConductor : MonoBehaviour
             return;
         }
 
-        songTime = GetFmodSongTimeSeconds();
+        if (tutorialUpPracticeActive)
+        {
+            if (tutorialPracticeSpawnPaused)
+                return;
 
+            tutorialPracticeClock += Time.deltaTime;
+            songTime = tutorialPracticeClock;
+            UpdateTutorialPracticeSpawning();
+            return;
+        }
+
+        songTime = GetFmodSongTimeSeconds();
         while (_chart.Count > 0 && songTime >= _chart[0].hitTime - noteTravelTime)
         {
             SpawnNote(_chart[0]);
@@ -136,6 +163,110 @@ public class RhythmConductor : MonoBehaviour
         activeNotes.Add(note);
     }
 
+    public void StartTutorialUpPracticeMode(
+        float bpm = 99f,
+        int groupSize = 3,
+        int groupRestBeats = 1,
+        int noteBeatSpacingBeats = 1)
+    {
+        StartTutorialDirectionalPracticeMode(
+            FlickDirection.Up,
+            bpm,
+            groupSize,
+            groupRestBeats,
+            noteBeatSpacingBeats);
+    }
+
+    public void StartTutorialDirectionalPracticeMode(
+        FlickDirection direction,
+        float bpm = 99f,
+        int groupSize = 3,
+        int groupRestBeats = 1,
+        int noteBeatSpacingBeats = 1)
+    {
+        tutorialPracticeDirection = direction;
+        tutorialPracticeUseSequence = false;
+        tutorialPracticeSequence = new FlickDirection[0];
+        tutorialPracticeSequenceIndex = 0;
+        tutorialPracticeBpm = Mathf.Max(1f, bpm);
+        tutorialPracticeGroupSize = Mathf.Max(1, groupSize);
+        tutorialPracticeGroupRestBeats = Mathf.Max(0, groupRestBeats);
+        tutorialPracticeNoteBeatSpacing = Mathf.Max(1, noteBeatSpacingBeats);
+        tutorialBeatInterval = 60f / tutorialPracticeBpm;
+        tutorialSpawnedInCurrentGroup = 0;
+        tutorialPracticeClock = 0f;
+        tutorialUpPracticeActive = true;
+        tutorialPracticeSpawnPaused = false;
+
+        ClearActiveRhythmObjects();
+        _chart.Clear();
+        _reelQueue.Clear();
+
+        float leadIn = Mathf.Max(noteTravelTime + tutorialBeatInterval, noteTravelTime + 0.25f);
+        tutorialNextHitTime = tutorialPracticeClock + leadIn;
+        songTime = tutorialPracticeClock;
+    }
+
+    public void StartTutorialSequencePracticeMode(
+        FlickDirection[] sequence,
+        float bpm = 99f,
+        int groupSize = 3,
+        int groupRestBeats = 1,
+        int noteBeatSpacingBeats = 1)
+    {
+        if (sequence == null || sequence.Length == 0)
+        {
+            StartTutorialDirectionalPracticeMode(
+                FlickDirection.Up,
+                bpm,
+                groupSize,
+                groupRestBeats,
+                noteBeatSpacingBeats);
+            return;
+        }
+
+        tutorialPracticeDirection = sequence[0];
+        tutorialPracticeUseSequence = true;
+        tutorialPracticeSequence = new FlickDirection[sequence.Length];
+        for (int i = 0; i < sequence.Length; i++)
+            tutorialPracticeSequence[i] = sequence[i];
+        tutorialPracticeSequenceIndex = 0;
+
+        tutorialPracticeBpm = Mathf.Max(1f, bpm);
+        tutorialPracticeGroupSize = Mathf.Max(1, groupSize);
+        tutorialPracticeGroupRestBeats = Mathf.Max(0, groupRestBeats);
+        tutorialPracticeNoteBeatSpacing = Mathf.Max(1, noteBeatSpacingBeats);
+        tutorialBeatInterval = 60f / tutorialPracticeBpm;
+        tutorialSpawnedInCurrentGroup = 0;
+        tutorialPracticeClock = 0f;
+        tutorialUpPracticeActive = true;
+        tutorialPracticeSpawnPaused = false;
+
+        ClearActiveRhythmObjects();
+        _chart.Clear();
+        _reelQueue.Clear();
+
+        float leadIn = Mathf.Max(noteTravelTime + tutorialBeatInterval, noteTravelTime + 0.25f);
+        tutorialNextHitTime = tutorialPracticeClock + leadIn;
+        songTime = tutorialPracticeClock;
+    }
+
+    public void StopTutorialUpPracticeMode(bool restoreBeatmapForReplay)
+    {
+        tutorialUpPracticeActive = false;
+        tutorialPracticeUseSequence = false;
+        tutorialPracticeSequence = new FlickDirection[0];
+        tutorialPracticeSequenceIndex = 0;
+        tutorialPracticeSpawnPaused = false;
+        tutorialSpawnedInCurrentGroup = 0;
+        tutorialNextHitTime = -1f;
+        tutorialPracticeClock = 0f;
+        ClearActiveRhythmObjects();
+
+        if (restoreBeatmapForReplay)
+            ResetBeatmapForReplay();
+    }
+
     public void ResetBeatmapForReplay()
     {
         ClearActiveRhythmObjects();
@@ -164,6 +295,7 @@ public class RhythmConductor : MonoBehaviour
         }
 
         songTime = 0f;
+        tutorialPracticeClock = 0f;
     }
 
     public void SetBeatmapFile(TextAsset newBeatmapFile)
@@ -269,6 +401,53 @@ public class RhythmConductor : MonoBehaviour
             Destroy(activeReel.gameObject);
             activeReel = null;
         }
+    }
+
+    private void UpdateTutorialPracticeSpawning()
+    {
+        if (tutorialNextHitTime < 0f)
+        {
+            float leadIn = Mathf.Max(noteTravelTime + tutorialBeatInterval, noteTravelTime + 0.25f);
+            tutorialNextHitTime = songTime + leadIn;
+        }
+
+        while (songTime >= tutorialNextHitTime - noteTravelTime)
+        {
+            float noteSpacingSeconds = tutorialBeatInterval * tutorialPracticeNoteBeatSpacing;
+            NoteData upNote = new NoteData
+            {
+                hitTime = tutorialNextHitTime,
+                type = RhythmArcNote.NoteType.Flick,
+                direction = GetNextTutorialPracticeDirection()
+            };
+            SpawnNote(upNote);
+
+            tutorialSpawnedInCurrentGroup++;
+            tutorialNextHitTime += noteSpacingSeconds;
+
+            if (tutorialSpawnedInCurrentGroup >= tutorialPracticeGroupSize)
+            {
+                tutorialSpawnedInCurrentGroup = 0;
+                tutorialNextHitTime += tutorialBeatInterval * tutorialPracticeGroupRestBeats;
+            }
+        }
+    }
+
+    public void SetTutorialUpPracticeSpawnPaused(bool paused)
+    {
+        tutorialPracticeSpawnPaused = paused;
+        if (paused)
+            ClearActiveRhythmObjects();
+    }
+
+    private FlickDirection GetNextTutorialPracticeDirection()
+    {
+        if (!tutorialPracticeUseSequence || tutorialPracticeSequence == null || tutorialPracticeSequence.Length == 0)
+            return tutorialPracticeDirection;
+
+        FlickDirection direction = tutorialPracticeSequence[tutorialPracticeSequenceIndex];
+        tutorialPracticeSequenceIndex = (tutorialPracticeSequenceIndex + 1) % tutorialPracticeSequence.Length;
+        return direction;
     }
 
 
