@@ -259,8 +259,21 @@ public class BobberArcCaster : MonoBehaviour
         if (true)
         {
             GameObject fishToShow = _hookedFish;
+            GameObject migratedFish = SceneLoading.MigratedFish;
             if (fishToShow == null)
-                fishToShow = SceneLoading.MigratedFish;
+                fishToShow = migratedFish;
+
+            // driveOverlayFromBobberTension can end rhythm as soon as we leave Tension.
+            // Clear SceneLoading's migrated reference so overlay teardown won't destroy
+            // the fish before the trophy animation consumes it.
+            if (fishToShow != null && fishToShow == migratedFish)
+                SceneLoading.MigratedFish = null;
+
+            if (SceneLoading.Instance != null)
+                SceneLoading.Instance.HideScoringCircleForCatchSequence();
+
+            BeginRodReturnForSuccessSequence();
+
             _hookedFish = null; // Remove reference so Consume/Restore doesn't touch it
 
             StartCoroutine(ExecuteSuccessSequence(fishToShow));
@@ -276,6 +289,8 @@ public class BobberArcCaster : MonoBehaviour
 
     private IEnumerator ExecuteSuccessSequence(GameObject fish)
     {
+        yield return WaitForRodIdleBeforeSuccessAnimation();
+
         if (fish == null)
         {
             Debug.LogWarning("Success sequence skipped fish trophy animation because no hooked fish was available.");
@@ -302,11 +317,40 @@ public class BobberArcCaster : MonoBehaviour
         if (SceneLoading.Instance != null)
             SceneLoading.Instance.EndRhythmEncounter();
 
-        StartYankAfterRodRestore();
+        if (CurrentState != State.Idle &&
+            CurrentState != State.Retracting &&
+            !_isPreparingYank)
+        {
+            StartYankAfterRodRestore();
+        }
         // retore fish
         if (pondManager != null)
                 pondManager.RestoreFishAfterTension();
                 
+    }
+
+    private void BeginRodReturnForSuccessSequence()
+    {
+        if (CurrentState == State.Tension)
+            CurrentState = State.Landed;
+
+        if (CurrentState != State.Idle &&
+            CurrentState != State.Retracting &&
+            !_isPreparingYank)
+        {
+            StartYankAfterRodRestore();
+        }
+    }
+
+    private IEnumerator WaitForRodIdleBeforeSuccessAnimation()
+    {
+        const float timeout = 1.2f;
+        float elapsed = 0f;
+        while (CurrentState != State.Idle && elapsed < timeout)
+        {
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
     }
 
     private bool TryResolveCatchAnimation()

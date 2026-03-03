@@ -17,6 +17,8 @@ public class SceneLoading : MonoBehaviour
     [Header("Tension Overlay Trigger")]
     public bool driveOverlayFromBobberTension = false;
     public BobberArcCaster tensionSource;
+    [Header("Rhythm UI Targets")]
+    public string scoringCircleObjectName = "ScoringCircle";
 
     public static GameObject MigratedFish;
     
@@ -27,6 +29,8 @@ public class SceneLoading : MonoBehaviour
     private bool isRhythmTransitioning = false;
     private readonly Dictionary<int, bool> rhythmRootDefaultActive = new Dictionary<int, bool>();
     private readonly List<GameObject> rhythmRoots = new List<GameObject>();
+    private GameObject scoringCircleObject;
+    private bool hasLoggedMissingScoringCircle;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetStatics()
@@ -124,6 +128,7 @@ public class SceneLoading : MonoBehaviour
             }
 
             SetRhythmOverlayVisible(true);
+            ShowScoringCircleForRhythm();
             ApplyRhythmProfileToRhythmSystems(rhythmProfile);
             return;
         }
@@ -160,6 +165,14 @@ public class SceneLoading : MonoBehaviour
         {
             StartCoroutine(UnloadRhythm());
         }
+    }
+
+    public void HideScoringCircleForCatchSequence()
+    {
+        if (!TryResolveScoringCircle(out GameObject scoringCircle))
+            return;
+
+        scoringCircle.SetActive(false);
     }
 
     private IEnumerator PreloadRhythmOverlay()
@@ -206,6 +219,7 @@ public class SceneLoading : MonoBehaviour
         Scene rhythmScene = SceneManager.GetSceneByName(rhythmSceneName);
         CacheRhythmRoots(rhythmScene);
         SetRhythmOverlayVisible(true);
+        ShowScoringCircleForRhythm();
         isRhythmTransitioning = false;
         
         Debug.Log("Rhythm Overlay ON.");
@@ -222,6 +236,7 @@ public class SceneLoading : MonoBehaviour
         CacheRhythmRoots(rhythmScene);
         PrepareFishForRhythmScene(fish, rhythmScene);
         SetRhythmOverlayVisible(true);
+        ShowScoringCircleForRhythm();
         ApplyRhythmProfileToRhythmSystems(rhythmProfile);
         isRhythmTransitioning = false;
         
@@ -246,6 +261,69 @@ public class SceneLoading : MonoBehaviour
         rhythmRootDefaultActive.Clear();
         isRhythmTransitioning = false;
         Debug.Log("Rhythm Unloaded");
+    }
+
+    private void ShowScoringCircleForRhythm()
+    {
+        if (!TryResolveScoringCircle(out GameObject scoringCircle))
+            return;
+
+        scoringCircle.SetActive(true);
+    }
+
+    private bool TryResolveScoringCircle(out GameObject scoringCircle)
+    {
+        scoringCircle = scoringCircleObject;
+        if (scoringCircle != null)
+            return true;
+
+        Scene rhythmScene = SceneManager.GetSceneByName(rhythmSceneName);
+        if (!rhythmScene.IsValid() || !rhythmScene.isLoaded)
+            return false;
+
+        GameObject[] roots = rhythmScene.GetRootGameObjects();
+        for (int i = 0; i < roots.Length; i++)
+        {
+            GameObject root = roots[i];
+            if (root == null)
+                continue;
+
+            Transform found = FindChildRecursiveByName(root.transform, scoringCircleObjectName);
+            if (found == null)
+                continue;
+
+            scoringCircleObject = found.gameObject;
+            scoringCircle = scoringCircleObject;
+            return true;
+        }
+
+        if (!hasLoggedMissingScoringCircle)
+        {
+            hasLoggedMissingScoringCircle = true;
+            Debug.LogWarning(
+                $"SceneLoading could not find '{scoringCircleObjectName}' in rhythm scene '{rhythmSceneName}'.");
+        }
+
+        return false;
+    }
+
+    private static Transform FindChildRecursiveByName(Transform root, string targetName)
+    {
+        if (root == null || string.IsNullOrEmpty(targetName))
+            return null;
+
+        if (root.name == targetName)
+            return root;
+
+        for (int i = 0; i < root.childCount; i++)
+        {
+            Transform child = root.GetChild(i);
+            Transform found = FindChildRecursiveByName(child, targetName);
+            if (found != null)
+                return found;
+        }
+
+        return null;
     }
 
     private void SetLayerRecursively(GameObject obj, int newLayer)
