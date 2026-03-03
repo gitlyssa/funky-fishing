@@ -10,7 +10,7 @@ public static class JoyConMenuInput
     private static int[] handles = emptyHandles;
     private static int lastPollFrame = -1;
     private static float nextReconnectTime = -1f;
-    private static bool jslAvailable = true;
+    private static int observedConnectionRevision = -1;
     private static bool initialized;
 
     private static bool anyConnected;
@@ -68,12 +68,16 @@ public static class JoyConMenuInput
         strongestStick = Vector2.zero;
         anyConnected = false;
 
-        if (!jslAvailable)
-            return;
-
         if (!initialized)
         {
             initialized = true;
+            ReconnectHandles();
+        }
+
+        int revision = JoyConConnectionService.GetRevision();
+        if (revision != observedConnectionRevision)
+        {
+            observedConnectionRevision = revision;
             ReconnectHandles();
         }
 
@@ -95,11 +99,10 @@ public static class JoyConMenuInput
             bool stillConnected;
             try
             {
-                stillConnected = handle >= 0 && JSL.JslStillConnected(handle);
+                stillConnected = JoyConConnectionService.IsHandleConnected(handle);
             }
             catch
             {
-                jslAvailable = false;
                 handles = emptyHandles;
                 currentButtonsByHandle.Clear();
                 lastButtonsByHandle.Clear();
@@ -107,6 +110,8 @@ public static class JoyConMenuInput
                 anyConnected = false;
                 submitPressedThisFrame = false;
                 pausePressedThisFrame = false;
+                JoyConConnectionService.RequestScan();
+                nextReconnectTime = Time.unscaledTime + reconnectIntervalDisconnected;
                 return;
             }
 
@@ -157,35 +162,14 @@ public static class JoyConMenuInput
 
     private static void ReconnectHandles()
     {
-        int count;
-        try
+        handles = JoyConConnectionService.GetConnectedHandles();
+        observedConnectionRevision = JoyConConnectionService.GetRevision();
+        if (handles == null || handles.Length <= 0)
         {
-            count = JSL.JslConnectDevices();
-        }
-        catch
-        {
-            jslAvailable = false;
             handles = emptyHandles;
+            JoyConConnectionService.RequestScan();
             nextReconnectTime = Time.unscaledTime + reconnectIntervalNoDevices;
             return;
-        }
-
-        if (count <= 0)
-        {
-            handles = emptyHandles;
-            nextReconnectTime = Time.unscaledTime + reconnectIntervalNoDevices;
-            return;
-        }
-
-        handles = new int[count];
-        try
-        {
-            JSL.JslGetConnectedDeviceHandles(handles, handles.Length);
-        }
-        catch
-        {
-            handles = emptyHandles;
-            jslAvailable = false;
         }
         nextReconnectTime = Time.unscaledTime + reconnectIntervalDisconnected;
     }

@@ -15,12 +15,6 @@ public class JoyConIMUVisualizer : MonoBehaviour
     }
 
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
-    private static extern int JslConnectDevices();
-
-    [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
-    private static extern int JslGetConnectedDeviceHandles([Out] int[] deviceHandleArray, int size);
-
-    [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
     private static extern IMU_STATE JslGetIMUState(int deviceId);
 
     [Header("Device")]
@@ -34,8 +28,8 @@ public class JoyConIMUVisualizer : MonoBehaviour
     public float barScaleG = 1.2f;      // g shown to full bar
     public float barScaleDps = 500f;    // dps shown to full bar
 
-    private int[] handles = Array.Empty<int>();
     private int id;
+    private int _knownConnectionRevision = -1;
 
     private Vector3 gravity;      // estimated gravity (g)
     private Vector3 linAccelFilt; // linear accel (g), filtered
@@ -49,19 +43,8 @@ public class JoyConIMUVisualizer : MonoBehaviour
 
     void Start()
     {
-        // Discover and select a Joy-Con device to read IMU data from.
-        int count = JslConnectDevices();
-        handles = new int[Mathf.Max(0, count)];
-        if (count > 0) JslGetConnectedDeviceHandles(handles, handles.Length);
-
-        if (handles.Length == 0)
-        {
-            Debug.LogError("No JoyShockLibrary devices found.");
-            enabled = false;
-            return;
-        }
-
-        id = handles[Mathf.Clamp(deviceIndex, 0, handles.Length - 1)];
+        ConnectDevice();
+        _knownConnectionRevision = JoyConConnectionService.GetRevision();
 
         // 1x1 white texture used for drawing simple UI bars.
         whiteTex = new Texture2D(1, 1);
@@ -71,6 +54,20 @@ public class JoyConIMUVisualizer : MonoBehaviour
 
     void Update()
     {
+        int revision = JoyConConnectionService.GetRevision();
+        if (revision != _knownConnectionRevision)
+        {
+            _knownConnectionRevision = revision;
+            ConnectDevice();
+        }
+
+        if (id < 0 || !JoyConConnectionService.IsHandleConnected(id))
+        {
+            id = -1;
+            JoyConConnectionService.RequestScan();
+            return;
+        }
+
         // Freeze toggle (Space)
 #if ENABLE_INPUT_SYSTEM
         if (UnityEngine.InputSystem.Keyboard.current?.spaceKey.wasPressedThisFrame == true)
@@ -84,7 +81,17 @@ public class JoyConIMUVisualizer : MonoBehaviour
 
         float dt = Time.deltaTime;
 
-        var imu = JslGetIMUState(id);
+        IMU_STATE imu;
+        try
+        {
+            imu = JslGetIMUState(id);
+        }
+        catch
+        {
+            id = -1;
+            JoyConConnectionService.RequestScan();
+            return;
+        }
 
         accelRaw = new Vector3(imu.accelX, imu.accelY, imu.accelZ);
         gyroRaw  = new Vector3(imu.gyroX,  imu.gyroY,  imu.gyroZ);
@@ -95,6 +102,19 @@ public class JoyConIMUVisualizer : MonoBehaviour
 
         // Smooth linear accel for display.
         linAccelFilt = Vector3.Lerp(linAccelFilt, lin, 1f - Mathf.Exp(-linAccelSmooth * dt));
+    }
+
+    private void ConnectDevice()
+    {
+        int[] handles = JoyConConnectionService.GetConnectedHandles();
+        if (handles == null || handles.Length == 0)
+        {
+            id = -1;
+            JoyConConnectionService.RequestScan();
+            return;
+        }
+
+        id = handles[Mathf.Clamp(deviceIndex, 0, handles.Length - 1)];
     }
 
     void OnGUI()

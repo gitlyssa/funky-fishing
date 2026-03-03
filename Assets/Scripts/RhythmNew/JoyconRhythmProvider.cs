@@ -20,8 +20,8 @@ public class JoyconRhythmProvider : MonoBehaviour, IRhythmInputT
     [Header("Reel Settings")]
     public float deadzone = 0.15f;
 
-    private readonly int[] _handlesBuffer = new int[16];
     private int[] _connectedHandles = Array.Empty<int>();
+    private int _knownConnectionRevision = -1;
     private float _nextReconnectTime;
     private bool _warnedMissingDevices;
 
@@ -36,6 +36,7 @@ public class JoyconRhythmProvider : MonoBehaviour, IRhythmInputT
     private void Start()
     {
         ReconnectDevices();
+        _knownConnectionRevision = JoyConConnectionService.GetRevision();
     }
 
     private void OnApplicationQuit()
@@ -45,6 +46,13 @@ public class JoyconRhythmProvider : MonoBehaviour, IRhythmInputT
 
     private void Update()
     {
+        int revision = JoyConConnectionService.GetRevision();
+        if (revision != _knownConnectionRevision)
+        {
+            _knownConnectionRevision = revision;
+            ReconnectDevices();
+        }
+
         if (Time.timeScale <= 0f)
         {
             _currentSpinVelocity = 0f;
@@ -54,8 +62,19 @@ public class JoyconRhythmProvider : MonoBehaviour, IRhythmInputT
         if (!TryEnsureActiveDevice())
             return;
 
-        JSL.JOY_SHOCK_STATE state = JSL.JslGetSimpleState(deviceId);
-        JSL.MOTION_STATE motion = JSL.JslGetMotionState(deviceId);
+        JSL.JOY_SHOCK_STATE state;
+        JSL.MOTION_STATE motion;
+        try
+        {
+            state = JSL.JslGetSimpleState(deviceId);
+            motion = JSL.JslGetMotionState(deviceId);
+        }
+        catch
+        {
+            JoyConConnectionService.RequestScan();
+            deviceId = -1;
+            return;
+        }
 
         HandleMotionFlick(motion);    // Accelerometer Logic
         HandleThumbstickReel(state);  // Physical Stick Logic
@@ -66,13 +85,13 @@ public class JoyconRhythmProvider : MonoBehaviour, IRhythmInputT
 
     private bool TryEnsureActiveDevice()
     {
-        if (deviceId >= 0 && JSL.JslStillConnected(deviceId))
+        if (JoyConConnectionService.IsHandleConnected(deviceId))
             return true;
 
         if (Time.unscaledTime >= _nextReconnectTime)
             ReconnectDevices();
 
-        if (deviceId >= 0 && JSL.JslStillConnected(deviceId))
+        if (JoyConConnectionService.IsHandleConnected(deviceId))
             return true;
 
         _currentSpinVelocity = 0f;
@@ -81,12 +100,14 @@ public class JoyconRhythmProvider : MonoBehaviour, IRhythmInputT
 
     private void ReconnectDevices()
     {
-        int count = JSL.JslConnectDevices();
-        if (count <= 0)
+        _connectedHandles = JoyConConnectionService.GetConnectedHandles();
+        _knownConnectionRevision = JoyConConnectionService.GetRevision();
+        if (_connectedHandles == null || _connectedHandles.Length <= 0)
         {
             _connectedHandles = Array.Empty<int>();
             deviceId = -1;
             _nextReconnectTime = Time.unscaledTime + Mathf.Max(0.1f, reconnectInterval);
+            JoyConConnectionService.RequestScan();
 
             if (!_warnedMissingDevices)
             {
@@ -96,11 +117,6 @@ public class JoyconRhythmProvider : MonoBehaviour, IRhythmInputT
             return;
         }
 
-        int copiedCount = JSL.JslGetConnectedDeviceHandles(_handlesBuffer, _handlesBuffer.Length);
-        copiedCount = Mathf.Clamp(copiedCount, 0, _handlesBuffer.Length);
-
-        _connectedHandles = new int[copiedCount];
-        Array.Copy(_handlesBuffer, _connectedHandles, copiedCount);
         _warnedMissingDevices = false;
         _nextReconnectTime = Time.unscaledTime + Mathf.Max(0.1f, reconnectInterval);
 
@@ -124,7 +140,7 @@ public class JoyconRhythmProvider : MonoBehaviour, IRhythmInputT
         for (int i = 0; i < handles.Length; i++)
         {
             int handle = handles[i];
-            if (handle >= 0 && JSL.JslStillConnected(handle))
+            if (JoyConConnectionService.IsHandleConnected(handle))
                 return handle;
         }
 
@@ -195,10 +211,18 @@ public class JoyconRhythmProvider : MonoBehaviour, IRhythmInputT
         if (index != 0)
             return false;
 
-        if (deviceId < 0 || !JSL.JslStillConnected(deviceId))
+        if (!JoyConConnectionService.IsHandleConnected(deviceId))
             return false;
 
-        return (JSL.JslGetSimpleState(deviceId).buttons & (1 << JSL.ButtonMaskDown)) != 0;
+        try
+        {
+            return (JSL.JslGetSimpleState(deviceId).buttons & (1 << JSL.ButtonMaskDown)) != 0;
+        }
+        catch
+        {
+            JoyConConnectionService.RequestScan();
+            return false;
+        }
     }
 
     private FlickDirection GetDirectionFromAccel(Vector3 acc)

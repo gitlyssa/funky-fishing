@@ -3909,7 +3909,7 @@ MonoBehaviour:
   upExitDps: 110
   sideEnterDps: 200
   sideExitDps: 110
-  upPriorityBias: 1.05
+  upPriorityBias: 1
   directionRearmDelay: 0.08
   sideNeutralRearmDps: 65
   sideNeutralHoldTime: 0.03
@@ -5618,7 +5618,7 @@ MonoBehaviour:
   centerRodWithCamera: 1
   rodCenterSpeed: 8
   cameraCenterDepth: -1
-  cameraCenterOffset: {x: 0.7, y: -0.3, z: 0}
+  cameraCenterOffset: {x: 0.4, y: -0.3, z: 0}
   tensionYawAngle: 0
   tensionPitchDownAngle: 30
   rodBendAngle: 5
