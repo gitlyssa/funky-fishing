@@ -70,6 +70,8 @@ public class FishingSessionHud : MonoBehaviour
     private static int lastCatchBestCombo;
     private static float lastCatchAccuracy;
 
+    public static float LastCatchAccuracy => lastCatchAccuracy;
+
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetSessionStats()
     {

@@ -130,6 +130,9 @@ public class BobberArcCaster : MonoBehaviour
     private bool _hookedFishMovingToCenter;
     private float _hookedFishSwimSeed;
 
+    [Header("Success Requirements")]
+    public int minimumAccuracyForCatch = 65;
+    public FishCatchAnimation catchAnimation; 
     public bool IsHookedFishDrivingBobber =>
         _hookedFishLockedToBobber &&
         CurrentState == State.Tension &&
@@ -247,16 +250,43 @@ public class BobberArcCaster : MonoBehaviour
 
     public void CompleteRhythmEncounter()
     {
-        ConsumeHookedFish();
+        
 
-        if (CurrentState == State.Tension || _isRestoringFromTension)
+        float accuracy = FishingSessionHud.LastCatchAccuracy; 
+        CurrentState = State.Idle;
+
+        // if (accuracy >= minimumAccuracyForCatch && _hookedFish != null)
+        if (true)
         {
-            StartYankAfterRodRestore();
-            return;
-        }
+            GameObject fishToShow = _hookedFish;
+            _hookedFish = null; // Remove reference so Consume/Restore doesn't touch it
 
-        if (CurrentState == State.Landed || CurrentState == State.InFlight || CurrentState == State.Retracting)
-            StartYank();
+            StartCoroutine(ExecuteSuccessSequence(fishToShow));
+        }
+        else
+        {
+            // FAIL: Standard escape
+            Debug.Log("Score too low! The fish got away.");
+            ConsumeHookedFish(); // This restores fish to pond or destroys it
+            FinishTensionState();
+        }
+    }
+
+    private IEnumerator ExecuteSuccessSequence(GameObject fish)
+    {
+        
+        yield return StartCoroutine(catchAnimation.TrophyRoutine(fish));
+
+        FinishTensionState();
+    }
+
+    private void FinishTensionState()
+    {
+        StartYankAfterRodRestore();
+        // retore fish
+        if (pondManager != null)
+                pondManager.RestoreFishAfterTension();
+                
     }
 
     private void ConsumeHookedFish()

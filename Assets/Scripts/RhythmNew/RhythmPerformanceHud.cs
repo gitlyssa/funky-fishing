@@ -54,6 +54,14 @@ public class RhythmPerformanceHud : MonoBehaviour
     private int _maxCombo;
     private int _score;
 
+    public int CurrentScore => _score;
+    public float CurrentAccuracy {
+        get {
+            int totalJudged = _perfectCount + _goodCount + _missCount;
+            return totalJudged > 0 ? ((_perfectCount * 1f) + (_goodCount * 0.7f)) / totalJudged * 100f : 0f;
+        }
+    }
+
     private enum ResultType
     {
         Perfect,
