@@ -106,11 +106,10 @@ public class RhythmMusicPlayer : MonoBehaviour
             hasProcessedMusicEnd = true;
             StopRhythmPlayback();
 
-            if (SceneLoading.Instance != null)
-                SceneLoading.Instance.EndRhythmEncounter();
-
             if (bobberArcCaster != null)
                 bobberArcCaster.CompleteRhythmEncounter();
+            else if (SceneLoading.Instance != null)
+                SceneLoading.Instance.EndRhythmEncounter();
         }
 
         wasInTension = bobberArcCaster != null &&

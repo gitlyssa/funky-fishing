@@ -157,6 +157,7 @@ public class BobberArcCaster : MonoBehaviour
         if (pondManager == null)
             pondManager = FindObjectOfType<PondManager>();
 
+        TryResolveCatchAnimation();
         CacheStableRodBasePose();
     }
 
@@ -253,12 +254,13 @@ public class BobberArcCaster : MonoBehaviour
         
 
         float accuracy = FishingSessionHud.LastCatchAccuracy; 
-        CurrentState = State.Idle;
 
         // if (accuracy >= minimumAccuracyForCatch && _hookedFish != null)
         if (true)
         {
             GameObject fishToShow = _hookedFish;
+            if (fishToShow == null)
+                fishToShow = SceneLoading.MigratedFish;
             _hookedFish = null; // Remove reference so Consume/Restore doesn't touch it
 
             StartCoroutine(ExecuteSuccessSequence(fishToShow));
@@ -274,19 +276,81 @@ public class BobberArcCaster : MonoBehaviour
 
     private IEnumerator ExecuteSuccessSequence(GameObject fish)
     {
-        
-        yield return StartCoroutine(catchAnimation.TrophyRoutine(fish));
+        if (fish == null)
+        {
+            Debug.LogWarning("Success sequence skipped fish trophy animation because no hooked fish was available.");
+        }
+        else if (TryResolveCatchAnimation())
+        {
+            yield return StartCoroutine(catchAnimation.TrophyRoutine(fish));
+        }
+        else
+        {
+            Debug.LogWarning("FishCatchAnimation reference is missing. Falling back to direct fish consume.");
+            if (pondManager != null)
+                pondManager.RemoveFish(fish);
+            else
+                Destroy(fish);
+        }
 
         FinishTensionState();
     }
 
     private void FinishTensionState()
     {
+        SceneLoading.MigratedFish = null;
+        if (SceneLoading.Instance != null)
+            SceneLoading.Instance.EndRhythmEncounter();
+
         StartYankAfterRodRestore();
         // retore fish
         if (pondManager != null)
                 pondManager.RestoreFishAfterTension();
                 
+    }
+
+    private bool TryResolveCatchAnimation()
+    {
+        if (catchAnimation != null)
+            return true;
+
+        catchAnimation = FindObjectOfType<FishCatchAnimation>();
+        if (catchAnimation != null)
+            return true;
+
+        FishCatchAnimation[] allAnimations = Resources.FindObjectsOfTypeAll<FishCatchAnimation>();
+        for (int i = 0; i < allAnimations.Length; i++)
+        {
+            FishCatchAnimation candidate = allAnimations[i];
+            if (candidate == null)
+                continue;
+            if (!candidate.gameObject.scene.IsValid())
+                continue;
+
+            catchAnimation = candidate;
+            break;
+        }
+
+        if (catchAnimation == null && Camera.main != null)
+        {
+            catchAnimation = Camera.main.GetComponent<FishCatchAnimation>();
+            if (catchAnimation == null)
+            {
+                catchAnimation = Camera.main.gameObject.AddComponent<FishCatchAnimation>();
+                Debug.LogWarning(
+                    "Added runtime FishCatchAnimation to Camera.main because no scene reference was found. " +
+                    "Assign BobberArcCaster.catchAnimation for authored UI bindings.");
+            }
+        }
+
+        if (catchAnimation == null)
+        {
+            Debug.LogWarning(
+                "Could not resolve FishCatchAnimation. " +
+                "Assign BobberArcCaster.catchAnimation in the inspector to enable trophy animation.");
+        }
+
+        return catchAnimation != null;
     }
 
     private void ConsumeHookedFish()

@@ -322,9 +322,10 @@ public class JoyconRhythmProvider : MonoBehaviour, IRhythmInputT
             return;
         }
 
-        int copiedCount = JSL.JslGetConnectedDeviceHandles(_handlesBuffer, _handlesBuffer.Length);
+        int[] handlesBuffer = new int[count];
+        int copiedCount = JSL.JslGetConnectedDeviceHandles(handlesBuffer, handlesBuffer.Length);
         _connectedHandles = new int[copiedCount];
-        Array.Copy(_handlesBuffer, _connectedHandles, copiedCount);
+        Array.Copy(handlesBuffer, _connectedHandles, copiedCount);
         
         _warnedMissingDevices = false;
         _nextReconnectTime = Time.unscaledTime + Mathf.Max(0.1f, reconnectInterval);
