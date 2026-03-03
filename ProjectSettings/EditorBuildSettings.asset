@@ -35,6 +35,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Screens/LoadingScreen.unity
     guid: 6ee4a49848a75744bb761106126d8f74
+  - enabled: 1
+    path: Assets/Scenes/AlphaDemo/Tutorial_Level.unity
+    guid: c30aae88a0b8a5047961cf8c102af0c5
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0

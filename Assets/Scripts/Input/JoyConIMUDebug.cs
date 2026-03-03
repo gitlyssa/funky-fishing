@@ -15,12 +15,6 @@ public class JoyConIMUDebug : MonoBehaviour
     }
 
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
-    private static extern int JslConnectDevices();
-
-    [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
-    private static extern int JslGetConnectedDeviceHandles([Out] int[] deviceHandleArray, int size);
-
-    [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
     private static extern IMU_STATE JslGetIMUState(int deviceId);
 
     [Header("Which connected device to use")]
@@ -34,8 +28,8 @@ public class JoyConIMUDebug : MonoBehaviour
     public bool logToConsole = true;
     public float logHz = 10f;
 
-    private int[] _handles = Array.Empty<int>();
     private int _id;
+    private int _knownConnectionRevision = -1;
 
     private Vector3 _gravity;      // estimated gravity (g)
     private Vector3 _linAccelFilt; // linear accel (g), filtered
@@ -44,27 +38,39 @@ public class JoyConIMUDebug : MonoBehaviour
 
     void Start()
     {
-        // Discover and select a Joy-Con device to read IMU data from.
-        int count = JslConnectDevices();
-        _handles = new int[Mathf.Max(0, count)];
-        if (count > 0) JslGetConnectedDeviceHandles(_handles, _handles.Length);
-
-        if (_handles.Length == 0)
-        {
-            Debug.LogError("No JoyShockLibrary devices found. Make sure the DLL is in Assets/Plugins and Joy-Con is connected.");
-            enabled = false;
-            return;
-        }
-
-        _id = _handles[Mathf.Clamp(deviceIndex, 0, _handles.Length - 1)];
-        Debug.Log($"JoyConIMUDebug using device handle {_id} (deviceIndex={deviceIndex}, total={_handles.Length})");
+        ConnectDevice();
+        _knownConnectionRevision = JoyConConnectionService.GetRevision();
     }
 
     void Update()
     {
+        int revision = JoyConConnectionService.GetRevision();
+        if (revision != _knownConnectionRevision)
+        {
+            _knownConnectionRevision = revision;
+            ConnectDevice();
+        }
+
+        if (_id < 0 || !JoyConConnectionService.IsHandleConnected(_id))
+        {
+            _id = -1;
+            JoyConConnectionService.RequestScan();
+            return;
+        }
+
         float dt = Time.deltaTime;
 
-        var imu = JslGetIMUState(_id);
+        IMU_STATE imu;
+        try
+        {
+            imu = JslGetIMUState(_id);
+        }
+        catch
+        {
+            _id = -1;
+            JoyConConnectionService.RequestScan();
+            return;
+        }
         var accelG = new Vector3(imu.accelX, imu.accelY, imu.accelZ);
         var gyroDps = new Vector3(imu.gyroX, imu.gyroY, imu.gyroZ);
 
@@ -86,5 +92,19 @@ public class JoyConIMUDebug : MonoBehaviour
                 $"gyro(dps)=({gyroDps.x:F0},{gyroDps.y:F0},{gyroDps.z:F0})"
             );
         }
+    }
+
+    private void ConnectDevice()
+    {
+        int[] handles = JoyConConnectionService.GetConnectedHandles();
+        if (handles == null || handles.Length == 0)
+        {
+            _id = -1;
+            JoyConConnectionService.RequestScan();
+            return;
+        }
+
+        _id = handles[Mathf.Clamp(deviceIndex, 0, handles.Length - 1)];
+        Debug.Log($"JoyConIMUDebug using device handle {_id} (deviceIndex={deviceIndex}, total={handles.Length})");
     }
 }

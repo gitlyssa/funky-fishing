@@ -52,6 +52,7 @@ public class JoyConDirectionalRhythmProvider : MonoBehaviour, IRhythmInputT
 
     private int[] _handles = Array.Empty<int>();
     private int _deviceId = -1;
+    private int _knownConnectionRevision = -1;
     private float _nextReconnectTime = -1f;
     private bool _warnedMissingDevice;
 
@@ -77,6 +78,7 @@ public class JoyConDirectionalRhythmProvider : MonoBehaviour, IRhythmInputT
 
         SyncFromDirectionalSwingIfNeeded();
         ConnectDevice();
+        _knownConnectionRevision = JoyConConnectionService.GetRevision();
     }
 
     private void OnDisable()
@@ -93,15 +95,23 @@ public class JoyConDirectionalRhythmProvider : MonoBehaviour, IRhythmInputT
     {
         SyncFromDirectionalSwingIfNeeded();
 
+        int revision = JoyConConnectionService.GetRevision();
+        if (revision != _knownConnectionRevision)
+        {
+            _knownConnectionRevision = revision;
+            ConnectDevice();
+        }
+
         if (_deviceId < 0)
         {
             TryReconnect();
             if (_deviceId < 0)
                 return;
         }
-        else if (!JSL.JslStillConnected(_deviceId))
+        else if (!JoyConConnectionService.IsHandleConnected(_deviceId))
         {
             _deviceId = -1;
+            JoyConConnectionService.RequestScan();
             return;
         }
 
@@ -117,8 +127,19 @@ public class JoyConDirectionalRhythmProvider : MonoBehaviour, IRhythmInputT
         }
 
         float dt = Mathf.Max(0.0001f, Time.deltaTime);
-        JSL.IMU_STATE imu = JSL.JslGetIMUState(_deviceId);
-        JSL.JOY_SHOCK_STATE state = JSL.JslGetSimpleState(_deviceId);
+        JSL.IMU_STATE imu;
+        JSL.JOY_SHOCK_STATE state;
+        try
+        {
+            imu = JSL.JslGetIMUState(_deviceId);
+            state = JSL.JslGetSimpleState(_deviceId);
+        }
+        catch
+        {
+            JoyConConnectionService.RequestScan();
+            _deviceId = -1;
+            return;
+        }
 
         Vector3 gyroRaw = new Vector3(imu.gyroX, imu.gyroY, imu.gyroZ);
         float smoothK = 1f - Mathf.Exp(-Mathf.Max(0.01f, gyroSmooth) * dt);
@@ -153,13 +174,12 @@ public class JoyConDirectionalRhythmProvider : MonoBehaviour, IRhythmInputT
 
     private void ConnectDevice()
     {
-        int count = JSL.JslConnectDevices();
-        _handles = new int[Mathf.Max(0, count)];
-        if (count > 0)
-            JSL.JslGetConnectedDeviceHandles(_handles, _handles.Length);
+        _handles = JoyConConnectionService.GetConnectedHandles();
+        _knownConnectionRevision = JoyConConnectionService.GetRevision();
 
-        if (_handles.Length == 0)
+        if (_handles == null || _handles.Length == 0)
         {
+            _handles = Array.Empty<int>();
             if (!_warnedMissingDevice)
             {
                 Debug.LogWarning("JoyConDirectionalRhythmProvider: no JoyShockLibrary device found. Retrying...");
@@ -167,6 +187,7 @@ public class JoyConDirectionalRhythmProvider : MonoBehaviour, IRhythmInputT
             }
 
             _deviceId = -1;
+            JoyConConnectionService.RequestScan();
             return;
         }
 
@@ -181,11 +202,11 @@ public class JoyConDirectionalRhythmProvider : MonoBehaviour, IRhythmInputT
         if (followGestureDetectorLastTrigger && gestureDetector != null && gestureDetector.LastTriggerHandle >= 0)
         {
             int lastHandle = gestureDetector.LastTriggerHandle;
-            if (JSL.JslStillConnected(lastHandle))
+            if (JoyConConnectionService.IsHandleConnected(lastHandle))
                 return lastHandle;
         }
 
-        if (_deviceId >= 0 && JSL.JslStillConnected(_deviceId))
+        if (_deviceId >= 0 && JoyConConnectionService.IsHandleConnected(_deviceId))
             return _deviceId;
 
         if (_handles == null || _handles.Length == 0)
@@ -347,11 +368,19 @@ public class JoyConDirectionalRhythmProvider : MonoBehaviour, IRhythmInputT
     public float GetSpinVelocity() => _currentSpinVelocity;
     public bool GetButton(int index)
     {
-        if (index != 0 || _deviceId < 0 || !JSL.JslStillConnected(_deviceId))
+        if (index != 0 || !JoyConConnectionService.IsHandleConnected(_deviceId))
             return false;
 
-        JSL.JOY_SHOCK_STATE state = JSL.JslGetSimpleState(_deviceId);
-        return (state.buttons & (1 << JSL.ButtonMaskDown)) != 0;
+        try
+        {
+            JSL.JOY_SHOCK_STATE state = JSL.JslGetSimpleState(_deviceId);
+            return (state.buttons & (1 << JSL.ButtonMaskDown)) != 0;
+        }
+        catch
+        {
+            JoyConConnectionService.RequestScan();
+            return false;
+        }
     }
 
     public float GetTotalAccumulatedSpin() => _accumulatedSpin;

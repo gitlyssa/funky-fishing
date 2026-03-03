@@ -41,8 +41,8 @@ public class JoyconRhythmProvider : MonoBehaviour, IRhythmInputT
     private Vector2 _smoothedAccel;
     private float _lastCrankAngle;
 
-    private readonly int[] _handlesBuffer = new int[16];
     private int[] _connectedHandles = Array.Empty<int>();
+    private int _knownConnectionRevision = -1;
     private float _nextReconnectTime;
     private bool _warnedMissingDevices;
 
@@ -72,6 +72,7 @@ public class JoyconRhythmProvider : MonoBehaviour, IRhythmInputT
     private void Start()
     {
         ReconnectDevices();
+        _knownConnectionRevision = JoyConConnectionService.GetRevision();
     }
 
     private void OnApplicationQuit()
@@ -81,6 +82,13 @@ public class JoyconRhythmProvider : MonoBehaviour, IRhythmInputT
 
     private void Update()
     {
+        int revision = JoyConConnectionService.GetRevision();
+        if (revision != _knownConnectionRevision)
+        {
+            _knownConnectionRevision = revision;
+            ReconnectDevices();
+        }
+
         if (Time.timeScale <= 0f)
         {
             _currentSpinVelocity = 0f;

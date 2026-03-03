@@ -19,15 +19,6 @@ public class JoyConGestureDetector : MonoBehaviour
     }
 
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
-    private static extern int JslConnectDevices();
-
-    [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
-    private static extern int JslGetConnectedDeviceHandles([Out] int[] deviceHandleArray, int size);
-
-    [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
-    private static extern bool JslStillConnected(int deviceId);
-
-    [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
     private static extern IMU_STATE JslGetIMUState(int deviceId);
 
     [Header("Device")]
@@ -71,6 +62,7 @@ public class JoyConGestureDetector : MonoBehaviour
 
     private int[] _handles = Array.Empty<int>();
     private int _id = -1;
+    private int _knownConnectionRevision = -1;
     private float _nextReconnectTime;
 
     private struct FilterState
@@ -93,20 +85,22 @@ public class JoyConGestureDetector : MonoBehaviour
             caster = FindObjectOfType<BobberArcCaster>();
 
         Connect();
+        _knownConnectionRevision = JoyConConnectionService.GetRevision();
     }
 
     [ContextMenu("Reconnect")]
     public void Connect()
     {
-        int count = JslConnectDevices();
-        _handles = new int[Mathf.Max(0, count)];
-        if (count > 0) JslGetConnectedDeviceHandles(_handles, _handles.Length);
+        _handles = JoyConConnectionService.GetConnectedHandles();
+        _knownConnectionRevision = JoyConConnectionService.GetRevision();
 
-        if (_handles.Length == 0)
+        if (_handles == null || _handles.Length == 0)
         {
+            _handles = Array.Empty<int>();
             _id = -1;
             LastTriggerHandle = -1;
             _filtersByHandle.Clear();
+            JoyConConnectionService.RequestScan();
             Debug.LogWarning("JoyConGestureDetector: No JoyShockLibrary devices found.");
             return;
         }
@@ -120,6 +114,13 @@ public class JoyConGestureDetector : MonoBehaviour
 
     void Update()
     {
+        int revision = JoyConConnectionService.GetRevision();
+        if (revision != _knownConnectionRevision)
+        {
+            _knownConnectionRevision = revision;
+            Connect();
+        }
+
         if (Time.time < _cooldownUntil) return;
 
         if (_state == State.Cooldown)
@@ -145,7 +146,7 @@ public class JoyConGestureDetector : MonoBehaviour
         {
             foreach (int handle in _handles)
             {
-                if (!JslStillConnected(handle))
+                if (!JoyConConnectionService.IsHandleConnected(handle))
                     continue;
 
                 anyConnected = true;
@@ -155,7 +156,7 @@ public class JoyConGestureDetector : MonoBehaviour
         }
         else
         {
-            if (_id >= 0 && JslStillConnected(_id))
+            if (_id >= 0 && JoyConConnectionService.IsHandleConnected(_id))
             {
                 anyConnected = true;
                 ProcessHandle(_id, dt);
@@ -164,6 +165,7 @@ public class JoyConGestureDetector : MonoBehaviour
 
         if (!anyConnected && Time.time >= _nextReconnectTime)
         {
+            JoyConConnectionService.RequestScan();
             Connect();
             _nextReconnectTime = Time.time + Mathf.Max(0.1f, reconnectInterval);
         }
@@ -171,7 +173,16 @@ public class JoyConGestureDetector : MonoBehaviour
 
     private bool ProcessHandle(int handle, float dt)
     {
-        var imu = JslGetIMUState(handle);
+        IMU_STATE imu;
+        try
+        {
+            imu = JslGetIMUState(handle);
+        }
+        catch
+        {
+            JoyConConnectionService.RequestScan();
+            return false;
+        }
         var accelG = new Vector3(imu.accelX, imu.accelY, imu.accelZ);
         var gyroDps = new Vector3(imu.gyroX, imu.gyroY, imu.gyroZ);
 

@@ -3843,9 +3843,9 @@ MonoBehaviour:
   linAccelSmooth: 25
   gyroSmooth: 20
   castForwardLinG: 0.4
-  castGyroDps: 160
+  castGyroDps: 100
   yankBackLinG: 0.4
-  yankGyroDps: 160
+  yankGyroDps: 150
   minTimeBetweenCastAndYank: 0.1
   cooldownAfterTrigger: 0.1
   caster: {fileID: 0}
@@ -3905,11 +3905,11 @@ MonoBehaviour:
   sideGyroAxis: 1
   sideGyroSign: -1
   gyroSmooth: 45
-  upEnterDps: 200
+  upEnterDps: 150
   upExitDps: 110
-  sideEnterDps: 300
+  sideEnterDps: 200
   sideExitDps: 110
-  upPriorityBias: 1.05
+  upPriorityBias: 1
   directionRearmDelay: 0.08
   sideNeutralRearmDps: 65
   sideNeutralHoldTime: 0.03
@@ -4026,6 +4026,8 @@ MonoBehaviour:
   hideDuringRhythmMode: 1
   hideWhenPausedInPondLevel1: 1
   pondLevelSceneName: Pond_Level_1
+  hideInTutorialLevel: 1
+  tutorialSceneName: Tutorial_Level
   panelSize: {x: 340, y: 320}
   panelOffset: {x: -24, y: -24}
   fontSize: 24
@@ -5597,6 +5599,8 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+  useNibbleBasedHooking: 1
+  allowRadiusHookFallback: 0
   allowManualTensionEntry: 0
   lockHookedFishToBobber: 1
   hookedFishFrontPadding: 0
@@ -5614,7 +5618,7 @@ MonoBehaviour:
   centerRodWithCamera: 1
   rodCenterSpeed: 8
   cameraCenterDepth: -1
-  cameraCenterOffset: {x: 0.7, y: -0.3, z: 0}
+  cameraCenterOffset: {x: 0.4, y: -0.3, z: 0}
   tensionYawAngle: 0
   tensionPitchDownAngle: 30
   rodBendAngle: 5
@@ -7545,9 +7549,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PondManager
   fishPrefabs:
-  - {fileID: 7196154191263375292, guid: 83e8391f15bad734ab3208fc4c46d905, type: 3}
-  - {fileID: 7196154191263375292, guid: 5653e2282b255bd468ef71503ebbb22e, type: 3}
-  - {fileID: 2849092432556853643, guid: 438f9058cbdccc140a08fb91e15e80d0, type: 3}
+  - {fileID: 7196154191263375292, guid: f41a92bab64cbcb4ab800c165336e8c3, type: 3}
+  - {fileID: 7196154191263375292, guid: bea10afbe5d8d9a4faf148209259d649, type: 3}
+  - {fileID: 2849092432556853643, guid: 1637cbe7bdfbc4540a2d1ef47f419d3e, type: 3}
+  initialSpawnPlan:
+  - prefab: {fileID: 2849092432556853643, guid: 1637cbe7bdfbc4540a2d1ef47f419d3e, type: 3}
+    count: 1
+  - prefab: {fileID: 7196154191263375292, guid: f41a92bab64cbcb4ab800c165336e8c3, type: 3}
+    count: 2
+  - prefab: {fileID: 7196154191263375292, guid: bea10afbe5d8d9a4faf148209259d649, type: 3}
+    count: 2
   fishList: []
   radius: 6
   waterlevel: 9

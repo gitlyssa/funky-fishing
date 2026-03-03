@@ -42,6 +42,7 @@ public class JoyConDirectionalSwingInput : MonoBehaviour
 
     private int[] _handles = Array.Empty<int>();
     private int _deviceId = -1;
+    private int _knownConnectionRevision = -1;
     private Vector3 _gyro;
     private MotionDirection _activeDirection = MotionDirection.None;
     private float _directionRearmUntil = -1f;
@@ -57,6 +58,7 @@ public class JoyConDirectionalSwingInput : MonoBehaviour
             gestureDetector = FindObjectOfType<JoyConGestureDetector>();
 
         ConnectDevice();
+        _knownConnectionRevision = JoyConConnectionService.GetRevision();
     }
 
     void OnDisable()
@@ -76,6 +78,13 @@ public class JoyConDirectionalSwingInput : MonoBehaviour
         if (caster == null)
             return;
 
+        int revision = JoyConConnectionService.GetRevision();
+        if (revision != _knownConnectionRevision)
+        {
+            _knownConnectionRevision = revision;
+            ConnectDevice();
+        }
+
         if (_deviceId < 0)
         {
             if (_joyConSwingWasDriving)
@@ -90,12 +99,13 @@ public class JoyConDirectionalSwingInput : MonoBehaviour
             if (_deviceId < 0)
                 return;
         }
-        else if (!JSL.JslStillConnected(_deviceId))
+        else if (!JoyConConnectionService.IsHandleConnected(_deviceId))
         {
             if (_joyConSwingWasDriving)
                 PushDirection(MotionDirection.None);
 
             _deviceId = -1;
+            JoyConConnectionService.RequestScan();
             return;
         }
 
@@ -121,7 +131,17 @@ public class JoyConDirectionalSwingInput : MonoBehaviour
         }
 
         float dt = Mathf.Max(0.0001f, Time.deltaTime);
-        JSL.IMU_STATE imu = JSL.JslGetIMUState(_deviceId);
+        JSL.IMU_STATE imu;
+        try
+        {
+            imu = JSL.JslGetIMUState(_deviceId);
+        }
+        catch
+        {
+            JoyConConnectionService.RequestScan();
+            _deviceId = -1;
+            return;
+        }
 
         Vector3 gyroRaw = new Vector3(imu.gyroX, imu.gyroY, imu.gyroZ);
         float smoothK = 1f - Mathf.Exp(-Mathf.Max(0.01f, gyroSmooth) * dt);
@@ -136,13 +156,12 @@ public class JoyConDirectionalSwingInput : MonoBehaviour
 
     private void ConnectDevice()
     {
-        int count = JSL.JslConnectDevices();
-        _handles = new int[Mathf.Max(0, count)];
-        if (count > 0)
-            JSL.JslGetConnectedDeviceHandles(_handles, _handles.Length);
+        _handles = JoyConConnectionService.GetConnectedHandles();
+        _knownConnectionRevision = JoyConConnectionService.GetRevision();
 
-        if (_handles.Length == 0)
+        if (_handles == null || _handles.Length == 0)
         {
+            _handles = Array.Empty<int>();
             if (!_warnedMissingDevice)
             {
                 Debug.LogWarning("JoyConDirectionalSwingInput: no JoyShockLibrary device found. Retrying...");
@@ -150,6 +169,7 @@ public class JoyConDirectionalSwingInput : MonoBehaviour
             }
 
             _deviceId = -1;
+            JoyConConnectionService.RequestScan();
             return;
         }
 
@@ -172,11 +192,11 @@ public class JoyConDirectionalSwingInput : MonoBehaviour
         if (followGestureDetectorLastTrigger && gestureDetector != null && gestureDetector.LastTriggerHandle >= 0)
         {
             int lastHandle = gestureDetector.LastTriggerHandle;
-            if (JSL.JslStillConnected(lastHandle))
+            if (JoyConConnectionService.IsHandleConnected(lastHandle))
                 return lastHandle;
         }
 
-        if (_deviceId >= 0 && JSL.JslStillConnected(_deviceId))
+        if (_deviceId >= 0 && JoyConConnectionService.IsHandleConnected(_deviceId))
             return _deviceId;
 
         if (_handles == null || _handles.Length == 0)

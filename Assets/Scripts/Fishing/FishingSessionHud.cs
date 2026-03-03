@@ -5,6 +5,22 @@ using UnityEngine.SceneManagement;
 
 public class FishingSessionHud : MonoBehaviour
 {
+    public struct SessionSummary
+    {
+        public int FishCaught;
+        public int HighScore;
+        public int SessionScore;
+        public int SessionBestCombo;
+        public int SessionRunsCompleted;
+        public int LastCatchScore;
+        public int LastCatchBestCombo;
+        public int LastCatchPerfect;
+        public int LastCatchGood;
+        public int LastCatchMiss;
+        public float LastCatchAccuracy;
+        public int AverageScorePerCatch;
+    }
+
     [Header("Toggle")]
     [SerializeField] private bool hudEnabled = true;
 
@@ -17,6 +33,8 @@ public class FishingSessionHud : MonoBehaviour
     [SerializeField] private bool hideDuringRhythmMode = true;
     [SerializeField] private bool hideWhenPausedInPondLevel1 = true;
     [SerializeField] private string pondLevelSceneName = "Pond_Level_1";
+    [SerializeField] private bool hideInTutorialLevel = true;
+    [SerializeField] private string tutorialSceneName = "Tutorial_Level";
     [SerializeField] private Vector2 panelSize = new Vector2(308f, 290f);
     [SerializeField] private Vector2 panelOffset = new Vector2(-24f, -24f);
     [SerializeField] private int fontSize = 22;
@@ -72,6 +90,11 @@ public class FishingSessionHud : MonoBehaviour
         lastCatchMiss = 0;
         lastCatchBestCombo = 0;
         lastCatchAccuracy = 0f;
+    }
+
+    public static void ResetSessionForLevelRestart()
+    {
+        ResetSessionStats();
     }
 
     private void Awake()
@@ -238,6 +261,29 @@ public class FishingSessionHud : MonoBehaviour
         ApplyHudVisibility(IsRhythmVisible());
     }
 
+    public static SessionSummary GetSessionSummary()
+    {
+        int avgScore = sessionFishCaught > 0
+            ? Mathf.RoundToInt((float)sessionTotalScore / sessionFishCaught)
+            : 0;
+
+        return new SessionSummary
+        {
+            FishCaught = sessionFishCaught,
+            HighScore = sessionHighScore,
+            SessionScore = sessionTotalScore,
+            SessionBestCombo = sessionBestCombo,
+            SessionRunsCompleted = sessionRunsCompleted,
+            LastCatchScore = lastCatchScore,
+            LastCatchBestCombo = lastCatchBestCombo,
+            LastCatchPerfect = lastCatchPerfect,
+            LastCatchGood = lastCatchGood,
+            LastCatchMiss = lastCatchMiss,
+            LastCatchAccuracy = lastCatchAccuracy,
+            AverageScorePerCatch = avgScore
+        };
+    }
+
     private string GetLetterGrade(float accuracy)
     {
         if (accuracy >= 95f) return "S";
@@ -309,7 +355,8 @@ public class FishingSessionHud : MonoBehaviour
             return;
 
         bool hideForPause = hideWhenPausedInPondLevel1 && IsPausedInPondLevel();
-        bool shouldShow = hudEnabled && (!hideDuringRhythmMode || !rhythmVisible) && !hideForPause;
+        bool hideForTutorial = hideInTutorialLevel && IsInTutorialLevel();
+        bool shouldShow = hudEnabled && (!hideDuringRhythmMode || !rhythmVisible) && !hideForPause && !hideForTutorial;
         canvas.enabled = shouldShow;
     }
 
@@ -320,5 +367,13 @@ public class FishingSessionHud : MonoBehaviour
 
         Scene activeScene = SceneManager.GetActiveScene();
         return activeScene.name == pondLevelSceneName;
+    }
+
+    private bool IsInTutorialLevel()
+    {
+        Scene tutorialScene = SceneManager.GetSceneByName(tutorialSceneName);
+        return tutorialScene.IsValid() &&
+               tutorialScene.isLoaded &&
+               gameObject.scene == tutorialScene;
     }
 }

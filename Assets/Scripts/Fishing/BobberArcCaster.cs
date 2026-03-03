@@ -137,6 +137,7 @@ public class BobberArcCaster : MonoBehaviour
         _hookedFishLockedToBobber &&
         CurrentState == State.Tension &&
         _hookedFish != null;
+    public GameObject HookedFish => _hookedFish;
 
     void Start()
     {
@@ -337,7 +338,7 @@ public class BobberArcCaster : MonoBehaviour
 
         ToggleTension();
         if (SceneLoading.Instance != null)
-            SceneLoading.Instance.StartRhythmEncounter();
+            SceneLoading.Instance.StartRhythmEncounter(_hookedFish);
     }
 
     private GameObject GetHookQueryBobber()

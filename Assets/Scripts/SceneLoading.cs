@@ -59,7 +59,7 @@ public class SceneLoading : MonoBehaviour
         // 3 to load overlay, 4 to unload
         if (Keyboard.current.digit3Key.wasPressedThisFrame && !isRhythmVisible)
         {
-            StartRhythmEncounter();
+            StartRhythmEncounter(ResolveFishForRhythmEncounter());
         }
         
         if (Keyboard.current.digit4Key.wasPressedThisFrame && isRhythmVisible)
@@ -90,6 +90,24 @@ public class SceneLoading : MonoBehaviour
 
     public void StartRhythmEncounter(GameObject fishToMigrate = null)
     {
+        RhythmProfile rhythmProfile = null;
+        if (fishToMigrate != null)
+        {
+            rhythmProfile = fishToMigrate.GetComponent<RhythmProfile>();
+            if (rhythmProfile == null)
+                rhythmProfile = fishToMigrate.GetComponentInChildren<RhythmProfile>(true);
+            if (rhythmProfile != null)
+            {
+                string beatmapName = rhythmProfile.beatmapFile != null ? rhythmProfile.beatmapFile.name : "null";
+                string musicEventInfo = rhythmProfile.musicEvent.IsNull ? "null" : rhythmProfile.musicEvent.ToString();
+                Debug.Log($"Fish '{fishToMigrate.name}' RhythmProfile values -> beatmapFile: {beatmapName}, musicEvent: {musicEventInfo}");
+            }
+            else
+            {
+                Debug.LogWarning($"Fish '{fishToMigrate.name}' does not have a RhythmProfile component.");
+            }
+        }
+
         if (isRhythmTransitioning)
             return;
 
@@ -106,13 +124,14 @@ public class SceneLoading : MonoBehaviour
             }
 
             SetRhythmOverlayVisible(true);
+            ApplyRhythmProfileToRhythmSystems(rhythmProfile);
             return;
         }
 
         if (fishToMigrate != null)
         {
             MigratedFish = fishToMigrate;
-            StartCoroutine(LoadRhythmFishAdditive(fishToMigrate));
+            StartCoroutine(LoadRhythmFishAdditive(fishToMigrate, rhythmProfile));
         }
         else
         {
@@ -192,7 +211,7 @@ public class SceneLoading : MonoBehaviour
         Debug.Log("Rhythm Overlay ON.");
     }
 
-    private IEnumerator LoadRhythmFishAdditive(GameObject fish)
+    private IEnumerator LoadRhythmFishAdditive(GameObject fish, RhythmProfile rhythmProfile)
     {
         isRhythmTransitioning = true;
         isRhythmLoaded = true;
@@ -203,6 +222,7 @@ public class SceneLoading : MonoBehaviour
         CacheRhythmRoots(rhythmScene);
         PrepareFishForRhythmScene(fish, rhythmScene);
         SetRhythmOverlayVisible(true);
+        ApplyRhythmProfileToRhythmSystems(rhythmProfile);
         isRhythmTransitioning = false;
         
         Debug.Log($"Migrated {fish.name} to Rhythm Scene.");
@@ -330,7 +350,7 @@ public class SceneLoading : MonoBehaviour
             tensionStateInitialized = true;
 
             if (inTension && !isRhythmVisible)
-                StartRhythmEncounter();
+                StartRhythmEncounter(ResolveFishForRhythmEncounter());
             else if (!inTension && isRhythmVisible)
                 EndRhythmEncounter();
             return;
@@ -340,7 +360,7 @@ public class SceneLoading : MonoBehaviour
         {
             // Self-heal in case the edge transition was missed during initialization.
             if (inTension && !isRhythmVisible && !isRhythmTransitioning)
-                StartRhythmEncounter();
+                StartRhythmEncounter(ResolveFishForRhythmEncounter());
             else if (!inTension && isRhythmVisible && !isRhythmTransitioning)
                 EndRhythmEncounter();
             return;
@@ -348,8 +368,41 @@ public class SceneLoading : MonoBehaviour
 
         wasInTensionLastFrame = inTension;
         if (inTension)
-            StartRhythmEncounter();
+            StartRhythmEncounter(ResolveFishForRhythmEncounter());
         else
             EndRhythmEncounter();
+    }
+
+    private GameObject ResolveFishForRhythmEncounter()
+    {
+        if (tensionSource == null)
+            tensionSource = FindObjectOfType<BobberArcCaster>();
+
+        if (tensionSource != null && tensionSource.HookedFish != null)
+            return tensionSource.HookedFish;
+
+        PondManager pondManager = FindObjectOfType<PondManager>();
+        if (pondManager != null && pondManager.playerBobber != null)
+        {
+            GameObject closestFish = pondManager.GetClosestFish(pondManager.playerBobber);
+            if (closestFish != null)
+                return closestFish;
+        }
+
+        return null;
+    }
+
+    private void ApplyRhythmProfileToRhythmSystems(RhythmProfile rhythmProfile)
+    {
+        if (rhythmProfile == null)
+            return;
+
+        RhythmConductor conductor = FindObjectOfType<RhythmConductor>();
+        if (conductor != null)
+            conductor.SetBeatmapFile(rhythmProfile.beatmapFile);
+
+        RhythmMusicPlayer musicPlayer = FindObjectOfType<RhythmMusicPlayer>();
+        if (musicPlayer != null)
+            musicPlayer.SetMusicEvent(rhythmProfile.musicEvent);
     }
 }
