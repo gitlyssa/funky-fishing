@@ -8,6 +8,7 @@ public class FishingSessionHud : MonoBehaviour
     public struct SessionSummary
     {
         public int FishCaught;
+        public int CatchAttempts;
         public int HighScore;
         public int SessionScore;
         public int SessionBestCombo;
@@ -18,7 +19,8 @@ public class FishingSessionHud : MonoBehaviour
         public int LastCatchGood;
         public int LastCatchMiss;
         public float LastCatchAccuracy;
-        public int AverageScorePerCatch;
+        public bool LastCatchSucceeded;
+        public int AverageScorePerAttempt;
     }
 
     [Header("Toggle")]
@@ -69,8 +71,17 @@ public class FishingSessionHud : MonoBehaviour
     private static int lastCatchMiss;
     private static int lastCatchBestCombo;
     private static float lastCatchAccuracy;
+    private static bool lastCatchSucceeded;
+
+    private static bool pendingCatchOutcomeRegistered;
+    private static bool pendingCatchSucceeded;
+    private static FishingSessionHud activeInstance;
 
     public static float LastCatchAccuracy => lastCatchAccuracy;
+    public const float GradeSMinAccuracy = 95f;
+    public const float GradeAMinAccuracy = 85f;
+    public const float GradeBMinAccuracy = 75f;
+    public const float GradeCMinAccuracy = 65f;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetSessionStats()
@@ -90,6 +101,10 @@ public class FishingSessionHud : MonoBehaviour
         lastCatchMiss = 0;
         lastCatchBestCombo = 0;
         lastCatchAccuracy = 0f;
+        lastCatchSucceeded = false;
+        pendingCatchOutcomeRegistered = false;
+        pendingCatchSucceeded = false;
+        activeInstance = null;
     }
 
     public static void ResetSessionForLevelRestart()
@@ -99,6 +114,7 @@ public class FishingSessionHud : MonoBehaviour
 
     private void Awake()
     {
+        activeInstance = this;
         EnsureUi();
         ApplyHudVisibility(false);
         RefreshHudText();
@@ -114,6 +130,12 @@ public class FishingSessionHud : MonoBehaviour
         RhythmJudge.OnNoteJudged -= HandleNoteJudged;
     }
 
+    private void OnDestroy()
+    {
+        if (activeInstance == this)
+            activeInstance = null;
+    }
+
     private void OnValidate()
     {
         ApplyHudVisibility(IsRhythmVisible());
@@ -122,14 +144,6 @@ public class FishingSessionHud : MonoBehaviour
     private void Update()
     {
         bool rhythmVisible = IsRhythmVisible();
-
-        if (!hudEnabled)
-        {
-            ApplyHudVisibility(rhythmVisible);
-            wasRhythmVisible = rhythmVisible;
-            return;
-        }
-
         ApplyHudVisibility(rhythmVisible);
 
         if (rhythmVisible && !wasRhythmVisible)
@@ -143,9 +157,6 @@ public class FishingSessionHud : MonoBehaviour
 
     private void HandleNoteJudged(RhythmJudge.JudgeRating rating)
     {
-        if (!hudEnabled)
-            return;
-
         if (!runActive)
             BeginCatchRun();
 
@@ -183,6 +194,7 @@ public class FishingSessionHud : MonoBehaviour
         runMiss = 0;
         runCombo = 0;
         runBestCombo = 0;
+        pendingCatchOutcomeRegistered = false;
     }
 
     private void CompleteCatchRun()
@@ -190,10 +202,11 @@ public class FishingSessionHud : MonoBehaviour
         if (!runActive)
             return;
 
-        int judgedNotes = runPerfect + runGood + runMiss;
-        float accuracy = judgedNotes > 0
-            ? ((runPerfect + (runGood * 0.7f)) / judgedNotes) * 100f
-            : 0f;
+        float accuracy = CalculateAccuracy(runPerfect, runGood, runMiss);
+        bool catchSucceeded = pendingCatchOutcomeRegistered
+            ? pendingCatchSucceeded
+            : IsSuccessfulCatchAccuracy(accuracy);
+        pendingCatchOutcomeRegistered = false;
 
         lastCatchScore = runScore;
         lastCatchPerfect = runPerfect;
@@ -201,16 +214,21 @@ public class FishingSessionHud : MonoBehaviour
         lastCatchMiss = runMiss;
         lastCatchBestCombo = runBestCombo;
         lastCatchAccuracy = accuracy;
+        lastCatchSucceeded = catchSucceeded;
 
-        sessionFishCaught++;
         sessionRunsCompleted++;
-        sessionTotalScore += runScore;
         sessionTotalPerfect += runPerfect;
         sessionTotalGood += runGood;
         sessionTotalMiss += runMiss;
 
-        if (runScore > sessionHighScore)
-            sessionHighScore = runScore;
+        if (catchSucceeded)
+        {
+            sessionFishCaught++;
+            sessionTotalScore += runScore;
+
+            if (runScore > sessionHighScore)
+                sessionHighScore = runScore;
+        }
 
         if (runBestCombo > sessionBestCombo)
             sessionBestCombo = runBestCombo;
@@ -238,17 +256,18 @@ public class FishingSessionHud : MonoBehaviour
         if (hudText == null)
             return;
 
-        int avgScore = sessionFishCaught > 0
-            ? Mathf.RoundToInt((float)sessionTotalScore / sessionFishCaught)
+        int avgScore = sessionRunsCompleted > 0
+            ? Mathf.RoundToInt((float)sessionTotalScore / sessionRunsCompleted)
             : 0;
+        string lastResult = lastCatchSucceeded ? "Caught" : "Escaped";
 
         hudText.text =
             "Fishing Session\n" +
-            $"Last Catch: {lastCatchScore} pts ({GetLetterGrade(lastCatchAccuracy)})\n" +
+            $"Last Attempt: {lastCatchScore} pts ({GetLetterGradeForAccuracy(lastCatchAccuracy)}) [{lastResult}]\n" +
             $"High Score: {sessionHighScore} pts\n" +
-            $"Fish Caught: {sessionFishCaught}\n" +
+            $"Caught / Attempts: {sessionFishCaught}/{sessionRunsCompleted}\n" +
             $"Session Score: {sessionTotalScore}\n" +
-            $"Avg / Catch: {avgScore}\n" +
+            $"Avg / Attempt: {avgScore}\n" +
             $"Best Combo: {sessionBestCombo}\n" +
             $"Last Combo: {lastCatchBestCombo}\n" +
             $"Last P/G/M: {lastCatchPerfect}/{lastCatchGood}/{lastCatchMiss}\n" +
@@ -263,13 +282,14 @@ public class FishingSessionHud : MonoBehaviour
 
     public static SessionSummary GetSessionSummary()
     {
-        int avgScore = sessionFishCaught > 0
-            ? Mathf.RoundToInt((float)sessionTotalScore / sessionFishCaught)
+        int avgScore = sessionRunsCompleted > 0
+            ? Mathf.RoundToInt((float)sessionTotalScore / sessionRunsCompleted)
             : 0;
 
         return new SessionSummary
         {
             FishCaught = sessionFishCaught,
+            CatchAttempts = sessionRunsCompleted,
             HighScore = sessionHighScore,
             SessionScore = sessionTotalScore,
             SessionBestCombo = sessionBestCombo,
@@ -280,17 +300,46 @@ public class FishingSessionHud : MonoBehaviour
             LastCatchGood = lastCatchGood,
             LastCatchMiss = lastCatchMiss,
             LastCatchAccuracy = lastCatchAccuracy,
-            AverageScorePerCatch = avgScore
+            LastCatchSucceeded = lastCatchSucceeded,
+            AverageScorePerAttempt = avgScore
         };
     }
 
-    private string GetLetterGrade(float accuracy)
+    public static void RegisterCatchOutcome(bool catchSucceeded)
     {
-        if (accuracy >= 95f) return "S";
-        if (accuracy >= 85f) return "A";
-        if (accuracy >= 75f) return "B";
-        if (accuracy >= 65f) return "C";
+        pendingCatchOutcomeRegistered = true;
+        pendingCatchSucceeded = catchSucceeded;
+    }
+
+    public static float GetCurrentRunAccuracyOrLast()
+    {
+        if (activeInstance != null && activeInstance.runActive)
+            return CalculateAccuracy(activeInstance.runPerfect, activeInstance.runGood, activeInstance.runMiss);
+
+        return lastCatchAccuracy;
+    }
+
+    public static bool IsSuccessfulCatchAccuracy(float accuracy)
+    {
+        return accuracy >= GradeCMinAccuracy;
+    }
+
+    public static string GetLetterGradeForAccuracy(float accuracy)
+    {
+        if (accuracy >= GradeSMinAccuracy) return "S";
+        if (accuracy >= GradeAMinAccuracy) return "A";
+        if (accuracy >= GradeBMinAccuracy) return "B";
+        if (accuracy >= GradeCMinAccuracy) return "C";
         return "D";
+    }
+
+    private static float CalculateAccuracy(int perfect, int good, int miss)
+    {
+        int judgedNotes = perfect + good + miss;
+        if (judgedNotes <= 0)
+            return 0f;
+
+        return ((perfect + (good * 0.7f)) / judgedNotes) * 100f;
     }
 
     private void EnsureUi()

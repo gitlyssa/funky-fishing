@@ -1388,10 +1388,10 @@ MonoBehaviour:
   judgementText: {fileID: 128711327}
   fishNameText: {fileID: 795617615}
   clickText: {fileID: 1901057087}
-  flyToCameraDuration: 0.6
+  flyToCameraDuration: 0.4
   distanceFromCamera: 3
   verticalOffset: -0.2
-  spinSpeed: 180
+  spinSpeed: 140
 --- !u!4 &214218021 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8783306491909106419, guid: f02116c209ecd9e488fc4d2cd8996133, type: 3}
@@ -7631,6 +7631,7 @@ MonoBehaviour:
   keepRhythmOverlayLoaded: 1
   driveOverlayFromBobberTension: 1
   tensionSource: {fileID: 1405675315}
+  scoringCircleObjectName: ScoringCircle
 --- !u!4 &1703477167
 Transform:
   m_ObjectHideFlags: 0

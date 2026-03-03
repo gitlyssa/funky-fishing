@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.Serialization;
+using UnityEngine.SceneManagement;
 using FMOD.Studio;
 
 public class BobberArcCaster : MonoBehaviour
@@ -133,6 +134,9 @@ public class BobberArcCaster : MonoBehaviour
     [Header("Success Requirements")]
     public int minimumAccuracyForCatch = 65;
     public FishCatchAnimation catchAnimation; 
+    [Header("Failed Catch Popup")]
+    public FailedCatchPopup failedCatchPopup;
+    public string failedCatchPopupLabel = "FISH ESCAPED!";
     public bool IsHookedFishDrivingBobber =>
         _hookedFishLockedToBobber &&
         CurrentState == State.Tension &&
@@ -158,6 +162,7 @@ public class BobberArcCaster : MonoBehaviour
             pondManager = FindObjectOfType<PondManager>();
 
         TryResolveCatchAnimation();
+        TryResolveFailedCatchPopup();
         CacheStableRodBasePose();
     }
 
@@ -251,17 +256,16 @@ public class BobberArcCaster : MonoBehaviour
 
     public void CompleteRhythmEncounter()
     {
-        
+        float accuracy = FishingSessionHud.GetCurrentRunAccuracyOrLast();
+        string grade = FishingSessionHud.GetLetterGradeForAccuracy(accuracy);
+        GameObject fishToResolve = ResolveFishForEncounter();
+        bool catchSucceeded = FishingSessionHud.IsSuccessfulCatchAccuracy(accuracy) && fishToResolve != null;
+        FishingSessionHud.RegisterCatchOutcome(catchSucceeded);
 
-        float accuracy = FishingSessionHud.LastCatchAccuracy; 
-
-        // if (accuracy >= minimumAccuracyForCatch && _hookedFish != null)
-        if (true)
+        if (catchSucceeded)
         {
-            GameObject fishToShow = _hookedFish;
+            GameObject fishToShow = fishToResolve;
             GameObject migratedFish = SceneLoading.MigratedFish;
-            if (fishToShow == null)
-                fishToShow = migratedFish;
 
             // driveOverlayFromBobberTension can end rhythm as soon as we leave Tension.
             // Clear SceneLoading's migrated reference so overlay teardown won't destroy
@@ -280,11 +284,148 @@ public class BobberArcCaster : MonoBehaviour
         }
         else
         {
-            // FAIL: Standard escape
-            Debug.Log("Score too low! The fish got away.");
-            ConsumeHookedFish(); // This restores fish to pond or destroys it
+            Debug.Log($"Catch failed ({grade}, {accuracy:F1}%). The fish got away.");
+            ShowFailedCatchPopup();
+            HandleFailedCatch(fishToResolve);
             FinishTensionState();
         }
+    }
+
+    private void ShowFailedCatchPopup()
+    {
+        if (!TryResolveFailedCatchPopup())
+            return;
+
+        failedCatchPopup.Show(failedCatchPopupLabel);
+    }
+
+    private GameObject ResolveFishForEncounter()
+    {
+        if (_hookedFish != null)
+            return _hookedFish;
+
+        return SceneLoading.MigratedFish;
+    }
+
+    private bool TryResolveFailedCatchPopup()
+    {
+        if (failedCatchPopup != null)
+            return true;
+
+        failedCatchPopup = FindObjectOfType<FailedCatchPopup>();
+        if (failedCatchPopup != null)
+            return true;
+
+        if (Camera.main != null)
+        {
+            failedCatchPopup = Camera.main.GetComponent<FailedCatchPopup>();
+            if (failedCatchPopup == null)
+                failedCatchPopup = Camera.main.gameObject.AddComponent<FailedCatchPopup>();
+        }
+
+        return failedCatchPopup != null;
+    }
+
+    private void HandleFailedCatch(GameObject fish)
+    {
+        BeginRodReturnForSuccessSequence();
+        FishMovement.ClearBobberNibbleVerticalOverride(bobber);
+
+        if (fish == null)
+        {
+            SceneLoading.MigratedFish = null;
+            _hookedFish = null;
+            ClearHookedFishLockState();
+            return;
+        }
+
+        ReleaseFishAfterFailedCatch(fish);
+        _hookedFish = null;
+    }
+
+    private void ReleaseFishAfterFailedCatch(GameObject fish)
+    {
+        if (fish == null)
+            return;
+
+        if (SceneLoading.MigratedFish == fish)
+            SceneLoading.MigratedFish = null;
+
+        RestoreFishForGameplayAfterRhythm(fish);
+
+        _hookedFish = fish;
+        ClearHookedFishLockState();
+
+        FishMovement movement = fish.GetComponentInChildren<FishMovement>(true);
+        if (movement != null)
+        {
+            movement.enabled = true;
+            float panicDuration = Random.Range(1.25f, 2f);
+            movement.ForcePanicSwimAwayFrom(bobber, panicDuration);
+            return;
+        }
+
+        Rigidbody fishRb = fish.GetComponent<Rigidbody>();
+        if (fishRb != null)
+        {
+            fishRb.isKinematic = false;
+            Vector3 away = bobber != null
+                ? fish.transform.position - bobber.position
+                : fish.transform.forward;
+            away.y = 0f;
+            if (away.sqrMagnitude < 0.0001f)
+            {
+                Vector2 random = Random.insideUnitCircle;
+                if (random.sqrMagnitude < 0.0001f)
+                    random = Vector2.right;
+                away = new Vector3(random.x, 0f, random.y);
+            }
+
+            fishRb.linearVelocity = away.normalized * 2.5f;
+        }
+    }
+
+    private void RestoreFishForGameplayAfterRhythm(GameObject fish)
+    {
+        if (fish == null)
+            return;
+
+        Scene gameplayScene = gameObject.scene;
+        if (gameplayScene.IsValid() && fish.scene != gameplayScene)
+            SceneManager.MoveGameObjectToScene(fish, gameplayScene);
+
+        Vector3 releasePos = bobber != null ? bobber.position : fish.transform.position;
+        float surfaceY = pondManager != null ? pondManager.waterlevel : releasePos.y;
+        releasePos.y = surfaceY - Mathf.Max(0.05f, hookedFishDepthBelowSurface);
+        fish.transform.position = releasePos;
+
+        Collider[] colliders = fish.GetComponentsInChildren<Collider>(true);
+        for (int i = 0; i < colliders.Length; i++)
+        {
+            Collider col = colliders[i];
+            if (col != null)
+                col.enabled = true;
+        }
+
+        Rigidbody[] rigidbodies = fish.GetComponentsInChildren<Rigidbody>(true);
+        for (int i = 0; i < rigidbodies.Length; i++)
+        {
+            Rigidbody rb = rigidbodies[i];
+            if (rb != null)
+                rb.isKinematic = false;
+        }
+
+        SetLayerRecursively(fish.transform, 0);
+    }
+
+    private static void SetLayerRecursively(Transform root, int layer)
+    {
+        if (root == null)
+            return;
+
+        root.gameObject.layer = layer;
+        for (int i = 0; i < root.childCount; i++)
+            SetLayerRecursively(root.GetChild(i), layer);
     }
 
     private IEnumerator ExecuteSuccessSequence(GameObject fish)

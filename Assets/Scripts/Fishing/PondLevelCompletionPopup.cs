@@ -204,28 +204,21 @@ public class PondLevelCompletionPopup : MonoBehaviour
             return;
 
         FishingSessionHud.SessionSummary s = FishingSessionHud.GetSessionSummary();
-        string lastGrade = GetLetterGrade(s.LastCatchAccuracy);
+        string lastGrade = FishingSessionHud.GetLetterGradeForAccuracy(s.LastCatchAccuracy);
+        string lastResult = s.LastCatchSucceeded ? "Caught" : "Escaped";
 
         bodyText.text =
             $"{subtitleMessage}\n\n" +
             $"Fish Caught: {s.FishCaught}\n" +
+            $"Catch Attempts: {s.CatchAttempts}\n" +
             $"Session Score: {s.SessionScore}\n" +
             $"High Score: {s.HighScore}\n" +
             $"Best Combo: {s.SessionBestCombo}\n" +
-            $"Avg / Catch: {s.AverageScorePerCatch}\n\n" +
-            $"Last Catch: {s.LastCatchScore} pts ({lastGrade})\n" +
+            $"Avg / Attempt: {s.AverageScorePerAttempt}\n\n" +
+            $"Last Attempt: {s.LastCatchScore} pts ({lastGrade}) [{lastResult}]\n" +
             $"Last Combo: {s.LastCatchBestCombo}\n" +
             $"Last P/G/M: {s.LastCatchPerfect}/{s.LastCatchGood}/{s.LastCatchMiss}\n" +
             $"Last Accuracy: {s.LastCatchAccuracy:F1}%";
-    }
-
-    private static string GetLetterGrade(float accuracy)
-    {
-        if (accuracy >= 95f) return "S";
-        if (accuracy >= 85f) return "A";
-        if (accuracy >= 75f) return "B";
-        if (accuracy >= 65f) return "C";
-        return "D";
     }
 
     private void BuildUi()

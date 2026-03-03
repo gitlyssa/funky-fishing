@@ -72,6 +72,9 @@ public class FishMovement : MonoBehaviour
     private float nibblePhase;
     private Vector3 lastPlanarPosition;
     private float stillTimer;
+    private bool forcedPanicEscape;
+    private float forcedPanicDuration;
+    private float panicRetargetTimer;
 
     private static FishMovement s_nibblePullOwner;
     private static Transform s_nibblePullBobber;
@@ -119,7 +122,7 @@ public class FishMovement : MonoBehaviour
 
         UpdateStillWatchdog();
 
-        if (!CanUseBobberInteraction())
+        if (!CanUseBobberInteraction() && !forcedPanicEscape)
         {
             if (state != State.Roam)
                 EnterRoam();
@@ -255,6 +258,7 @@ public class FishMovement : MonoBehaviour
     {
         SetBobberCollisionIgnored(true);
         stateTimer += Time.fixedDeltaTime;
+        bool isForcedPanic = forcedPanicEscape;
 
         if (bobber != null)
         {
@@ -264,8 +268,47 @@ public class FishMovement : MonoBehaviour
                 dartDirection = Vector3.Slerp(dartDirection, awayFromBobber, 0.4f).normalized;
         }
 
-        float dartSpeed = Mathf.Max(MinInteractionSpeed * 1.6f, roamSpeed * Mathf.Clamp(dartSpeedMultiplier, 1f, 6f));
+        if (isForcedPanic)
+        {
+            panicRetargetTimer -= Time.fixedDeltaTime;
+            if (panicRetargetTimer <= 0f)
+            {
+                panicRetargetTimer = Random.Range(0.07f, 0.16f);
+
+                Vector3 awayFromBobber = bobber != null
+                    ? GetPlanarDirection(bobber.position, rb.position, out _)
+                    : Vector3.zero;
+                if (awayFromBobber.sqrMagnitude < 0.0001f)
+                    awayFromBobber = dartDirection.sqrMagnitude > 0.0001f ? dartDirection : RandomPlanarDirection();
+
+                float yaw = Random.Range(-130f, 130f);
+                Vector3 panicDir = Quaternion.Euler(0f, yaw, 0f) * awayFromBobber;
+                panicDir = KeepDirectionInsidePond(panicDir);
+                if (panicDir.sqrMagnitude > 0.0001f)
+                    dartDirection = Vector3.Slerp(dartDirection, panicDir.normalized, 0.9f).normalized;
+            }
+        }
+
+        float speedMultiplier = Mathf.Clamp(dartSpeedMultiplier, 1f, 6f);
+        if (isForcedPanic)
+            speedMultiplier = Mathf.Clamp(speedMultiplier * 2.0f, 1f, 10f);
+
+        float dartSpeed = Mathf.Max(MinInteractionSpeed * 1.6f, roamSpeed * speedMultiplier);
         ApplyVelocity(dartDirection, dartSpeed);
+
+        if (isForcedPanic)
+        {
+            float panicDuration = Mathf.Max(0.2f, forcedPanicDuration);
+            if (stateTimer >= panicDuration)
+            {
+                forcedPanicEscape = false;
+                forcedPanicDuration = 0f;
+                panicRetargetTimer = 0f;
+                EnterCooldownRoam();
+            }
+
+            return;
+        }
 
         bool timeDone = stateTimer >= Mathf.Clamp(dartDuration, 0.2f, 1.3f);
         bool farEnough = true;
@@ -298,6 +341,9 @@ public class FishMovement : MonoBehaviour
     private void EnterRoam()
     {
         EndBobberNibblePull();
+        forcedPanicEscape = false;
+        forcedPanicDuration = 0f;
+        panicRetargetTimer = 0f;
         state = State.Roam;
         stateTimer = 0f;
         nibblePhase = 0f;
@@ -307,6 +353,9 @@ public class FishMovement : MonoBehaviour
     private void EnterApproach(Vector3 toBobber)
     {
         EndBobberNibblePull();
+        forcedPanicEscape = false;
+        forcedPanicDuration = 0f;
+        panicRetargetTimer = 0f;
         state = State.Approach;
         stateTimer = 0f;
         if (toBobber.sqrMagnitude > 0.0001f)
@@ -319,6 +368,9 @@ public class FishMovement : MonoBehaviour
 
     private void EnterNibble(Vector3 toBobber)
     {
+        forcedPanicEscape = false;
+        forcedPanicDuration = 0f;
+        panicRetargetTimer = 0f;
         state = State.Nibble;
         stateTimer = 0f;
         nibblePhase = 0f;
@@ -344,6 +396,28 @@ public class FishMovement : MonoBehaviour
         cooldownTimer = Mathf.Clamp(cooldownDuration, MinCooldownTime, 6f);
         PickNewRoamDirection();
         SetBobberCollisionIgnored(false);
+    }
+
+    public void ForceDartAwayFrom(Transform danger)
+    {
+        Vector3 toDanger = Vector3.zero;
+        if (danger != null)
+            toDanger = GetPlanarDirection(rb.position, danger.position, out _);
+
+        EnterDartAway(toDanger);
+    }
+
+    public void ForcePanicSwimAwayFrom(Transform danger, float durationSeconds = 1.6f)
+    {
+        forcedPanicEscape = true;
+        forcedPanicDuration = Mathf.Clamp(durationSeconds, 0.2f, 4f);
+        panicRetargetTimer = 0f;
+
+        Vector3 toDanger = Vector3.zero;
+        if (danger != null)
+            toDanger = GetPlanarDirection(rb.position, danger.position, out _);
+
+        EnterDartAway(toDanger);
     }
 
     private void PickNewRoamDirection()

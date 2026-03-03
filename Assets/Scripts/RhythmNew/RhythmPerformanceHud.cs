@@ -26,6 +26,19 @@ public class RhythmPerformanceHud : MonoBehaviour
     [SerializeField] private float judgementPopScale = 1.28f;
     [SerializeField] private float judgementRiseDistance = 26f;
 
+    [Header("Combo Counter")]
+    [SerializeField] private int comboShowThreshold = 2;
+    [SerializeField] private Vector2 comboAnchoredPosition = new Vector2(0f, -200f);
+    [SerializeField] private int comboFontSize = 74;
+    [SerializeField] private Color comboColor = new Color(0.35f, 0.95f, 0.45f, 1f);
+    [SerializeField] private string comboSuffix = " COMBO";
+    [SerializeField] private float comboBaseScaleMin = 0.55f;
+    [SerializeField] private float comboBaseScaleMax = 1.38f;
+    [SerializeField] private int comboGrowthMaxCombo = 18;
+    [SerializeField] private float comboPulseReturnDuration = 0.14f;
+    [SerializeField] private float comboPulseScale = 1.34f;
+    [SerializeField] private float comboPulseRiseDistance = 10f;
+
     [Header("Detailed Text")]
     [SerializeField] private Vector2 detailAnchoredPosition = new Vector2(-28f, -28f);
     [SerializeField] private int detailFontSize = 26;
@@ -36,7 +49,13 @@ public class RhythmPerformanceHud : MonoBehaviour
     private Canvas _canvas;
 
     private TextMeshProUGUI _judgementText;
+    private TextMeshProUGUI _comboText;
     private TextMeshProUGUI _detailText;
+    private RectTransform _comboRect;
+    private Vector2 _comboBasePosition;
+    private float _comboCurrentBaseScale = 1f;
+    private float _comboPulseTime = -1f;
+    private bool _comboVisible;
     private RectTransform _judgementRect;
     private Vector2 _judgementBasePosition;
     private Color _judgementBaseColor;
@@ -93,6 +112,7 @@ public class RhythmPerformanceHud : MonoBehaviour
             _wasPlaybackActive = false;
             _trackedNotes.Clear();
             HideJudgementImmediate();
+            HideComboImmediate();
             return;
         }
 
@@ -112,6 +132,7 @@ public class RhythmPerformanceHud : MonoBehaviour
         if (!playbackActive && _wasPlaybackActive)
         {
             _trackedNotes.Clear();
+            HideComboImmediate();
         }
 
         _wasPlaybackActive = playbackActive;
@@ -122,6 +143,7 @@ public class RhythmPerformanceHud : MonoBehaviour
         CollectNewNotes();
         ResolveRemovedNotes();
         TickJudgementAnimation();
+        TickComboPulseAnimation();
     }
 
     private void EnsureReferences()
@@ -136,10 +158,22 @@ public class RhythmPerformanceHud : MonoBehaviour
 
     private void EnsureUi()
     {
-        if (_judgementText != null && _detailText != null)
+        if (_judgementText != null && _detailText != null && _comboText != null)
             return;
 
         _canvas = GetOrCreateHudCanvas();
+
+        _comboText = CreateText(
+            "ComboCounterText",
+            _canvas.transform,
+            new Vector2(0.5f, 0.5f),
+            new Vector2(0.5f, 0.5f),
+            new Vector2(0.5f, 0.5f),
+            comboAnchoredPosition,
+            new Vector2(700f, 140f),
+            comboFontSize,
+            TextAlignmentOptions.Center,
+            string.Empty);
 
         _judgementText = CreateText(
             "JudgementText",
@@ -165,10 +199,19 @@ public class RhythmPerformanceHud : MonoBehaviour
             TextAlignmentOptions.TopRight,
             string.Empty);
 
+        _comboText.gameObject.layer = _canvas.gameObject.layer;
         _judgementText.gameObject.layer = _canvas.gameObject.layer;
         _detailText.gameObject.layer = _canvas.gameObject.layer;
+        _comboRect = _comboText.rectTransform;
+        Vector2 resolvedComboPosition = comboAnchoredPosition;
+        float minBelowJudgementY = judgementAnchoredPosition.y - Mathf.Max(52f, judgementFontSize * 0.9f);
+        if (resolvedComboPosition.y > minBelowJudgementY)
+            resolvedComboPosition.y = minBelowJudgementY;
+        _comboRect.anchoredPosition = resolvedComboPosition;
+        _comboBasePosition = resolvedComboPosition;
         _judgementRect = _judgementText.rectTransform;
         _judgementBasePosition = _judgementRect.anchoredPosition;
+        HideComboImmediate();
         HideJudgementImmediate();
 
         ApplyHudVisibility();
@@ -349,6 +392,7 @@ public class RhythmPerformanceHud : MonoBehaviour
                 _perfectCount++;
                 _combo++;
                 _score += perfectPoints;
+                ShowComboPulseIfEligible();
                 ShowJudgement("PERFECT", perfectColor);
                 break;
 
@@ -356,6 +400,7 @@ public class RhythmPerformanceHud : MonoBehaviour
                 _goodCount++;
                 _combo++;
                 _score += goodPoints;
+                ShowComboPulseIfEligible();
                 ShowJudgement("GOOD", goodColor);
                 break;
 
@@ -363,6 +408,7 @@ public class RhythmPerformanceHud : MonoBehaviour
                 _missCount++;
                 _combo = 0;
                 _score += missPoints;
+                HideComboImmediate();
                 ShowJudgement("MISS", missColor);
                 break;
         }
@@ -401,6 +447,34 @@ public class RhythmPerformanceHud : MonoBehaviour
         _judgementText.color = c;
     }
 
+    private void ShowComboPulseIfEligible()
+    {
+        if (_comboText == null || _comboRect == null)
+            return;
+
+        if (_combo < Mathf.Max(1, comboShowThreshold))
+        {
+            HideComboImmediate();
+            return;
+        }
+
+        _comboVisible = true;
+        _comboText.text = $"{_combo}{comboSuffix}";
+        _comboCurrentBaseScale = CalculateComboBaseScale();
+        _comboPulseTime = 0f;
+        ApplyComboAnimation();
+    }
+
+    private float CalculateComboBaseScale()
+    {
+        int threshold = Mathf.Max(1, comboShowThreshold);
+        int growthMaxCombo = Mathf.Max(threshold, comboGrowthMaxCombo);
+        float t = growthMaxCombo == threshold
+            ? 1f
+            : Mathf.InverseLerp(threshold, growthMaxCombo, _combo);
+        return Mathf.Lerp(comboBaseScaleMin, comboBaseScaleMax, t);
+    }
+
     private void RefreshDetailText()
     {
         if (_detailText == null)
@@ -429,6 +503,7 @@ public class RhythmPerformanceHud : MonoBehaviour
         _combo = 0;
         _maxCombo = 0;
         _score = 0;
+        HideComboImmediate();
     }
 
     public void SetHudEnabled(bool enabled)
@@ -457,6 +532,43 @@ public class RhythmPerformanceHud : MonoBehaviour
         {
             HideJudgementImmediate();
         }
+    }
+
+    private void TickComboPulseAnimation()
+    {
+        if (!_comboVisible || _comboRect == null || _comboText == null || _comboPulseTime < 0f)
+            return;
+
+        _comboPulseTime += Time.unscaledDeltaTime;
+        ApplyComboAnimation();
+
+        if (_comboPulseTime >= Mathf.Max(0.01f, comboPulseReturnDuration))
+        {
+            _comboPulseTime = -1f;
+            ApplyComboAnimation();
+        }
+    }
+
+    private void ApplyComboAnimation()
+    {
+        if (_comboRect == null || _comboText == null)
+            return;
+
+        float duration = Mathf.Max(0.01f, comboPulseReturnDuration);
+        float pulseT = _comboPulseTime < 0f
+            ? 1f
+            : Mathf.Clamp01(_comboPulseTime / duration);
+        float baseScale = Mathf.Max(0.05f, _comboCurrentBaseScale);
+        float pulseScale = baseScale * Mathf.Max(1f, comboPulseScale);
+        float scale = Mathf.Lerp(pulseScale, baseScale, pulseT);
+        float rise = Mathf.Lerp(comboPulseRiseDistance, 0f, pulseT);
+
+        _comboRect.localScale = Vector3.one * scale;
+        _comboRect.anchoredPosition = _comboBasePosition + (Vector2.up * rise);
+
+        Color c = comboColor;
+        c.a = _comboVisible ? 1f : 0f;
+        _comboText.color = c;
     }
 
     private void ApplyJudgementAnimation(float normalized)
@@ -495,6 +607,22 @@ public class RhythmPerformanceHud : MonoBehaviour
         Color c = _judgementText.color;
         c.a = 0f;
         _judgementText.color = c;
+    }
+
+    private void HideComboImmediate()
+    {
+        if (_comboText == null || _comboRect == null)
+            return;
+
+        _comboVisible = false;
+        _comboCurrentBaseScale = 1f;
+        _comboPulseTime = -1f;
+        _comboRect.localScale = Vector3.one;
+        _comboRect.anchoredPosition = _comboBasePosition;
+
+        Color c = _comboText.color;
+        c.a = 0f;
+        _comboText.color = c;
     }
 
     private static class ListPool
