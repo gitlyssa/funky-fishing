@@ -171,6 +171,9 @@ public class BobberArcCaster : MonoBehaviour
     {
         if (!rodTip || !bobber || !targetMarker) return;
 
+        if (!TutorialStartGate.IsCastAllowedByTutorial())
+            return;
+
         // Only allow a fresh cast from idle/hanging.
         if (CurrentState != State.Idle) return;
         _hookedFish = null;
@@ -193,8 +196,19 @@ public class BobberArcCaster : MonoBehaviour
     {
         if (!rodTip || !bobber) return;
 
+        if (!TutorialStartGate.IsYankAllowedByTutorial())
+            return;
+
         // Guard: don't yank if already idle/hanging
         if (CurrentState == State.Idle || _isPreparingYank) return;
+
+        // Only allow yanks once the bobber is in-water (landed/tension flow).
+        bool bobberInWater =
+            CurrentState == State.Landed ||
+            CurrentState == State.Tension ||
+            _isRestoringFromTension;
+        if (!bobberInWater)
+            return;
 
         // If rod is displaced by tension feedback, let it settle before retracting bobber.
         if (CurrentState == State.Tension && IsBeatmapPlaying())

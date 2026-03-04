@@ -8,6 +8,7 @@ using UnityEngine.UI;
 public class TutorialStartGate : MonoBehaviour
 {
     private static bool sceneHookRegistered;
+    private static TutorialStartGate activeInstance;
 
     private enum TutorialFlowState
     {
@@ -145,6 +146,14 @@ public class TutorialStartGate : MonoBehaviour
             return;
         }
 
+        if (activeInstance != null && activeInstance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        activeInstance = this;
+
         BuildGateUi();
         flowState = TutorialFlowState.StartupGate;
         ActivateGate(0);
@@ -176,6 +185,9 @@ public class TutorialStartGate : MonoBehaviour
 
     private void OnDestroy()
     {
+        if (activeInstance == this)
+            activeInstance = null;
+
         if (gateActive)
             Time.timeScale = 1f;
 
@@ -645,5 +657,58 @@ public class TutorialStartGate : MonoBehaviour
         }
 
         disabledPauseManagers.Clear();
+    }
+
+    public static bool IsCastAllowedByTutorial()
+    {
+        if (activeInstance == null)
+            return true;
+
+        return activeInstance.IsCastAllowedForCurrentFlow();
+    }
+
+    public static bool IsYankAllowedByTutorial()
+    {
+        if (activeInstance == null)
+            return true;
+
+        return activeInstance.IsYankAllowedForCurrentFlow();
+    }
+
+    private bool IsCastAllowedForCurrentFlow()
+    {
+        if (!IsTutorialScene())
+            return true;
+
+        switch (flowState)
+        {
+            case TutorialFlowState.StartupGate:
+            case TutorialFlowState.AwaitCastingTargetMove:
+            case TutorialFlowState.AwaitCastHintDelay:
+            case TutorialFlowState.CastHintGate:
+                return false;
+            default:
+                return true;
+        }
+    }
+
+    private bool IsYankAllowedForCurrentFlow()
+    {
+        if (!IsTutorialScene())
+            return true;
+
+        switch (flowState)
+        {
+            case TutorialFlowState.StartupGate:
+            case TutorialFlowState.AwaitCastingTargetMove:
+            case TutorialFlowState.AwaitCastHintDelay:
+            case TutorialFlowState.CastHintGate:
+            case TutorialFlowState.AwaitSuccessfulCast:
+            case TutorialFlowState.AwaitYankHintDelay:
+            case TutorialFlowState.YankHintGate:
+                return false;
+            default:
+                return true;
+        }
     }
 }

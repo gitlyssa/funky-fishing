@@ -4137,10 +4137,10 @@ MonoBehaviour:
   gravityFollow: 12
   linAccelSmooth: 25
   gyroSmooth: 20
-  castForwardLinG: 0.4
-  castGyroDps: 100
+  castForwardLinG: 0.2
+  castGyroDps: 80
   yankBackLinG: 0.4
-  yankGyroDps: 150
+  yankGyroDps: 100
   minTimeBetweenCastAndYank: 0.1
   cooldownAfterTrigger: 0.1
   caster: {fileID: 0}
@@ -4208,6 +4208,8 @@ MonoBehaviour:
   directionRearmDelay: 0.08
   sideNeutralRearmDps: 65
   sideNeutralHoldTime: 0.03
+  useFixedOutputPulse: 1
+  fixedOutputPulseDuration: 0.06
   logDirectionChanges: 0
 --- !u!4 &951590839 stripped
 Transform:
@@ -6006,6 +6008,8 @@ MonoBehaviour:
     m_RotationOrder: 4
   minimumAccuracyForCatch: 65
   catchAnimation: {fileID: 0}
+  failedCatchPopup: {fileID: 0}
+  failedCatchPopupLabel: FISH ESCAPED!
 --- !u!4 &1405835190 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4385080170327957909, guid: ff62b58c5a9ea164fa8ddf8038e10cd1, type: 3}

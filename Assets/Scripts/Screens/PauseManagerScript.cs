@@ -53,6 +53,9 @@ public class PauseManager : MonoBehaviour
 
         if (isPaused && WasCancelBackPressed())
         {
+            if (TryCloseRhythmTuningPanel())
+                return;
+
             if (IsControlsOpen())
                 BackToPauseMenu();
             else
@@ -61,7 +64,10 @@ public class PauseManager : MonoBehaviour
         }
 
         if (isPaused)
-            EnsurePausedSelection();
+        {
+            if (!TryEnsureRhythmTuningSelection())
+                EnsurePausedSelection();
+        }
     }
 
     public void PauseGame()
@@ -146,6 +152,26 @@ public class PauseManager : MonoBehaviour
     private bool IsControlsOpen()
     {
         return ControlsPanel != null && ControlsPanel.activeInHierarchy;
+    }
+
+    private bool TryCloseRhythmTuningPanel()
+    {
+        RhythmPauseTuningPanel tuning = GetComponent<RhythmPauseTuningPanel>();
+        if (tuning == null || !tuning.IsTuningPanelOpen())
+            return false;
+
+        tuning.CloseTuningPanel();
+        return true;
+    }
+
+    private bool TryEnsureRhythmTuningSelection()
+    {
+        RhythmPauseTuningPanel tuning = GetComponent<RhythmPauseTuningPanel>();
+        if (tuning == null || !tuning.IsTuningPanelOpen())
+            return false;
+
+        tuning.EnsureSelection();
+        return true;
     }
 
     private void EnsurePausedSelection()

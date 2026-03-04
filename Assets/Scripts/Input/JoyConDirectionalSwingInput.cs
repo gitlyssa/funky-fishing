@@ -37,6 +37,10 @@ public class JoyConDirectionalSwingInput : MonoBehaviour
     public float sideNeutralRearmDps = 65f;
     public float sideNeutralHoldTime = 0.03f;
 
+    [Header("Output Pulse (to rod swing)")]
+    public bool useFixedOutputPulse = true;
+    public float fixedOutputPulseDuration = 0.06f;
+
     [Header("Debug")]
     public bool logDirectionChanges = false;
 
@@ -51,6 +55,8 @@ public class JoyConDirectionalSwingInput : MonoBehaviour
     private float _nextReconnectTime = -1f;
     private bool _warnedMissingDevice;
     private bool _joyConSwingWasDriving;
+    private MotionDirection _pulseDirection = MotionDirection.None;
+    private float _pulseUntil = -1f;
 
     void Start()
     {
@@ -71,6 +77,8 @@ public class JoyConDirectionalSwingInput : MonoBehaviour
         _directionRearmUntil = -1f;
         _sideRearmed = true;
         _sideNeutralSince = -1f;
+        _pulseDirection = MotionDirection.None;
+        _pulseUntil = -1f;
     }
 
     void Update()
@@ -266,6 +274,7 @@ public class JoyConDirectionalSwingInput : MonoBehaviour
 
     private void PushDirection(MotionDirection direction)
     {
+        MotionDirection previousDirection = _activeDirection;
         _activeDirection = direction;
 
         if (direction == MotionDirection.Left || direction == MotionDirection.Right)
@@ -274,19 +283,48 @@ public class JoyConDirectionalSwingInput : MonoBehaviour
             _sideNeutralSince = -1f;
         }
 
+        if (useFixedOutputPulse)
+        {
+            if (direction != MotionDirection.None && direction != previousDirection)
+            {
+                _pulseDirection = direction;
+                _pulseUntil = Time.time + Mathf.Max(0.01f, fixedOutputPulseDuration);
+            }
+            else if (direction == MotionDirection.None && Time.time >= _pulseUntil)
+            {
+                _pulseDirection = MotionDirection.None;
+            }
+        }
+
         if (logDirectionChanges && _activeDirection != MotionDirection.None)
             Debug.Log($"JoyCon directional swing: {_activeDirection}");
 
         if (caster != null)
         {
-            bool joyConActive = direction != MotionDirection.None;
+            bool upHeld;
+            bool leftHeld;
+            bool rightHeld;
+
+            if (useFixedOutputPulse)
+            {
+                bool pulseActive = Time.time < _pulseUntil && _pulseDirection != MotionDirection.None;
+                MotionDirection outputDirection = pulseActive ? _pulseDirection : MotionDirection.None;
+                upHeld = outputDirection == MotionDirection.Up;
+                leftHeld = outputDirection == MotionDirection.Left;
+                rightHeld = outputDirection == MotionDirection.Right;
+            }
+            else
+            {
+                upHeld = direction == MotionDirection.Up;
+                leftHeld = direction == MotionDirection.Left;
+                rightHeld = direction == MotionDirection.Right;
+            }
+
+            bool joyConActive = upHeld || leftHeld || rightHeld;
             if (!joyConActive && !_joyConSwingWasDriving)
                 return;
 
-            caster.SetDirectionalSwingHeld(
-                direction == MotionDirection.Up,
-                direction == MotionDirection.Left,
-                direction == MotionDirection.Right);
+            caster.SetDirectionalSwingHeld(upHeld, leftHeld, rightHeld);
 
             _joyConSwingWasDriving = joyConActive;
         }
@@ -302,13 +340,23 @@ public class JoyConDirectionalSwingInput : MonoBehaviour
         if (_sideRearmed)
             return;
 
-        if (Mathf.Abs(sideValue) <= Mathf.Max(0f, sideNeutralRearmDps))
+        float neutralRearm = Mathf.Max(0f, sideNeutralRearmDps);
+        float holdSeconds = Mathf.Max(0f, sideNeutralHoldTime);
+
+        if (Mathf.Abs(sideValue) <= neutralRearm)
         {
+            if (holdSeconds <= 0f)
+            {
+                _sideRearmed = true;
+                _sideNeutralSince = Time.time;
+                return;
+            }
+
             if (_sideNeutralSince < 0f)
             {
                 _sideNeutralSince = Time.time;
             }
-            else if ((Time.time - _sideNeutralSince) >= Mathf.Max(0f, sideNeutralHoldTime))
+            else if ((Time.time - _sideNeutralSince) >= holdSeconds)
             {
                 _sideRearmed = true;
             }
