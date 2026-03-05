@@ -5,6 +5,15 @@ using UnityEngine.SceneManagement;
 
 public class FishingSessionHud : MonoBehaviour
 {
+    public enum CatchGradeRank
+    {
+        D = 0,
+        C = 1,
+        B = 2,
+        A = 3,
+        S = 4
+    }
+
     public struct SessionSummary
     {
         public int FishCaught;
@@ -76,12 +85,18 @@ public class FishingSessionHud : MonoBehaviour
     private static bool pendingCatchOutcomeRegistered;
     private static bool pendingCatchSucceeded;
     private static FishingSessionHud activeInstance;
+    private static int minimumSuccessfulCatchGradeRank = (int)CatchGradeRank.C;
 
     public static float LastCatchAccuracy => lastCatchAccuracy;
     public const float GradeSMinAccuracy = 95f;
     public const float GradeAMinAccuracy = 85f;
     public const float GradeBMinAccuracy = 75f;
     public const float GradeCMinAccuracy = 65f;
+    public static int MinimumSuccessfulCatchGradeRank
+    {
+        get => minimumSuccessfulCatchGradeRank;
+        set => minimumSuccessfulCatchGradeRank = Mathf.Clamp(value, (int)CatchGradeRank.D, (int)CatchGradeRank.S);
+    }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetSessionStats()
@@ -105,6 +120,7 @@ public class FishingSessionHud : MonoBehaviour
         pendingCatchOutcomeRegistered = false;
         pendingCatchSucceeded = false;
         activeInstance = null;
+        minimumSuccessfulCatchGradeRank = (int)CatchGradeRank.C;
     }
 
     public static void ResetSessionForLevelRestart()
@@ -321,16 +337,33 @@ public class FishingSessionHud : MonoBehaviour
 
     public static bool IsSuccessfulCatchAccuracy(float accuracy)
     {
-        return accuracy >= GradeCMinAccuracy;
+        return GetGradeRankForAccuracy(accuracy) >= minimumSuccessfulCatchGradeRank;
     }
 
     public static string GetLetterGradeForAccuracy(float accuracy)
     {
-        if (accuracy >= GradeSMinAccuracy) return "S";
-        if (accuracy >= GradeAMinAccuracy) return "A";
-        if (accuracy >= GradeBMinAccuracy) return "B";
-        if (accuracy >= GradeCMinAccuracy) return "C";
-        return "D";
+        return GetGradeLetterForRank(GetGradeRankForAccuracy(accuracy));
+    }
+
+    public static int GetGradeRankForAccuracy(float accuracy)
+    {
+        if (accuracy >= GradeSMinAccuracy) return (int)CatchGradeRank.S;
+        if (accuracy >= GradeAMinAccuracy) return (int)CatchGradeRank.A;
+        if (accuracy >= GradeBMinAccuracy) return (int)CatchGradeRank.B;
+        if (accuracy >= GradeCMinAccuracy) return (int)CatchGradeRank.C;
+        return (int)CatchGradeRank.D;
+    }
+
+    public static string GetGradeLetterForRank(int rank)
+    {
+        switch (Mathf.Clamp(rank, (int)CatchGradeRank.D, (int)CatchGradeRank.S))
+        {
+            case (int)CatchGradeRank.S: return "S";
+            case (int)CatchGradeRank.A: return "A";
+            case (int)CatchGradeRank.B: return "B";
+            case (int)CatchGradeRank.C: return "C";
+            default: return "D";
+        }
     }
 
     private static float CalculateAccuracy(int perfect, int good, int miss)

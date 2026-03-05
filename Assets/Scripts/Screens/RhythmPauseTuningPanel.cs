@@ -100,10 +100,10 @@ public class RhythmPauseTuningPanel : MonoBehaviour
 
     private static readonly FieldSpec[] Specs =
     {
-        new FieldSpec { Field = TuningField.UpEnterDps, Label = "Up Enter DPS", Min = 140f, Max = 520f, Decimals = 0, DefaultValue = 299.85107421875f },
-        new FieldSpec { Field = TuningField.UpExitDps, Label = "Up Exit DPS", Min = 80f, Max = 360f, Decimals = 0, DefaultValue = 200.4626007080078f },
-        new FieldSpec { Field = TuningField.SideEnterDps, Label = "Side Enter DPS", Min = 140f, Max = 520f, Decimals = 0, DefaultValue = 300.306884765625f },
-        new FieldSpec { Field = TuningField.SideExitDps, Label = "Side Exit DPS", Min = 80f, Max = 360f, Decimals = 0, DefaultValue = 199.81024169921876f },
+        new FieldSpec { Field = TuningField.UpEnterDps, Label = "Up Enter DPS", Min = 140f, Max = 520f, Decimals = 0, DefaultValue = 260f },
+        new FieldSpec { Field = TuningField.UpExitDps, Label = "Up Exit DPS", Min = 80f, Max = 360f, Decimals = 0, DefaultValue = 180f },
+        new FieldSpec { Field = TuningField.SideEnterDps, Label = "Side Enter DPS", Min = 140f, Max = 520f, Decimals = 0, DefaultValue = 260f },
+        new FieldSpec { Field = TuningField.SideExitDps, Label = "Side Exit DPS", Min = 80f, Max = 360f, Decimals = 0, DefaultValue = 180f },
         new FieldSpec { Field = TuningField.UpPriorityBias, Label = "Up Priority Bias", Min = 0.95f, Max = 1.25f, Decimals = 2, DefaultValue = 0.9969385266304016f },
         new FieldSpec { Field = TuningField.DirectionRearmDelay, Label = "Direction Rearm Delay", Min = 0f, Max = 0.18f, Decimals = 3, DefaultValue = 0.015034792013466359f },
         new FieldSpec { Field = TuningField.SideNeutralRearmDps, Label = "Side Neutral Rearm DPS", Min = 35f, Max = 110f, Decimals = 0, DefaultValue = 60.18131637573242f },

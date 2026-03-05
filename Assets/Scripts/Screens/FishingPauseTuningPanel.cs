@@ -15,6 +15,7 @@ public class FishingPauseTuningPanel : MonoBehaviour
     private enum TuningField
     {
         RequireBumperOrTriggerHold,
+        MinimumCatchGrade,
         CastForwardLinG,
         CastGyroDps,
         YankBackLinG,
@@ -33,6 +34,7 @@ public class FishingPauseTuningPanel : MonoBehaviour
         public float DefaultValue;
         public bool WholeNumbers;
         public bool IsToggle;
+        public bool IsGrade;
     }
 
     private sealed class SliderRow
@@ -46,6 +48,8 @@ public class FishingPauseTuningPanel : MonoBehaviour
     private sealed class TuningSaveData
     {
         public bool requireBumperOrTriggerHold;
+        public bool hasMinimumCatchGradeRank;
+        public int minimumCatchGradeRank;
         public float castForwardLinG;
         public float castGyroDps;
         public float yankBackLinG;
@@ -95,6 +99,7 @@ public class FishingPauseTuningPanel : MonoBehaviour
     private static readonly FieldSpec[] Specs =
     {
         new FieldSpec { Field = TuningField.RequireBumperOrTriggerHold, Label = "Require Trigger/Bumper Hold (Cast)", Min = 0f, Max = 1f, Decimals = 0, DefaultValue = 1f, WholeNumbers = true, IsToggle = true },
+        new FieldSpec { Field = TuningField.MinimumCatchGrade, Label = "Minimum Catch Grade", Min = 0f, Max = 4f, Decimals = 0, DefaultValue = 1f, WholeNumbers = true, IsGrade = true },
         new FieldSpec { Field = TuningField.CastForwardLinG, Label = "Cast Forward Lin (g)", Min = 0.05f, Max = 2.00f, Decimals = 2, DefaultValue = 0.05000000074505806f },
         new FieldSpec { Field = TuningField.CastGyroDps, Label = "Cast Gyro (dps)", Min = 80f, Max = 520f, Decimals = 0, DefaultValue = 160.2053985595703f },
         new FieldSpec { Field = TuningField.YankBackLinG, Label = "Yank Back Lin (g)", Min = 0.05f, Max = 2.00f, Decimals = 2, DefaultValue = 0.05000000074505806f },
@@ -786,6 +791,8 @@ public class FishingPauseTuningPanel : MonoBehaviour
         return new TuningSaveData
         {
             requireBumperOrTriggerHold = ReadField(TuningField.RequireBumperOrTriggerHold) >= 0.5f,
+            hasMinimumCatchGradeRank = true,
+            minimumCatchGradeRank = Mathf.RoundToInt(ReadField(TuningField.MinimumCatchGrade)),
             castForwardLinG = ReadField(TuningField.CastForwardLinG),
             castGyroDps = ReadField(TuningField.CastGyroDps),
             yankBackLinG = ReadField(TuningField.YankBackLinG),
@@ -799,6 +806,9 @@ public class FishingPauseTuningPanel : MonoBehaviour
     private void ApplySaveData(TuningSaveData data)
     {
         WriteField(TuningField.RequireBumperOrTriggerHold, data.requireBumperOrTriggerHold ? 1f : 0f);
+        WriteField(
+            TuningField.MinimumCatchGrade,
+            data.hasMinimumCatchGradeRank ? data.minimumCatchGradeRank : (int)FishingSessionHud.CatchGradeRank.C);
         WriteField(TuningField.CastForwardLinG, data.castForwardLinG);
         WriteField(TuningField.CastGyroDps, data.castGyroDps);
         WriteField(TuningField.YankBackLinG, data.yankBackLinG);
@@ -815,6 +825,7 @@ public class FishingPauseTuningPanel : MonoBehaviour
         switch (field)
         {
             case TuningField.RequireBumperOrTriggerHold: return gestureDetector.requireBumperOrTriggerHold ? 1f : 0f;
+            case TuningField.MinimumCatchGrade: return FishingSessionHud.MinimumSuccessfulCatchGradeRank;
             case TuningField.CastForwardLinG: return gestureDetector.castForwardLinG;
             case TuningField.CastGyroDps: return gestureDetector.castGyroDps;
             case TuningField.YankBackLinG: return gestureDetector.yankBackLinG;
@@ -836,6 +847,7 @@ public class FishingPauseTuningPanel : MonoBehaviour
         switch (field)
         {
             case TuningField.RequireBumperOrTriggerHold: gestureDetector.requireBumperOrTriggerHold = clamped >= 0.5f; break;
+            case TuningField.MinimumCatchGrade: FishingSessionHud.MinimumSuccessfulCatchGradeRank = Mathf.RoundToInt(clamped); break;
             case TuningField.CastForwardLinG: gestureDetector.castForwardLinG = clamped; break;
             case TuningField.CastGyroDps: gestureDetector.castGyroDps = clamped; break;
             case TuningField.YankBackLinG: gestureDetector.yankBackLinG = clamped; break;
@@ -903,6 +915,8 @@ public class FishingPauseTuningPanel : MonoBehaviour
     {
         if (spec.IsToggle)
             return value >= 0.5f ? "On" : "Off";
+        if (spec.IsGrade)
+            return FishingSessionHud.GetGradeLetterForRank(Mathf.RoundToInt(value));
 
         return value.ToString("F" + Mathf.Max(0, spec.Decimals));
     }
