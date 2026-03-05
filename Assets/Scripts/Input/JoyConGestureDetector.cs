@@ -48,6 +48,10 @@ public class JoyConGestureDetector : MonoBehaviour
     public float minTimeBetweenCastAndYank = 0.25f;
     public float cooldownAfterTrigger = 0.25f;
 
+    [Header("Cast Input Guard")]
+    public bool requireBumperOrTriggerHold = false;
+    public float triggerHoldThreshold = 0.35f;
+
     [Header("Yank Guard")]
     public BobberArcCaster caster;
     public bool blockYankDuringTension = true;
@@ -185,6 +189,15 @@ public class JoyConGestureDetector : MonoBehaviour
         }
         var accelG = new Vector3(imu.accelX, imu.accelY, imu.accelZ);
         var gyroDps = new Vector3(imu.gyroX, imu.gyroY, imu.gyroZ);
+        JSL.JOY_SHOCK_STATE simpleState;
+        try
+        {
+            simpleState = JSL.JslGetSimpleState(handle);
+        }
+        catch
+        {
+            simpleState = default;
+        }
 
         if (!_filtersByHandle.TryGetValue(handle, out FilterState state))
             state = default;
@@ -205,6 +218,9 @@ public class JoyConGestureDetector : MonoBehaviour
         switch (_state)
         {
             case State.Idle:
+                if (requireBumperOrTriggerHold && !IsGestureModifierHeld(simpleState))
+                    break;
+
                 if (TryDetectCast(forwardLin, swingGyro, out int castPolarity))
                 {
                     if (logTriggers) Debug.Log($"CAST! handle={handle} lin={forwardLin:F2}g gyro={swingGyro:F0}dps polarity={castPolarity}");
@@ -270,6 +286,29 @@ public class JoyConGestureDetector : MonoBehaviour
         return blockYankDuringTension &&
                caster != null &&
                caster.CurrentState == BobberArcCaster.State.Tension;
+    }
+
+    private bool IsGestureModifierHeld(JSL.JOY_SHOCK_STATE state)
+    {
+        bool shoulderHeld =
+            IsButtonPressed(state.buttons, JSL.ButtonMaskL) ||
+            IsButtonPressed(state.buttons, JSL.ButtonMaskR) ||
+            IsButtonPressed(state.buttons, JSL.ButtonMaskZL) ||
+            IsButtonPressed(state.buttons, JSL.ButtonMaskZR) ||
+            IsButtonPressed(state.buttons, JSL.ButtonMaskSL) ||
+            IsButtonPressed(state.buttons, JSL.ButtonMaskSR);
+
+        float triggerThreshold = Mathf.Clamp01(triggerHoldThreshold);
+        bool analogTriggerHeld =
+            state.lTrigger >= triggerThreshold ||
+            state.rTrigger >= triggerThreshold;
+
+        return shoulderHeld || analogTriggerHeld;
+    }
+
+    private static bool IsButtonPressed(int buttons, int bit)
+    {
+        return (buttons & (1 << bit)) != 0;
     }
 
     private static float GetAxis(Vector3 v, Axis a) => a == Axis.X ? v.x : (a == Axis.Y ? v.y : v.z);

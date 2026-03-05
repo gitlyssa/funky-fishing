@@ -10,19 +10,17 @@ using UnityEngine.UI;
 
 [DisallowMultipleComponent]
 [RequireComponent(typeof(PauseManager))]
-public class RhythmPauseTuningPanel : MonoBehaviour
+public class FishingPauseTuningPanel : MonoBehaviour
 {
     private enum TuningField
     {
-        UpEnterDps,
-        UpExitDps,
-        SideEnterDps,
-        SideExitDps,
-        UpPriorityBias,
-        DirectionRearmDelay,
-        SideNeutralRearmDps,
-        SideNeutralHoldTime,
-        GyroSmooth
+        RequireBumperOrTriggerHold,
+        CastForwardLinG,
+        CastGyroDps,
+        YankBackLinG,
+        YankGyroDps,
+        MinTimeBetweenCastAndYank,
+        CooldownAfterTrigger
     }
 
     private sealed class FieldSpec
@@ -33,6 +31,8 @@ public class RhythmPauseTuningPanel : MonoBehaviour
         public float Max;
         public int Decimals;
         public float DefaultValue;
+        public bool WholeNumbers;
+        public bool IsToggle;
     }
 
     private sealed class SliderRow
@@ -45,41 +45,37 @@ public class RhythmPauseTuningPanel : MonoBehaviour
     [Serializable]
     private sealed class TuningSaveData
     {
-        public float upEnterDps;
-        public float upExitDps;
-        public float sideEnterDps;
-        public float sideExitDps;
-        public float upPriorityBias;
-        public float directionRearmDelay;
-        public float sideNeutralRearmDps;
-        public float sideNeutralHoldTime;
-        public float gyroSmooth;
+        public bool requireBumperOrTriggerHold;
+        public float castForwardLinG;
+        public float castGyroDps;
+        public float yankBackLinG;
+        public float yankGyroDps;
+        public float minTimeBetweenCastAndYank;
+        public float cooldownAfterTrigger;
         public string savedUtc;
     }
 
     [Header("Auto Find")]
-    [SerializeField] private bool autoFindTargets = true;
-    [SerializeField] private bool forceEnableSyncOnStart = true;
-    [SerializeField] private JoyConDirectionalRhythmProvider directionalRhythmProvider;
-    [SerializeField] private JoyConDirectionalSwingInput directionalSwingInput;
+    [SerializeField] private bool autoFindTarget = true;
+    [SerializeField] private JoyConGestureDetector gestureDetector;
 
     [Header("Pause Menu Button")]
-    [SerializeField] private string openButtonName = "RhythmTuningButton";
+    [SerializeField] private string openButtonName = "FishingTuningButton";
     [SerializeField] private Vector2 openButtonSize = new Vector2(180f, 34f);
-    [SerializeField] private Vector2 openButtonOffset = new Vector2(-20f, 20f);
+    [SerializeField] private Vector2 openButtonOffset = new Vector2(20f, 20f);
     [SerializeField] private bool adaptToMirroredPausePanel = true;
 
     [Header("Panel Layout")]
-    [SerializeField] private string panelObjectName = "RhythmTuningPanel";
-    [SerializeField] private Vector2 panelSize = new Vector2(860f, 560f);
+    [SerializeField] private string panelObjectName = "FishingTuningPanel";
+    [SerializeField] private Vector2 panelSize = new Vector2(760f, 500f);
     [SerializeField] private Vector2 panelOffset = Vector2.zero;
-    [SerializeField] private Vector2 panelMaxViewportPercent = new Vector2(0.92f, 0.86f);
+    [SerializeField] private Vector2 panelMaxViewportPercent = new Vector2(0.88f, 0.82f);
 
     [Header("Persistence")]
     [SerializeField] private bool autoLoadOnStart = true;
     [SerializeField] private bool autoSaveOnChange = true;
-    [SerializeField] private string saveFileName = "rhythm_flick_tuning.json";
-    [SerializeField] private string exportFolderName = "RhythmTuningExports";
+    [SerializeField] private string saveFileName = "fishing_joycon_tuning.json";
+    [SerializeField] private string exportFolderName = "FishingTuningExports";
 
     private PauseManager _pauseManager;
     private RectTransform _panelRoot;
@@ -94,21 +90,17 @@ public class RhythmPauseTuningPanel : MonoBehaviour
     private bool _built;
     private bool _wasPauseOpen;
     private bool _isTuningOpen;
-    private bool _targetIsSwing;
     private bool _hasTarget;
-    private bool _syncForced;
 
     private static readonly FieldSpec[] Specs =
     {
-        new FieldSpec { Field = TuningField.UpEnterDps, Label = "Up Enter DPS", Min = 140f, Max = 520f, Decimals = 0, DefaultValue = 299.85107421875f },
-        new FieldSpec { Field = TuningField.UpExitDps, Label = "Up Exit DPS", Min = 80f, Max = 360f, Decimals = 0, DefaultValue = 200.4626007080078f },
-        new FieldSpec { Field = TuningField.SideEnterDps, Label = "Side Enter DPS", Min = 140f, Max = 520f, Decimals = 0, DefaultValue = 300.306884765625f },
-        new FieldSpec { Field = TuningField.SideExitDps, Label = "Side Exit DPS", Min = 80f, Max = 360f, Decimals = 0, DefaultValue = 199.81024169921876f },
-        new FieldSpec { Field = TuningField.UpPriorityBias, Label = "Up Priority Bias", Min = 0.95f, Max = 1.25f, Decimals = 2, DefaultValue = 0.9969385266304016f },
-        new FieldSpec { Field = TuningField.DirectionRearmDelay, Label = "Direction Rearm Delay", Min = 0f, Max = 0.18f, Decimals = 3, DefaultValue = 0.015034792013466359f },
-        new FieldSpec { Field = TuningField.SideNeutralRearmDps, Label = "Side Neutral Rearm DPS", Min = 35f, Max = 110f, Decimals = 0, DefaultValue = 60.18131637573242f },
-        new FieldSpec { Field = TuningField.SideNeutralHoldTime, Label = "Side Neutral Hold Time", Min = 0f, Max = 0.10f, Decimals = 3, DefaultValue = 0.010351191274821759f },
-        new FieldSpec { Field = TuningField.GyroSmooth, Label = "Gyro Smooth", Min = 8f, Max = 45f, Decimals = 1, DefaultValue = 24.986251831054689f }
+        new FieldSpec { Field = TuningField.RequireBumperOrTriggerHold, Label = "Require Trigger/Bumper Hold (Cast)", Min = 0f, Max = 1f, Decimals = 0, DefaultValue = 1f, WholeNumbers = true, IsToggle = true },
+        new FieldSpec { Field = TuningField.CastForwardLinG, Label = "Cast Forward Lin (g)", Min = 0.05f, Max = 2.00f, Decimals = 2, DefaultValue = 0.05000000074505806f },
+        new FieldSpec { Field = TuningField.CastGyroDps, Label = "Cast Gyro (dps)", Min = 80f, Max = 520f, Decimals = 0, DefaultValue = 160.2053985595703f },
+        new FieldSpec { Field = TuningField.YankBackLinG, Label = "Yank Back Lin (g)", Min = 0.05f, Max = 2.00f, Decimals = 2, DefaultValue = 0.05000000074505806f },
+        new FieldSpec { Field = TuningField.YankGyroDps, Label = "Yank Gyro (dps)", Min = 80f, Max = 520f, Decimals = 0, DefaultValue = 200.3485107421875f },
+        new FieldSpec { Field = TuningField.MinTimeBetweenCastAndYank, Label = "Min Cast->Yank Time (s)", Min = 0.05f, Max = 0.90f, Decimals = 2, DefaultValue = 0.05000000074505806f },
+        new FieldSpec { Field = TuningField.CooldownAfterTrigger, Label = "Trigger Cooldown (s)", Min = 0.05f, Max = 0.90f, Decimals = 2, DefaultValue = 0.05000000074505806f }
     };
 
     private void Awake()
@@ -121,7 +113,7 @@ public class RhythmPauseTuningPanel : MonoBehaviour
         BuildUiIfNeeded();
         AdjustOpenButtonPlacement();
         AdjustPanelToViewport();
-        ResolveTargets();
+        ResolveTarget();
         if (autoLoadOnStart)
             TryLoadPersistentFile(showStatusWhenMissing: false);
         RefreshUiFromTarget();
@@ -142,7 +134,7 @@ public class RhythmPauseTuningPanel : MonoBehaviour
             return;
         }
 
-        ResolveTargets();
+        ResolveTarget();
         AdjustOpenButtonPlacement();
         AdjustPanelToViewport();
         SyncOpenButtonVisibility();
@@ -161,9 +153,9 @@ public class RhythmPauseTuningPanel : MonoBehaviour
 
     public void OpenTuningPanel()
     {
-        FishingPauseTuningPanel fishingPanel = GetComponent<FishingPauseTuningPanel>();
-        if (fishingPanel != null && fishingPanel.IsTuningPanelOpen())
-            fishingPanel.CloseTuningPanel();
+        RhythmPauseTuningPanel rhythmPanel = GetComponent<RhythmPauseTuningPanel>();
+        if (rhythmPanel != null && rhythmPanel.IsTuningPanelOpen())
+            rhythmPanel.CloseTuningPanel();
 
         if (_panelRoot == null)
             return;
@@ -172,12 +164,12 @@ public class RhythmPauseTuningPanel : MonoBehaviour
         _isTuningOpen = true;
         _panelRoot.gameObject.SetActive(true);
         SetOpenButtonActive(false);
-        ResolveTargets();
+        ResolveTarget();
         RefreshUiFromTarget();
         EnsureSelection();
         SyncOpenButtonVisibility();
-        if (fishingPanel != null)
-            fishingPanel.SyncOpenButtonVisibility();
+        if (rhythmPanel != null)
+            rhythmPanel.SyncOpenButtonVisibility();
     }
 
     public void CloseTuningPanel()
@@ -211,9 +203,9 @@ public class RhythmPauseTuningPanel : MonoBehaviour
 
         SyncOpenButtonVisibility();
 
-        FishingPauseTuningPanel fishingPanel = GetComponent<FishingPauseTuningPanel>();
-        if (fishingPanel != null)
-            fishingPanel.SyncOpenButtonVisibility();
+        RhythmPauseTuningPanel rhythmPanel = GetComponent<RhythmPauseTuningPanel>();
+        if (rhythmPanel != null)
+            rhythmPanel.SyncOpenButtonVisibility();
 
         if (!selectOpenButton)
             return;
@@ -236,14 +228,14 @@ public class RhythmPauseTuningPanel : MonoBehaviour
         bool pauseOpen = _pauseManager != null &&
             _pauseManager.PausePanel != null &&
             _pauseManager.PausePanel.activeInHierarchy;
-        bool fishingOpen = IsFishingTuningPanelOpen();
-        SetOpenButtonActive(pauseOpen && !_isTuningOpen && !fishingOpen);
+        bool rhythmOpen = IsRhythmTuningPanelOpen();
+        SetOpenButtonActive(pauseOpen && !_isTuningOpen && !rhythmOpen);
     }
 
-    private bool IsFishingTuningPanelOpen()
+    private bool IsRhythmTuningPanelOpen()
     {
-        FishingPauseTuningPanel fishingPanel = GetComponent<FishingPauseTuningPanel>();
-        return fishingPanel != null && fishingPanel.IsTuningPanelOpen();
+        RhythmPauseTuningPanel rhythmPanel = GetComponent<RhythmPauseTuningPanel>();
+        return rhythmPanel != null && rhythmPanel.IsTuningPanelOpen();
     }
 
     private void AdjustOpenButtonPlacement()
@@ -264,7 +256,7 @@ public class RhythmPauseTuningPanel : MonoBehaviour
             flipY = s.y < 0f;
         }
 
-        float anchorX = flipX ? 0f : 1f;
+        float anchorX = flipX ? 1f : 0f;
         float anchorY = flipY ? 1f : 0f;
         rect.anchorMin = new Vector2(anchorX, anchorY);
         rect.anchorMax = new Vector2(anchorX, anchorY);
@@ -293,59 +285,16 @@ public class RhythmPauseTuningPanel : MonoBehaviour
         _panelRoot.sizeDelta = new Vector2(Mathf.Min(panelSize.x, maxW), Mathf.Min(panelSize.y, maxH));
     }
 
-    private void ResolveTargets()
+    private void ResolveTarget()
     {
-        if (autoFindTargets)
-        {
-            if (directionalRhythmProvider == null)
-                directionalRhythmProvider = FindObjectOfType<JoyConDirectionalRhythmProvider>();
-            if (directionalSwingInput == null)
-                directionalSwingInput = FindObjectOfType<JoyConDirectionalSwingInput>();
-        }
+        if (autoFindTarget && gestureDetector == null)
+            gestureDetector = FindObjectOfType<JoyConGestureDetector>();
 
-        if (forceEnableSyncOnStart && !_syncForced && directionalRhythmProvider != null && directionalSwingInput != null)
-        {
-            directionalRhythmProvider.SyncSettingsFromDirectionalSwing = true;
-            _syncForced = true;
-        }
-
-        if (directionalRhythmProvider != null &&
-            directionalRhythmProvider.SyncSettingsFromDirectionalSwing &&
-            directionalRhythmProvider.DirectionalSwingSource != null)
-        {
-            directionalSwingInput = directionalRhythmProvider.DirectionalSwingSource;
-        }
-
-        _hasTarget = false;
-        _targetIsSwing = false;
-
-        if (directionalRhythmProvider != null &&
-            directionalRhythmProvider.SyncSettingsFromDirectionalSwing &&
-            directionalSwingInput != null)
-        {
-            _hasTarget = true;
-            _targetIsSwing = true;
-            UpdateTargetLabel("Target: JoyConDirectionalSwingInput (sync source)");
-            return;
-        }
-
-        if (directionalRhythmProvider != null)
-        {
-            _hasTarget = true;
-            _targetIsSwing = false;
-            UpdateTargetLabel("Target: JoyConDirectionalRhythmProvider");
-            return;
-        }
-
-        if (directionalSwingInput != null)
-        {
-            _hasTarget = true;
-            _targetIsSwing = true;
-            UpdateTargetLabel("Target: JoyConDirectionalSwingInput");
-            return;
-        }
-
-        UpdateTargetLabel("Target: not found in scene");
+        _hasTarget = gestureDetector != null;
+        if (_hasTarget)
+            UpdateTargetLabel("Target: JoyConGestureDetector");
+        else
+            UpdateTargetLabel("Target: JoyConGestureDetector not found in scene");
     }
 
     private void BuildUiIfNeeded()
@@ -369,13 +318,13 @@ public class RhythmPauseTuningPanel : MonoBehaviour
         go.transform.SetParent(parent, false);
 
         Image image = go.GetComponent<Image>();
-        image.color = new Color(0.14f, 0.25f, 0.36f, 0.92f);
+        image.color = new Color(0.12f, 0.34f, 0.21f, 0.92f);
 
         _openButton = go.GetComponent<Button>();
         _openButton.targetGraphic = image;
         _openButton.onClick.AddListener(OpenTuningPanel);
 
-        TextMeshProUGUI label = CreateText(go.transform, "Label", "Rhythm Tuning", 13f, FontStyles.Bold, TextAlignmentOptions.Center);
+        TextMeshProUGUI label = CreateText(go.transform, "Label", "Fishing Tuning", 13f, FontStyles.Bold, TextAlignmentOptions.Center);
         Stretch(label.rectTransform);
 
         AdjustOpenButtonPlacement();
@@ -398,7 +347,7 @@ public class RhythmPauseTuningPanel : MonoBehaviour
         _panelRoot.anchoredPosition = panelOffset;
 
         Image bg = go.GetComponent<Image>();
-        bg.color = new Color(0.05f, 0.05f, 0.06f, 1f);
+        bg.color = new Color(0.05f, 0.07f, 0.06f, 1f);
 
         CreateHeader();
         CreateTargetLabel();
@@ -435,7 +384,7 @@ public class RhythmPauseTuningPanel : MonoBehaviour
         resetRect.sizeDelta = new Vector2(128f, 0f);
         resetRect.anchoredPosition = Vector2.zero;
 
-        TextMeshProUGUI title = CreateText(header, "Title", "Rhythm Flick Tuning", 16f, FontStyles.Bold, TextAlignmentOptions.Center);
+        TextMeshProUGUI title = CreateText(header, "Title", "Fishing Joy-Con Tuning", 16f, FontStyles.Bold, TextAlignmentOptions.Center);
         title.color = new Color(1f, 0.95f, 0.72f, 1f);
         Stretch(title.rectTransform);
         title.rectTransform.offsetMin = new Vector2(98f, 0f);
@@ -564,7 +513,7 @@ public class RhythmPauseTuningPanel : MonoBehaviour
         Slider slider = CreateSlider(rowGo.transform);
         slider.minValue = spec.Min;
         slider.maxValue = spec.Max;
-        slider.wholeNumbers = false;
+        slider.wholeNumbers = spec.WholeNumbers;
 
         SliderRow row = new SliderRow { Spec = spec, Slider = slider, ValueLabel = value };
         _rows.Add(row);
@@ -612,7 +561,7 @@ public class RhythmPauseTuningPanel : MonoBehaviour
         fillGo.transform.SetParent(fillAreaGo.transform, false);
         RectTransform fill = fillGo.GetComponent<RectTransform>();
         Stretch(fill);
-        fillGo.GetComponent<Image>().color = new Color(0.2f, 0.72f, 1f, 1f);
+        fillGo.GetComponent<Image>().color = new Color(0.30f, 0.80f, 0.46f, 1f);
 
         GameObject handleGo = new GameObject("Handle", typeof(RectTransform), typeof(Image));
         handleGo.transform.SetParent(sliderGo.transform, false);
@@ -817,7 +766,7 @@ public class RhythmPauseTuningPanel : MonoBehaviour
         }
 
         string exportDir = GetExportDirectory();
-        string exportName = "rhythm_flick_tuning_" + DateTime.UtcNow.ToString("yyyyMMdd_HHmmss") + ".json";
+        string exportName = "fishing_joycon_tuning_" + DateTime.UtcNow.ToString("yyyyMMdd_HHmmss") + ".json";
         string exportPath = Path.Combine(exportDir, exportName);
 
         try
@@ -836,56 +785,64 @@ public class RhythmPauseTuningPanel : MonoBehaviour
     {
         return new TuningSaveData
         {
-            upEnterDps = ReadField(TuningField.UpEnterDps),
-            upExitDps = ReadField(TuningField.UpExitDps),
-            sideEnterDps = ReadField(TuningField.SideEnterDps),
-            sideExitDps = ReadField(TuningField.SideExitDps),
-            upPriorityBias = ReadField(TuningField.UpPriorityBias),
-            directionRearmDelay = ReadField(TuningField.DirectionRearmDelay),
-            sideNeutralRearmDps = ReadField(TuningField.SideNeutralRearmDps),
-            sideNeutralHoldTime = ReadField(TuningField.SideNeutralHoldTime),
-            gyroSmooth = ReadField(TuningField.GyroSmooth),
+            requireBumperOrTriggerHold = ReadField(TuningField.RequireBumperOrTriggerHold) >= 0.5f,
+            castForwardLinG = ReadField(TuningField.CastForwardLinG),
+            castGyroDps = ReadField(TuningField.CastGyroDps),
+            yankBackLinG = ReadField(TuningField.YankBackLinG),
+            yankGyroDps = ReadField(TuningField.YankGyroDps),
+            minTimeBetweenCastAndYank = ReadField(TuningField.MinTimeBetweenCastAndYank),
+            cooldownAfterTrigger = ReadField(TuningField.CooldownAfterTrigger),
             savedUtc = DateTime.UtcNow.ToString("o")
         };
     }
 
     private void ApplySaveData(TuningSaveData data)
     {
-        WriteField(TuningField.UpEnterDps, data.upEnterDps);
-        WriteField(TuningField.UpExitDps, data.upExitDps);
-        WriteField(TuningField.SideEnterDps, data.sideEnterDps);
-        WriteField(TuningField.SideExitDps, data.sideExitDps);
-        WriteField(TuningField.UpPriorityBias, data.upPriorityBias);
-        WriteField(TuningField.DirectionRearmDelay, data.directionRearmDelay);
-        WriteField(TuningField.SideNeutralRearmDps, data.sideNeutralRearmDps);
-        WriteField(TuningField.SideNeutralHoldTime, data.sideNeutralHoldTime);
-        WriteField(TuningField.GyroSmooth, data.gyroSmooth);
+        WriteField(TuningField.RequireBumperOrTriggerHold, data.requireBumperOrTriggerHold ? 1f : 0f);
+        WriteField(TuningField.CastForwardLinG, data.castForwardLinG);
+        WriteField(TuningField.CastGyroDps, data.castGyroDps);
+        WriteField(TuningField.YankBackLinG, data.yankBackLinG);
+        WriteField(TuningField.YankGyroDps, data.yankGyroDps);
+        WriteField(TuningField.MinTimeBetweenCastAndYank, data.minTimeBetweenCastAndYank);
+        WriteField(TuningField.CooldownAfterTrigger, data.cooldownAfterTrigger);
     }
 
     private float ReadField(TuningField field)
     {
-        if (_targetIsSwing && directionalSwingInput != null)
-            return GetFromSwing(field);
+        if (gestureDetector == null)
+            return 0f;
 
-        if (!_targetIsSwing && directionalRhythmProvider != null)
-            return GetFromProvider(field);
-
-        return 0f;
+        switch (field)
+        {
+            case TuningField.RequireBumperOrTriggerHold: return gestureDetector.requireBumperOrTriggerHold ? 1f : 0f;
+            case TuningField.CastForwardLinG: return gestureDetector.castForwardLinG;
+            case TuningField.CastGyroDps: return gestureDetector.castGyroDps;
+            case TuningField.YankBackLinG: return gestureDetector.yankBackLinG;
+            case TuningField.YankGyroDps: return gestureDetector.yankGyroDps;
+            case TuningField.MinTimeBetweenCastAndYank: return gestureDetector.minTimeBetweenCastAndYank;
+            case TuningField.CooldownAfterTrigger: return gestureDetector.cooldownAfterTrigger;
+            default: return 0f;
+        }
     }
 
     private void WriteField(TuningField field, float value)
     {
+        if (gestureDetector == null)
+            return;
+
         FieldSpec spec = FindSpec(field);
         float clamped = Mathf.Clamp(value, spec.Min, spec.Max);
 
-        if (_targetIsSwing && directionalSwingInput != null)
+        switch (field)
         {
-            SetOnSwing(field, clamped);
-            return;
+            case TuningField.RequireBumperOrTriggerHold: gestureDetector.requireBumperOrTriggerHold = clamped >= 0.5f; break;
+            case TuningField.CastForwardLinG: gestureDetector.castForwardLinG = clamped; break;
+            case TuningField.CastGyroDps: gestureDetector.castGyroDps = clamped; break;
+            case TuningField.YankBackLinG: gestureDetector.yankBackLinG = clamped; break;
+            case TuningField.YankGyroDps: gestureDetector.yankGyroDps = clamped; break;
+            case TuningField.MinTimeBetweenCastAndYank: gestureDetector.minTimeBetweenCastAndYank = clamped; break;
+            case TuningField.CooldownAfterTrigger: gestureDetector.cooldownAfterTrigger = clamped; break;
         }
-
-        if (!_targetIsSwing && directionalRhythmProvider != null)
-            SetOnProvider(field, clamped);
     }
 
     private static FieldSpec FindSpec(TuningField field)
@@ -928,13 +885,10 @@ public class RhythmPauseTuningPanel : MonoBehaviour
 
     private float GetFieldValue(FieldSpec spec)
     {
-        if (_targetIsSwing && directionalSwingInput != null)
-            return GetFromSwing(spec.Field);
+        if (gestureDetector == null)
+            return spec.DefaultValue;
 
-        if (!_targetIsSwing && directionalRhythmProvider != null)
-            return GetFromProvider(spec.Field);
-
-        return spec.DefaultValue;
+        return ReadField(spec.Field);
     }
 
     private void ApplyFieldValue(FieldSpec spec, float value)
@@ -942,85 +896,14 @@ public class RhythmPauseTuningPanel : MonoBehaviour
         if (!_hasTarget)
             return;
 
-        float clamped = Mathf.Clamp(value, spec.Min, spec.Max);
-        if (_targetIsSwing && directionalSwingInput != null)
-        {
-            SetOnSwing(spec.Field, clamped);
-            return;
-        }
-
-        if (!_targetIsSwing && directionalRhythmProvider != null)
-            SetOnProvider(spec.Field, clamped);
-    }
-
-    private float GetFromSwing(TuningField field)
-    {
-        switch (field)
-        {
-            case TuningField.UpEnterDps: return directionalSwingInput.upEnterDps;
-            case TuningField.UpExitDps: return directionalSwingInput.upExitDps;
-            case TuningField.SideEnterDps: return directionalSwingInput.sideEnterDps;
-            case TuningField.SideExitDps: return directionalSwingInput.sideExitDps;
-            case TuningField.UpPriorityBias: return directionalSwingInput.upPriorityBias;
-            case TuningField.DirectionRearmDelay: return directionalSwingInput.directionRearmDelay;
-            case TuningField.SideNeutralRearmDps: return directionalSwingInput.sideNeutralRearmDps;
-            case TuningField.SideNeutralHoldTime: return directionalSwingInput.sideNeutralHoldTime;
-            case TuningField.GyroSmooth: return directionalSwingInput.gyroSmooth;
-            default: return 0f;
-        }
-    }
-
-    private void SetOnSwing(TuningField field, float value)
-    {
-        switch (field)
-        {
-            case TuningField.UpEnterDps: directionalSwingInput.upEnterDps = value; break;
-            case TuningField.UpExitDps: directionalSwingInput.upExitDps = value; break;
-            case TuningField.SideEnterDps: directionalSwingInput.sideEnterDps = value; break;
-            case TuningField.SideExitDps: directionalSwingInput.sideExitDps = value; break;
-            case TuningField.UpPriorityBias: directionalSwingInput.upPriorityBias = value; break;
-            case TuningField.DirectionRearmDelay: directionalSwingInput.directionRearmDelay = value; break;
-            case TuningField.SideNeutralRearmDps: directionalSwingInput.sideNeutralRearmDps = value; break;
-            case TuningField.SideNeutralHoldTime: directionalSwingInput.sideNeutralHoldTime = value; break;
-            case TuningField.GyroSmooth: directionalSwingInput.gyroSmooth = value; break;
-        }
-    }
-
-    private float GetFromProvider(TuningField field)
-    {
-        switch (field)
-        {
-            case TuningField.UpEnterDps: return directionalRhythmProvider.UpEnterDps;
-            case TuningField.UpExitDps: return directionalRhythmProvider.UpExitDps;
-            case TuningField.SideEnterDps: return directionalRhythmProvider.SideEnterDps;
-            case TuningField.SideExitDps: return directionalRhythmProvider.SideExitDps;
-            case TuningField.UpPriorityBias: return directionalRhythmProvider.UpPriorityBias;
-            case TuningField.DirectionRearmDelay: return directionalRhythmProvider.DirectionRearmDelay;
-            case TuningField.SideNeutralRearmDps: return directionalRhythmProvider.SideNeutralRearmDps;
-            case TuningField.SideNeutralHoldTime: return directionalRhythmProvider.SideNeutralHoldTime;
-            case TuningField.GyroSmooth: return directionalRhythmProvider.GyroSmooth;
-            default: return 0f;
-        }
-    }
-
-    private void SetOnProvider(TuningField field, float value)
-    {
-        switch (field)
-        {
-            case TuningField.UpEnterDps: directionalRhythmProvider.UpEnterDps = value; break;
-            case TuningField.UpExitDps: directionalRhythmProvider.UpExitDps = value; break;
-            case TuningField.SideEnterDps: directionalRhythmProvider.SideEnterDps = value; break;
-            case TuningField.SideExitDps: directionalRhythmProvider.SideExitDps = value; break;
-            case TuningField.UpPriorityBias: directionalRhythmProvider.UpPriorityBias = value; break;
-            case TuningField.DirectionRearmDelay: directionalRhythmProvider.DirectionRearmDelay = value; break;
-            case TuningField.SideNeutralRearmDps: directionalRhythmProvider.SideNeutralRearmDps = value; break;
-            case TuningField.SideNeutralHoldTime: directionalRhythmProvider.SideNeutralHoldTime = value; break;
-            case TuningField.GyroSmooth: directionalRhythmProvider.GyroSmooth = value; break;
-        }
+        WriteField(spec.Field, value);
     }
 
     private static string FormatValue(FieldSpec spec, float value)
     {
+        if (spec.IsToggle)
+            return value >= 0.5f ? "On" : "Off";
+
         return value.ToString("F" + Mathf.Max(0, spec.Decimals));
     }
 
@@ -1031,7 +914,7 @@ public class RhythmPauseTuningPanel : MonoBehaviour
     }
 }
 
-public static class RhythmPauseTuningPanelBootstrap
+public static class FishingPauseTuningPanelBootstrap
 {
     private static bool _hookedSceneLoaded;
 
@@ -1054,11 +937,8 @@ public static class RhythmPauseTuningPanelBootstrap
 
     private static void InstallForScene()
     {
-        bool hasRhythmTargets =
-            UnityEngine.Object.FindObjectOfType<JoyConDirectionalRhythmProvider>(true) != null ||
-            UnityEngine.Object.FindObjectOfType<JoyConDirectionalSwingInput>(true) != null;
-
-        if (!hasRhythmTargets)
+        bool hasFishingTarget = UnityEngine.Object.FindObjectOfType<JoyConGestureDetector>(true) != null;
+        if (!hasFishingTarget)
             return;
 
         PauseManager[] managers = UnityEngine.Object.FindObjectsOfType<PauseManager>(true);
@@ -1068,8 +948,9 @@ public static class RhythmPauseTuningPanelBootstrap
             if (manager == null)
                 continue;
 
-            if (manager.GetComponent<RhythmPauseTuningPanel>() == null)
-                manager.gameObject.AddComponent<RhythmPauseTuningPanel>();
+            if (manager.GetComponent<FishingPauseTuningPanel>() == null)
+                manager.gameObject.AddComponent<FishingPauseTuningPanel>();
         }
     }
 }
+

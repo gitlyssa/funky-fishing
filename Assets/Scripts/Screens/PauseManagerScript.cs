@@ -53,7 +53,7 @@ public class PauseManager : MonoBehaviour
 
         if (isPaused && WasCancelBackPressed())
         {
-            if (TryCloseRhythmTuningPanel())
+            if (TryCloseTuningPanel())
                 return;
 
             if (IsControlsOpen())
@@ -65,7 +65,7 @@ public class PauseManager : MonoBehaviour
 
         if (isPaused)
         {
-            if (!TryEnsureRhythmTuningSelection())
+            if (!TryEnsureTuningSelection())
                 EnsurePausedSelection();
         }
     }
@@ -154,8 +154,15 @@ public class PauseManager : MonoBehaviour
         return ControlsPanel != null && ControlsPanel.activeInHierarchy;
     }
 
-    private bool TryCloseRhythmTuningPanel()
+    private bool TryCloseTuningPanel()
     {
+        FishingPauseTuningPanel fishing = GetComponent<FishingPauseTuningPanel>();
+        if (fishing != null && fishing.IsTuningPanelOpen())
+        {
+            fishing.CloseTuningPanel();
+            return true;
+        }
+
         RhythmPauseTuningPanel tuning = GetComponent<RhythmPauseTuningPanel>();
         if (tuning == null || !tuning.IsTuningPanelOpen())
             return false;
@@ -164,8 +171,15 @@ public class PauseManager : MonoBehaviour
         return true;
     }
 
-    private bool TryEnsureRhythmTuningSelection()
+    private bool TryEnsureTuningSelection()
     {
+        FishingPauseTuningPanel fishing = GetComponent<FishingPauseTuningPanel>();
+        if (fishing != null && fishing.IsTuningPanelOpen())
+        {
+            fishing.EnsureSelection();
+            return true;
+        }
+
         RhythmPauseTuningPanel tuning = GetComponent<RhythmPauseTuningPanel>();
         if (tuning == null || !tuning.IsTuningPanelOpen())
             return false;
