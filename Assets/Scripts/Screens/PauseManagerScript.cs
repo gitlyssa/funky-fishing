@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
+using UnityEngine.UI;
 using System.Collections;
 
 public class PauseManager : MonoBehaviour
@@ -36,6 +37,7 @@ public class PauseManager : MonoBehaviour
         if (ControlsPanel != null)
             ControlsPanel.SetActive(false);
 
+        DisableDecorativePauseOverlayRaycasts();
         ResolveSelectionReferences();
         ClearSelectedObject();
     }
@@ -232,6 +234,26 @@ public class PauseManager : MonoBehaviour
         }
 
         return null;
+    }
+
+    private void DisableDecorativePauseOverlayRaycasts()
+    {
+        if (PausePanel == null)
+            return;
+
+        DisableGraphicRaycastTargetByName(PausePanel.transform, "PausedTextImg");
+        DisableGraphicRaycastTargetByName(PausePanel.transform, "PausedText");
+    }
+
+    private static void DisableGraphicRaycastTargetByName(Transform root, string targetName)
+    {
+        GameObject target = FindByNameRecursive(root, targetName);
+        if (target == null)
+            return;
+
+        Graphic graphic = target.GetComponent<Graphic>();
+        if (graphic != null)
+            graphic.raycastTarget = false;
     }
 
     private void QueueSelect(GameObject target)
