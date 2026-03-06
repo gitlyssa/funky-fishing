@@ -75,19 +75,19 @@ public class RhythmWheel3D : MonoBehaviour
     private void UpdateIdle()
     {
         _targetSpeed = 0f;
-        Color nextColor = Color.Lerp(GetCurrentColor(), idleColor, Time.deltaTime * 8f);
+        // Color nextColor = Color.Lerp(GetCurrentColor(), idleColor, Time.deltaTime * 8f);
         
 
-        if (Vector4.Distance(nextColor, idleColor) < 0.01f) nextColor = idleColor;
+        // if (Vector4.Distance(nextColor, idleColor) < 0.01f) nextColor = idleColor;
         
-        SetWheelVisuals(nextColor, 0f);
+        // SetWheelVisuals(nextColor, 0f);
     }
 
     private void SetWheelVisuals(Color color, float glowIntensity)
     {
         if (_wheelMaterial == null) return;
         
-        _wheelMaterial.color = color; 
+        // _wheelMaterial.color = color; 
     }
 
     private Color GetCurrentColor() => _wheelMaterial != null ? _wheelMaterial.GetColor(emissionColorPropertyName) : idleColor;
