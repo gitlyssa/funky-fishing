@@ -14117,11 +14117,11 @@ MonoBehaviour:
   judgementAnchoredPosition: {x: 0, y: -140}
   judgementFontSize: 56
   perfectJudgementSprite: {fileID: 21300000, guid: a9d53b6fa8a5f504e99e60b69bb2d896, type: 3}
-  perfectJudgementImageSize: {x: 1248, y: 312}
+  perfectJudgementImageSize: {x: 1747.2, y: 436.8}
   goodJudgementSprite: {fileID: 21300000, guid: ccec7f7d2f3b1a34691c9c6b8b472c5d, type: 3}
-  goodJudgementImageSize: {x: 1008, y: 288}
+  goodJudgementImageSize: {x: 1411.2, y: 403.2}
   missJudgementSprite: {fileID: 21300000, guid: 118da20ce18fb72468843af5f91d4b7a, type: 3}
-  missJudgementImageSize: {x: 756, y: 216}
+  missJudgementImageSize: {x: 1058.4, y: 302.4}
   perfectColor: {r: 0.95, g: 1, b: 0.35, a: 1}
   goodColor: {r: 0.4, g: 0.95, b: 1, a: 1}
   missColor: {r: 1, g: 0.45, b: 0.45, a: 1}
