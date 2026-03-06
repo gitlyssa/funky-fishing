@@ -17,6 +17,12 @@ public class RhythmPerformanceHud : MonoBehaviour
     [Header("Judgement Text")]
     [SerializeField] private Vector2 judgementAnchoredPosition = new Vector2(0f, -120f);
     [SerializeField] private int judgementFontSize = 56;
+    [SerializeField] private Sprite perfectJudgementSprite;
+    [SerializeField] private Vector2 perfectJudgementImageSize = new Vector2(520f, 130f);
+    [SerializeField] private Sprite goodJudgementSprite;
+    [SerializeField] private Vector2 goodJudgementImageSize = new Vector2(420f, 120f);
+    [SerializeField] private Sprite missJudgementSprite;
+    [SerializeField] private Vector2 missJudgementImageSize = new Vector2(420f, 120f);
     [SerializeField] private Color perfectColor = new Color(0.95f, 1f, 0.35f, 1f);
     [SerializeField] private Color goodColor = new Color(0.4f, 0.95f, 1f, 1f);
     [SerializeField] private Color missColor = new Color(1f, 0.45f, 0.45f, 1f);
@@ -60,6 +66,13 @@ public class RhythmPerformanceHud : MonoBehaviour
     private Vector2 _judgementBasePosition;
     private Color _judgementBaseColor;
     private float _judgementAnimTime = -1f;
+    private Image _perfectJudgementImage;
+    private RectTransform _perfectJudgementRect;
+    private Image _goodJudgementImage;
+    private RectTransform _goodJudgementRect;
+    private Image _missJudgementImage;
+    private RectTransform _missJudgementRect;
+    private JudgementVisual _judgementVisual = JudgementVisual.Text;
 
     private readonly Dictionary<int, float> _trackedNotes = new Dictionary<int, float>();
     private readonly HashSet<int> _activeNoteIdsBuffer = new HashSet<int>();
@@ -86,6 +99,14 @@ public class RhythmPerformanceHud : MonoBehaviour
         Perfect,
         Good,
         Miss
+    }
+
+    private enum JudgementVisual
+    {
+        Text,
+        PerfectImage,
+        GoodImage,
+        MissImage
     }
 
     private void Awake()
@@ -158,7 +179,7 @@ public class RhythmPerformanceHud : MonoBehaviour
 
     private void EnsureUi()
     {
-        if (_judgementText != null && _detailText != null && _comboText != null)
+        if (_judgementText != null && _detailText != null && _comboText != null && _missJudgementImage != null && _perfectJudgementImage != null && _goodJudgementImage != null)
             return;
 
         _canvas = GetOrCreateHudCanvas();
@@ -187,6 +208,36 @@ public class RhythmPerformanceHud : MonoBehaviour
             TextAlignmentOptions.Center,
             "-");
 
+        _perfectJudgementImage = CreateImage(
+            "PerfectJudgementImage",
+            _canvas.transform,
+            new Vector2(0.5f, 0.5f),
+            new Vector2(0.5f, 0.5f),
+            new Vector2(0.5f, 0.5f),
+            judgementAnchoredPosition,
+            perfectJudgementImageSize,
+            perfectJudgementSprite);
+
+        _goodJudgementImage = CreateImage(
+            "GoodJudgementImage",
+            _canvas.transform,
+            new Vector2(0.5f, 0.5f),
+            new Vector2(0.5f, 0.5f),
+            new Vector2(0.5f, 0.5f),
+            judgementAnchoredPosition,
+            goodJudgementImageSize,
+            goodJudgementSprite);
+
+        _missJudgementImage = CreateImage(
+            "MissJudgementImage",
+            _canvas.transform,
+            new Vector2(0.5f, 0.5f),
+            new Vector2(0.5f, 0.5f),
+            new Vector2(0.5f, 0.5f),
+            judgementAnchoredPosition,
+            missJudgementImageSize,
+            missJudgementSprite);
+
         _detailText = CreateText(
             "DetailedScoreText",
             _canvas.transform,
@@ -201,6 +252,9 @@ public class RhythmPerformanceHud : MonoBehaviour
 
         _comboText.gameObject.layer = _canvas.gameObject.layer;
         _judgementText.gameObject.layer = _canvas.gameObject.layer;
+        _perfectJudgementImage.gameObject.layer = _canvas.gameObject.layer;
+        _goodJudgementImage.gameObject.layer = _canvas.gameObject.layer;
+        _missJudgementImage.gameObject.layer = _canvas.gameObject.layer;
         _detailText.gameObject.layer = _canvas.gameObject.layer;
         _comboRect = _comboText.rectTransform;
         Vector2 resolvedComboPosition = comboAnchoredPosition;
@@ -210,7 +264,23 @@ public class RhythmPerformanceHud : MonoBehaviour
         _comboRect.anchoredPosition = resolvedComboPosition;
         _comboBasePosition = resolvedComboPosition;
         _judgementRect = _judgementText.rectTransform;
+        _perfectJudgementRect = _perfectJudgementImage.rectTransform;
+        _goodJudgementRect = _goodJudgementImage.rectTransform;
+        _missJudgementRect = _missJudgementImage.rectTransform;
         _judgementBasePosition = _judgementRect.anchoredPosition;
+
+        Color perfectImageColor = _perfectJudgementImage.color;
+        perfectImageColor.a = 0f;
+        _perfectJudgementImage.color = perfectImageColor;
+
+        Color goodImageColor = _goodJudgementImage.color;
+        goodImageColor.a = 0f;
+        _goodJudgementImage.color = goodImageColor;
+
+        Color imageColor = _missJudgementImage.color;
+        imageColor.a = 0f;
+        _missJudgementImage.color = imageColor;
+
         HideComboImmediate();
         HideJudgementImmediate();
 
@@ -291,6 +361,42 @@ public class RhythmPerformanceHud : MonoBehaviour
         text.raycastTarget = false;
 
         return text;
+    }
+
+    private Image CreateImage(
+        string objectName,
+        Transform parent,
+        Vector2 anchorMin,
+        Vector2 anchorMax,
+        Vector2 pivot,
+        Vector2 anchoredPosition,
+        Vector2 size,
+        Sprite sprite)
+    {
+        Transform existing = parent.Find(objectName);
+        if (existing != null)
+        {
+            Image existingImage = existing.GetComponent<Image>();
+            if (existingImage != null)
+                return existingImage;
+        }
+
+        GameObject go = new GameObject(objectName, typeof(RectTransform), typeof(Image));
+        go.transform.SetParent(parent, false);
+
+        RectTransform rect = go.GetComponent<RectTransform>();
+        rect.anchorMin = anchorMin;
+        rect.anchorMax = anchorMax;
+        rect.pivot = pivot;
+        rect.anchoredPosition = anchoredPosition;
+        rect.sizeDelta = size;
+
+        Image image = go.GetComponent<Image>();
+        image.sprite = sprite;
+        image.preserveAspect = true;
+        image.raycastTarget = false;
+
+        return image;
     }
 
     private bool IsRhythmPlaybackActive()
@@ -393,7 +499,7 @@ public class RhythmPerformanceHud : MonoBehaviour
                 _combo++;
                 _score += perfectPoints;
                 ShowComboPulseIfEligible();
-                ShowJudgement("PERFECT", perfectColor);
+                ShowPerfectJudgement();
                 break;
 
             case ResultType.Good:
@@ -401,7 +507,7 @@ public class RhythmPerformanceHud : MonoBehaviour
                 _combo++;
                 _score += goodPoints;
                 ShowComboPulseIfEligible();
-                ShowJudgement("GOOD", goodColor);
+                ShowGoodJudgement();
                 break;
 
             default:
@@ -409,7 +515,7 @@ public class RhythmPerformanceHud : MonoBehaviour
                 _combo = 0;
                 _score += missPoints;
                 HideComboImmediate();
-                ShowJudgement("MISS", missColor);
+                ShowMissJudgement();
                 break;
         }
 
@@ -425,7 +531,135 @@ public class RhythmPerformanceHud : MonoBehaviour
             return;
 
         _judgementBaseColor = color;
+        _judgementVisual = JudgementVisual.Text;
         _judgementText.text = text;
+        if (_perfectJudgementImage != null)
+        {
+            Color perfectImageColor = _perfectJudgementImage.color;
+            perfectImageColor.a = 0f;
+            _perfectJudgementImage.color = perfectImageColor;
+        }
+        if (_goodJudgementImage != null)
+        {
+            Color goodImageColor = _goodJudgementImage.color;
+            goodImageColor.a = 0f;
+            _goodJudgementImage.color = goodImageColor;
+        }
+        if (_missJudgementImage != null)
+        {
+            Color missImageColor = _missJudgementImage.color;
+            missImageColor.a = 0f;
+            _missJudgementImage.color = missImageColor;
+        }
+        _judgementAnimTime = 0f;
+        ApplyJudgementAnimation(0f);
+    }
+
+    private void ShowGoodJudgement()
+    {
+        if (_judgementText == null)
+            return;
+
+        _judgementBaseColor = goodColor;
+        _judgementVisual = JudgementVisual.GoodImage;
+        _judgementText.text = string.Empty;
+
+        if (_perfectJudgementImage != null)
+        {
+            Color perfectImageColor = _perfectJudgementImage.color;
+            perfectImageColor.a = 0f;
+            _perfectJudgementImage.color = perfectImageColor;
+        }
+
+        if (_goodJudgementImage != null)
+        {
+            _goodJudgementImage.sprite = goodJudgementSprite;
+            _goodJudgementImage.SetNativeSize();
+            _goodJudgementImage.rectTransform.sizeDelta = goodJudgementImageSize;
+            Color goodImageColor = _goodJudgementImage.color;
+            goodImageColor.a = 1f;
+            _goodJudgementImage.color = goodImageColor;
+        }
+
+        if (_missJudgementImage != null)
+        {
+            Color missImageColor = _missJudgementImage.color;
+            missImageColor.a = 0f;
+            _missJudgementImage.color = missImageColor;
+        }
+
+        _judgementAnimTime = 0f;
+        ApplyJudgementAnimation(0f);
+    }
+
+    private void ShowPerfectJudgement()
+    {
+        if (_judgementText == null)
+            return;
+
+        _judgementBaseColor = perfectColor;
+        _judgementVisual = JudgementVisual.PerfectImage;
+        _judgementText.text = string.Empty;
+
+        if (_perfectJudgementImage != null)
+        {
+            _perfectJudgementImage.sprite = perfectJudgementSprite;
+            _perfectJudgementImage.SetNativeSize();
+            _perfectJudgementImage.rectTransform.sizeDelta = perfectJudgementImageSize;
+            Color perfectImageColor = _perfectJudgementImage.color;
+            perfectImageColor.a = 1f;
+            _perfectJudgementImage.color = perfectImageColor;
+        }
+
+        if (_missJudgementImage != null)
+        {
+            Color missImageColor = _missJudgementImage.color;
+            missImageColor.a = 0f;
+            _missJudgementImage.color = missImageColor;
+        }
+        if (_goodJudgementImage != null)
+        {
+            Color goodImageColor = _goodJudgementImage.color;
+            goodImageColor.a = 0f;
+            _goodJudgementImage.color = goodImageColor;
+        }
+
+        _judgementAnimTime = 0f;
+        ApplyJudgementAnimation(0f);
+    }
+
+    private void ShowMissJudgement()
+    {
+        if (_judgementText == null)
+            return;
+
+        _judgementBaseColor = missColor;
+        _judgementVisual = JudgementVisual.MissImage;
+        _judgementText.text = string.Empty;
+
+        if (_perfectJudgementImage != null)
+        {
+            Color perfectImageColor = _perfectJudgementImage.color;
+            perfectImageColor.a = 0f;
+            _perfectJudgementImage.color = perfectImageColor;
+        }
+        if (_goodJudgementImage != null)
+        {
+            Color goodImageColor = _goodJudgementImage.color;
+            goodImageColor.a = 0f;
+            _goodJudgementImage.color = goodImageColor;
+        }
+
+        if (_missJudgementImage != null)
+        {
+            _missJudgementImage.sprite = missJudgementSprite;
+            _missJudgementImage.SetNativeSize();
+            _missJudgementImage.rectTransform.sizeDelta = missJudgementImageSize;
+            Color missImageColor = _missJudgementImage.color;
+            missImageColor.a = 1f;
+            _missJudgementImage.color = missImageColor;
+        }
+
         _judgementAnimTime = 0f;
         ApplyJudgementAnimation(0f);
     }
@@ -435,8 +669,28 @@ public class RhythmPerformanceHud : MonoBehaviour
         if (_judgementText == null || _judgementRect == null)
             return;
 
+        if (_missJudgementImage != null)
+        {
+            Color missImageColor = _missJudgementImage.color;
+            missImageColor.a = 0f;
+            _missJudgementImage.color = missImageColor;
+        }
+        if (_perfectJudgementImage != null)
+        {
+            Color perfectImageColor = _perfectJudgementImage.color;
+            perfectImageColor.a = 0f;
+            _perfectJudgementImage.color = perfectImageColor;
+        }
+        if (_goodJudgementImage != null)
+        {
+            Color goodImageColor = _goodJudgementImage.color;
+            goodImageColor.a = 0f;
+            _goodJudgementImage.color = goodImageColor;
+        }
+
         _judgementText.text = "READY";
         _judgementBaseColor = Color.white;
+        _judgementVisual = JudgementVisual.Text;
         _judgementAnimTime = -1f;
 
         _judgementRect.localScale = Vector3.one;
@@ -589,10 +843,44 @@ public class RhythmPerformanceHud : MonoBehaviour
 
         _judgementRect.localScale = Vector3.one * scale;
         _judgementRect.anchoredPosition = _judgementBasePosition + (Vector2.up * (judgementRiseDistance * normalized));
+        if (_perfectJudgementRect != null)
+        {
+            _perfectJudgementRect.localScale = Vector3.one * scale;
+            _perfectJudgementRect.anchoredPosition = _judgementBasePosition + (Vector2.up * (judgementRiseDistance * normalized));
+        }
+        if (_goodJudgementRect != null)
+        {
+            _goodJudgementRect.localScale = Vector3.one * scale;
+            _goodJudgementRect.anchoredPosition = _judgementBasePosition + (Vector2.up * (judgementRiseDistance * normalized));
+        }
+        if (_missJudgementRect != null)
+        {
+            _missJudgementRect.localScale = Vector3.one * scale;
+            _missJudgementRect.anchoredPosition = _judgementBasePosition + (Vector2.up * (judgementRiseDistance * normalized));
+        }
 
         Color c = _judgementBaseColor;
         c.a = alpha;
         _judgementText.color = c;
+
+        if (_missJudgementImage != null)
+        {
+            Color missImageColor = _missJudgementImage.color;
+            missImageColor.a = _judgementVisual == JudgementVisual.MissImage ? alpha : 0f;
+            _missJudgementImage.color = missImageColor;
+        }
+        if (_perfectJudgementImage != null)
+        {
+            Color perfectImageColor = _perfectJudgementImage.color;
+            perfectImageColor.a = _judgementVisual == JudgementVisual.PerfectImage ? alpha : 0f;
+            _perfectJudgementImage.color = perfectImageColor;
+        }
+        if (_goodJudgementImage != null)
+        {
+            Color goodImageColor = _goodJudgementImage.color;
+            goodImageColor.a = _judgementVisual == JudgementVisual.GoodImage ? alpha : 0f;
+            _goodJudgementImage.color = goodImageColor;
+        }
     }
 
     private void HideJudgementImmediate()
@@ -607,6 +895,26 @@ public class RhythmPerformanceHud : MonoBehaviour
         Color c = _judgementText.color;
         c.a = 0f;
         _judgementText.color = c;
+        _judgementVisual = JudgementVisual.Text;
+
+        if (_missJudgementImage != null)
+        {
+            Color missImageColor = _missJudgementImage.color;
+            missImageColor.a = 0f;
+            _missJudgementImage.color = missImageColor;
+        }
+        if (_perfectJudgementImage != null)
+        {
+            Color perfectImageColor = _perfectJudgementImage.color;
+            perfectImageColor.a = 0f;
+            _perfectJudgementImage.color = perfectImageColor;
+        }
+        if (_goodJudgementImage != null)
+        {
+            Color goodImageColor = _goodJudgementImage.color;
+            goodImageColor.a = 0f;
+            _goodJudgementImage.color = goodImageColor;
+        }
     }
 
     private void HideComboImmediate()
