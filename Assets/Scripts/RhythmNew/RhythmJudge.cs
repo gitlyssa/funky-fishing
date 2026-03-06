@@ -188,6 +188,7 @@ public class RhythmJudge : MonoBehaviour
         if (reel == null) return;
 
         float songTime = conductor.songTime;
+        float endTime = reel.Data.startTime + reel.Data.duration;
 
 
         if (reel.CurrentPhase == ReelPhase.Active)
@@ -196,9 +197,8 @@ public class RhythmJudge : MonoBehaviour
             float delta = spinVelocity * Time.deltaTime; // Convert velocity to delta for this frame
             reel.AddSpin(delta);
         }
-        
 
-        if (songTime >= reel.Data.startTime + reel.Data.duration && reel.CurrentPhase != ReelPhase.Resolved)
+        if (songTime >= endTime)
         {
             
             float finalProgress = reel.Progress;
@@ -219,6 +219,7 @@ public class RhythmJudge : MonoBehaviour
             }
             else
             {
+                Debug.Log("<color=red>REEL FAILED!</color>");
                 reel.OnFail();
             }
 

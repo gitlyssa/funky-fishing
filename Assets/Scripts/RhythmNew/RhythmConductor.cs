@@ -124,27 +124,42 @@ public class RhythmConductor : MonoBehaviour
             _reelQueue.RemoveAt(0);
         }
 
-            // on pressing r, spawn a reel
-            // start time is when the reel becomes active
-            // lead in is how long before it starts winding up
-            // if (Input.GetKeyDown(KeyCode.R) && activeReel == null)
-            // {
-            //     ReelData testReel = new ReelData
-            //     {
-            //         startTime = songTime + 2.0f,
-            //         duration = 3.0f,
-            //         goalDegrees = (UnityEngine.Random.value > 0.5f) ? 720f : -720f, // 2 full spins in either direction
-            //         leadInTime = 1.0f
-            //     };
-            //     SpawnReel(testReel);
-            // }
-        // }
+        if (enableDebugInput)
+        {
+            // PRESS R: Spawn a Reel 2 seconds in the future
+            if (Input.GetKeyDown(KeyCode.R) && activeReel == null)
+            {
+                ReelData debugReel = new ReelData
+                {
+                    startTime = songTime + 2.0f, // Becomes active in 2s
+                    duration = 4.0f,             // Player has 4s to finish
+                    goalDegrees = -720f,          // 2 full rotations
+                    leadInTime = 1.0f            // Visuals start 1s before startTime
+                };
+                SpawnReel(debugReel);
+                Debug.Log($"Debug Reel Spawned! Will be active at: {debugReel.startTime}");
+            }
+
+            // PRESS F: Spawn a Flick 2 seconds in the future
+            if (Input.GetKeyDown(KeyCode.F))
+            {
+                NoteData debugNote = new NoteData
+                {
+                    hitTime = songTime + 2.0f,
+                    type = RhythmArcNote.NoteType.Flick,
+                    direction = FlickDirection.Up
+                };
+                SpawnNote(debugNote);
+                Debug.Log("Debug Flick Spawned!");
+            }
+        }
     }
 
 
     public void SpawnReel(ReelData data)
     {
         GameObject go = new GameObject("ReelLogic");
+        go.transform.SetParent(this.transform);
         go.layer = gameObject.layer;
         activeReel = go.AddComponent<RhythmReelNote>();
         activeReel.Initialize(data);
