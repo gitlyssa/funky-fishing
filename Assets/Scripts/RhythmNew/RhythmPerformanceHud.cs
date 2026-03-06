@@ -560,6 +560,12 @@ public class RhythmPerformanceHud : MonoBehaviour
         if (_judgementText == null)
             return;
 
+        if (goodJudgementSprite == null)
+        {
+            ShowJudgement("GOOD", goodColor);
+            return;
+        }
+
         _judgementBaseColor = goodColor;
         _judgementVisual = JudgementVisual.GoodImage;
         _judgementText.text = string.Empty;
@@ -597,6 +603,12 @@ public class RhythmPerformanceHud : MonoBehaviour
         if (_judgementText == null)
             return;
 
+        if (perfectJudgementSprite == null)
+        {
+            ShowJudgement("PERFECT", perfectColor);
+            return;
+        }
+
         _judgementBaseColor = perfectColor;
         _judgementVisual = JudgementVisual.PerfectImage;
         _judgementText.text = string.Empty;
@@ -632,6 +644,12 @@ public class RhythmPerformanceHud : MonoBehaviour
     {
         if (_judgementText == null)
             return;
+
+        if (missJudgementSprite == null)
+        {
+            ShowJudgement("MISS", missColor);
+            return;
+        }
 
         _judgementBaseColor = missColor;
         _judgementVisual = JudgementVisual.MissImage;
