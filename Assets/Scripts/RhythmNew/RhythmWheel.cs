@@ -34,7 +34,7 @@ public class RhythmWheel3D : MonoBehaviour
 
         if (reel == null)
         {
-            UpdateIdle();
+            // UpdateIdle();
         }
         else
         {

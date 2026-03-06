@@ -1,6 +1,7 @@
 using UnityEngine;
 using TMPro;
 using System.Collections;
+using UnityEngine.UI;
 public class FishCatchAnimation : MonoBehaviour
 {
     [Header("UI & Effects")]
@@ -8,6 +9,13 @@ public class FishCatchAnimation : MonoBehaviour
     public TextMeshProUGUI judgementText; // "Perfect Catch!"
     public TextMeshProUGUI fishNameText;  // "Redbelly caught!"
     public TextMeshProUGUI clickText;        // press any key to continue
+
+    public Image perfectJudgementImage;
+    public Image greatJudgementImage;
+    public Image goodJudgementImage;
+    private Image _activeJudgementImage;
+
+    private float _imageSize = 3.1f; // Base size for judgement images
 
 
     [Header("Positioning")]
@@ -24,6 +32,7 @@ public class FishCatchAnimation : MonoBehaviour
         if (clickText != null) clickText.gameObject.SetActive(false);
         if (judgementText != null) judgementText.gameObject.SetActive(false);
         if (fishNameText != null) fishNameText.gameObject.SetActive(false);
+        HideAllJudgements();
     }
     private void Update()
     {
@@ -48,6 +57,12 @@ public class FishCatchAnimation : MonoBehaviour
                 }
             }
         }
+    }
+    private void HideAllJudgements()
+    {
+        if (perfectJudgementImage != null) perfectJudgementImage.gameObject.SetActive(false);
+        if (greatJudgementImage != null) greatJudgementImage.gameObject.SetActive(false);
+        if (goodJudgementImage != null) goodJudgementImage.gameObject.SetActive(false);
     }
 
     private void SetContinue()
@@ -99,9 +114,17 @@ public class FishCatchAnimation : MonoBehaviour
         if (judgementText != null)
         {
             judgementText.text = GetJudgementString(accuracy);
-            judgementText.gameObject.SetActive(true);
+            
+            // judgementText.gameObject.SetActive(true);
             judgementText.transform.localScale = Vector3.zero; 
         }
+
+        _activeJudgementImage = GetJudgementImage(accuracy);
+        if (_activeJudgementImage != null) {
+            _activeJudgementImage.gameObject.SetActive(true);
+            _activeJudgementImage.rectTransform.localScale = Vector3.zero;
+        }
+
         
         if (fishNameText != null)
         {
@@ -121,7 +144,8 @@ public class FishCatchAnimation : MonoBehaviour
             
 
             float bounceScale = Mathf.Lerp(0f, 1f, t); 
-            
+
+            if (_activeJudgementImage != null) _activeJudgementImage.rectTransform.localScale = Vector3.one * _imageSize * bounceScale;
             if (judgementText != null) judgementText.transform.localScale = Vector3.one * bounceScale;
             if (fishNameText != null) fishNameText.transform.localScale = Vector3.one * bounceScale;
 
@@ -142,6 +166,7 @@ public class FishCatchAnimation : MonoBehaviour
         if (judgementText != null) judgementText.gameObject.SetActive(false);
         if (fishNameText != null) fishNameText.gameObject.SetActive(false);
         if (clickText != null) clickText.gameObject.SetActive(false);
+        HideAllJudgements();
         
         Destroy(fish);
     }
@@ -158,6 +183,13 @@ public class FishCatchAnimation : MonoBehaviour
         }
         judgementText.color = Color.white;
         return "GOOD CATCH!";
-        }
+    }
+
+    private Image GetJudgementImage(float acc)
+    {
+        if (acc >= 95f) return perfectJudgementImage;
+        if (acc >= 80f) return greatJudgementImage;
+        return goodJudgementImage;
+    }
 }
 
