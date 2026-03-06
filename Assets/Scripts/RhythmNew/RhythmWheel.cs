@@ -34,7 +34,7 @@ public class RhythmWheel3D : MonoBehaviour
 
         if (reel == null)
         {
-            // UpdateIdle();
+            UpdateIdle();
         }
         else
         {
@@ -80,14 +80,14 @@ public class RhythmWheel3D : MonoBehaviour
 
         if (Vector4.Distance(nextColor, idleColor) < 0.01f) nextColor = idleColor;
         
-        SetWheelVisuals(nextColor, 0f);
+        // SetWheelVisuals(nextColor, 0f);
     }
 
     private void SetWheelVisuals(Color color, float glowIntensity)
     {
         if (_wheelMaterial == null) return;
         
-        _wheelMaterial.color = color; 
+        // _wheelMaterial.color = color; 
     }
 
     private Color GetCurrentColor() => _wheelMaterial != null ? _wheelMaterial.GetColor(emissionColorPropertyName) : idleColor;
