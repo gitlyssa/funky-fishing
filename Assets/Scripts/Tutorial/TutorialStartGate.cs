@@ -67,16 +67,33 @@ public class TutorialStartGate : MonoBehaviour
     [Header("Style")]
     [SerializeField] private Vector2 welcomePanelSize = new Vector2(860f, 360f);
     [SerializeField] private Vector2 castTargetPanelSize = new Vector2(980f, 520f);
+    [SerializeField] private Vector2 castTargetPanelSizeWithImage = new Vector2(760f, 520f);
     [SerializeField] private Color backdropColor = new Color(0f, 0f, 0f, 0.6f);
     [SerializeField] private Color panelColor = new Color(0.05f, 0.05f, 0.05f, 0.92f);
     [SerializeField] private Color textColor = Color.white;
     [SerializeField] private int fontSize = 40;
     [SerializeField] private int minFontSize = 24;
 
+    [Header("Tutorial Images")]
+    [SerializeField] private Vector2 castTargetTutorialImageSize = new Vector2(560f, 460f);
+    [SerializeField] private Vector2 castTargetTutorialImageOffset = new Vector2(680f, 0f);
+    [SerializeField] private float tutorialImageStepsLeftShift = 140f;
+    [SerializeField] private string castTargetTutorialImageResourcePath = "Tutorial/tut1";
+    [SerializeField] private string castTargetTutorialImageEditorAssetPath = "Assets/Images/Tutorial/tut1.jpg";
+    [SerializeField] private string castTutorialImageResourcePath = "Tutorial/tut2";
+    [SerializeField] private string castTutorialImageEditorAssetPath = "Assets/Images/Tutorial/tut2.jpg";
+    [SerializeField] private string yankTutorialImageResourcePath = "Tutorial/tut3";
+    [SerializeField] private string yankTutorialImageEditorAssetPath = "Assets/Images/Tutorial/tut3.jpg";
+
     private Canvas gateCanvas;
     private GameObject gateRoot;
     private TextMeshProUGUI gateText;
     private RectTransform gatePanelRect;
+    private RectTransform castTargetTutorialImageRect;
+    private Image castTargetTutorialImage;
+    private Sprite castTargetTutorialSprite;
+    private Sprite castTutorialSprite;
+    private Sprite yankTutorialSprite;
     private bool gateActive;
     private int gateStepIndex;
     private TutorialFlowState flowState;
@@ -94,6 +111,9 @@ public class TutorialStartGate : MonoBehaviour
     private float showYankHintAtUnscaledTime = -1f;
     private float showCatchHintAtUnscaledTime = -1f;
     private bool tutorialFishSpawned;
+    private bool loggedMissingCastTargetTutorialImage;
+    private bool loggedMissingCastTutorialImage;
+    private bool loggedMissingYankTutorialImage;
     private bool cachedCursorVisible;
     private CursorLockMode cachedCursorLockMode;
     private bool cursorStateCached;
@@ -198,6 +218,24 @@ public class TutorialStartGate : MonoBehaviour
             Cursor.visible = cachedCursorVisible;
             Cursor.lockState = cachedCursorLockMode;
             cursorStateCached = false;
+        }
+
+        if (castTargetTutorialSprite != null)
+        {
+            Destroy(castTargetTutorialSprite);
+            castTargetTutorialSprite = null;
+        }
+
+        if (castTutorialSprite != null)
+        {
+            Destroy(castTutorialSprite);
+            castTutorialSprite = null;
+        }
+
+        if (yankTutorialSprite != null)
+        {
+            Destroy(yankTutorialSprite);
+            yankTutorialSprite = null;
         }
     }
 
@@ -319,8 +357,7 @@ public class TutorialStartGate : MonoBehaviour
         else
             gateText.text = catchMessage;
 
-        if (gatePanelRect != null)
-            gatePanelRect.sizeDelta = gateStepIndex == 0 ? welcomePanelSize : castTargetPanelSize;
+        RefreshGateVisuals();
     }
 
     private void UpdatePostGateFlow()
@@ -609,6 +646,21 @@ public class TutorialStartGate : MonoBehaviour
         panelRect.anchoredPosition = Vector2.zero;
         panel.GetComponent<Image>().color = panelColor;
 
+        GameObject tutorialImageObject = new GameObject("CastTargetTutorialImage", typeof(RectTransform), typeof(Image));
+        tutorialImageObject.transform.SetParent(backdrop.transform, false);
+        castTargetTutorialImageRect = tutorialImageObject.GetComponent<RectTransform>();
+        castTargetTutorialImageRect.anchorMin = new Vector2(0.5f, 0.5f);
+        castTargetTutorialImageRect.anchorMax = new Vector2(0.5f, 0.5f);
+        castTargetTutorialImageRect.pivot = new Vector2(0.5f, 0.5f);
+        castTargetTutorialImageRect.sizeDelta = castTargetTutorialImageSize;
+        castTargetTutorialImageRect.anchoredPosition = castTargetTutorialImageOffset;
+
+        castTargetTutorialImage = tutorialImageObject.GetComponent<Image>();
+        castTargetTutorialImage.color = Color.white;
+        castTargetTutorialImage.preserveAspect = true;
+        castTargetTutorialImage.raycastTarget = false;
+        castTargetTutorialImage.enabled = false;
+
         GameObject textObject = new GameObject("WelcomeText", typeof(RectTransform), typeof(TextMeshProUGUI));
         textObject.transform.SetParent(panel.transform, false);
         RectTransform textRect = textObject.GetComponent<RectTransform>();
@@ -630,6 +682,171 @@ public class TutorialStartGate : MonoBehaviour
         text.alignment = TextAlignmentOptions.Center;
         text.textWrappingMode = TextWrappingModes.Normal;
         text.raycastTarget = false;
+    }
+
+    private void RefreshGateVisuals()
+    {
+        bool showTutorialImage = gateStepIndex == 1 || gateStepIndex == 2 || gateStepIndex == 3;
+        float layoutShiftX = showTutorialImage ? -Mathf.Abs(tutorialImageStepsLeftShift) : 0f;
+
+        if (gatePanelRect != null)
+        {
+            if (gateStepIndex == 0)
+                gatePanelRect.sizeDelta = welcomePanelSize;
+            else if (gateStepIndex == 1 || gateStepIndex == 2 || gateStepIndex == 3)
+                gatePanelRect.sizeDelta = castTargetPanelSizeWithImage;
+            else
+                gatePanelRect.sizeDelta = castTargetPanelSize;
+
+            gatePanelRect.anchoredPosition = new Vector2(layoutShiftX, 0f);
+        }
+
+        if (castTargetTutorialImageRect != null)
+        {
+            castTargetTutorialImageRect.anchoredPosition = castTargetTutorialImageOffset + new Vector2(layoutShiftX, 0f);
+        }
+
+        if (castTargetTutorialImage == null)
+            return;
+
+        Sprite tutorialSprite = null;
+        if (gateStepIndex == 1)
+            tutorialSprite = LoadCastTargetTutorialSprite();
+        else if (gateStepIndex == 2)
+            tutorialSprite = LoadCastTutorialSprite();
+        else if (gateStepIndex == 3)
+            tutorialSprite = LoadYankTutorialSprite();
+
+        castTargetTutorialImage.sprite = tutorialSprite;
+        if (castTargetTutorialImageRect != null)
+            castTargetTutorialImageRect.sizeDelta = GetTutorialImageDisplaySize(tutorialSprite);
+        castTargetTutorialImage.enabled = showTutorialImage && tutorialSprite != null;
+    }
+
+    private Vector2 GetTutorialImageDisplaySize(Sprite sprite)
+    {
+        if (sprite == null)
+            return castTargetTutorialImageSize;
+
+        Rect spriteRect = sprite.rect;
+        if (spriteRect.width <= 0f || spriteRect.height <= 0f)
+            return castTargetTutorialImageSize;
+
+        float scaleByWidth = castTargetTutorialImageSize.x / spriteRect.width;
+        float scaleByHeight = castTargetTutorialImageSize.y / spriteRect.height;
+        float uniformScale = Mathf.Min(scaleByWidth, scaleByHeight);
+        if (float.IsNaN(uniformScale) || float.IsInfinity(uniformScale) || uniformScale <= 0f)
+            return castTargetTutorialImageSize;
+
+        return new Vector2(spriteRect.width * uniformScale, spriteRect.height * uniformScale);
+    }
+
+    private Sprite LoadCastTargetTutorialSprite()
+    {
+        if (castTargetTutorialSprite != null)
+            return castTargetTutorialSprite;
+
+        Texture2D texture = null;
+        if (!string.IsNullOrWhiteSpace(castTargetTutorialImageResourcePath))
+            texture = Resources.Load<Texture2D>(castTargetTutorialImageResourcePath);
+
+#if UNITY_EDITOR
+        if (texture == null && !string.IsNullOrWhiteSpace(castTargetTutorialImageEditorAssetPath))
+            texture = UnityEditor.AssetDatabase.LoadAssetAtPath<Texture2D>(castTargetTutorialImageEditorAssetPath);
+#endif
+
+        if (texture == null)
+        {
+            if (!loggedMissingCastTargetTutorialImage)
+            {
+                Debug.LogWarning(
+                    "TutorialStartGate: Couldn't load cast-target tutorial image. " +
+                    "Expected Resources path '" + castTargetTutorialImageResourcePath + "' " +
+                    "or editor asset '" + castTargetTutorialImageEditorAssetPath + "'.");
+                loggedMissingCastTargetTutorialImage = true;
+            }
+            return null;
+        }
+
+        castTargetTutorialSprite = Sprite.Create(
+            texture,
+            new Rect(0f, 0f, texture.width, texture.height),
+            new Vector2(0.5f, 0.5f),
+            100f);
+        castTargetTutorialSprite.name = "CastTargetTutorialSprite";
+        return castTargetTutorialSprite;
+    }
+
+    private Sprite LoadCastTutorialSprite()
+    {
+        if (castTutorialSprite != null)
+            return castTutorialSprite;
+
+        Texture2D texture = null;
+        if (!string.IsNullOrWhiteSpace(castTutorialImageResourcePath))
+            texture = Resources.Load<Texture2D>(castTutorialImageResourcePath);
+
+#if UNITY_EDITOR
+        if (texture == null && !string.IsNullOrWhiteSpace(castTutorialImageEditorAssetPath))
+            texture = UnityEditor.AssetDatabase.LoadAssetAtPath<Texture2D>(castTutorialImageEditorAssetPath);
+#endif
+
+        if (texture == null)
+        {
+            if (!loggedMissingCastTutorialImage)
+            {
+                Debug.LogWarning(
+                    "TutorialStartGate: Couldn't load cast tutorial image. " +
+                    "Expected Resources path '" + castTutorialImageResourcePath + "' " +
+                    "or editor asset '" + castTutorialImageEditorAssetPath + "'.");
+                loggedMissingCastTutorialImage = true;
+            }
+            return null;
+        }
+
+        castTutorialSprite = Sprite.Create(
+            texture,
+            new Rect(0f, 0f, texture.width, texture.height),
+            new Vector2(0.5f, 0.5f),
+            100f);
+        castTutorialSprite.name = "CastTutorialSprite";
+        return castTutorialSprite;
+    }
+
+    private Sprite LoadYankTutorialSprite()
+    {
+        if (yankTutorialSprite != null)
+            return yankTutorialSprite;
+
+        Texture2D texture = null;
+        if (!string.IsNullOrWhiteSpace(yankTutorialImageResourcePath))
+            texture = Resources.Load<Texture2D>(yankTutorialImageResourcePath);
+
+#if UNITY_EDITOR
+        if (texture == null && !string.IsNullOrWhiteSpace(yankTutorialImageEditorAssetPath))
+            texture = UnityEditor.AssetDatabase.LoadAssetAtPath<Texture2D>(yankTutorialImageEditorAssetPath);
+#endif
+
+        if (texture == null)
+        {
+            if (!loggedMissingYankTutorialImage)
+            {
+                Debug.LogWarning(
+                    "TutorialStartGate: Couldn't load yank tutorial image. " +
+                    "Expected Resources path '" + yankTutorialImageResourcePath + "' " +
+                    "or editor asset '" + yankTutorialImageEditorAssetPath + "'.");
+                loggedMissingYankTutorialImage = true;
+            }
+            return null;
+        }
+
+        yankTutorialSprite = Sprite.Create(
+            texture,
+            new Rect(0f, 0f, texture.width, texture.height),
+            new Vector2(0.5f, 0.5f),
+            100f);
+        yankTutorialSprite.name = "YankTutorialSprite";
+        return yankTutorialSprite;
     }
 
     private void DisablePauseManagers()

@@ -70,6 +70,7 @@ public class RhythmTutorialCoach : MonoBehaviour
 
     [Header("Style")]
     [SerializeField] private Vector2 panelSize = new Vector2(980f, 520f);
+    [SerializeField] private Vector2 directionPanelSizeWithImage = new Vector2(760f, 520f);
     [SerializeField] private Color backdropColor = new Color(0f, 0f, 0f, 0.6f);
     [SerializeField] private Color panelColor = new Color(0.05f, 0.05f, 0.05f, 0.92f);
     [SerializeField] private Color textColor = Color.white;
@@ -77,6 +78,17 @@ public class RhythmTutorialCoach : MonoBehaviour
     [SerializeField] private int minFontSize = 24;
     [SerializeField] private Vector2 progressOffset = new Vector2(-24f, -24f);
     [SerializeField] private int progressFontSize = 30;
+
+    [Header("Direction Tutorial Images")]
+    [SerializeField] private Vector2 directionTutorialImageMaxSize = new Vector2(560f, 460f);
+    [SerializeField] private Vector2 directionTutorialImageOffset = new Vector2(680f, 0f);
+    [SerializeField] private float directionTutorialImageLeftShift = 140f;
+    [SerializeField] private string upTutorialImageResourcePath = "Tutorial/tut4";
+    [SerializeField] private string upTutorialImageEditorAssetPath = "Assets/Images/Tutorial/tut4.jpg";
+    [SerializeField] private string leftTutorialImageResourcePath = "Tutorial/tut5";
+    [SerializeField] private string leftTutorialImageEditorAssetPath = "Assets/Images/Tutorial/tut5.jpg";
+    [SerializeField] private string rightTutorialImageResourcePath = "Tutorial/tut6";
+    [SerializeField] private string rightTutorialImageEditorAssetPath = "Assets/Images/Tutorial/tut6.jpg";
 
     private FlowState flowState = FlowState.WaitingForRhythm;
     private bool wasRhythmVisible;
@@ -105,8 +117,17 @@ public class RhythmTutorialCoach : MonoBehaviour
     private FishingSessionHud fishingSessionHud;
     private Canvas gateCanvas;
     private GameObject gateWindowRoot;
+    private RectTransform gatePanelRect;
     private TextMeshProUGUI gateText;
     private TextMeshProUGUI progressText;
+    private RectTransform directionTutorialImageRect;
+    private Image directionTutorialImage;
+    private Sprite upTutorialSprite;
+    private Sprite leftTutorialSprite;
+    private Sprite rightTutorialSprite;
+    private bool loggedMissingUpTutorialImage;
+    private bool loggedMissingLeftTutorialImage;
+    private bool loggedMissingRightTutorialImage;
 
     private bool cursorStateCached;
     private bool cachedCursorVisible;
@@ -182,6 +203,7 @@ public class RhythmTutorialCoach : MonoBehaviour
         RestoreConflictingHud();
         RestorePauseManagers();
         RestoreCursorState();
+        DestroyDirectionTutorialSprites();
         if (gateActive)
             Time.timeScale = 1f;
     }
@@ -548,12 +570,28 @@ public class RhythmTutorialCoach : MonoBehaviour
         GameObject panel = new GameObject("Panel", typeof(RectTransform), typeof(Image));
         panel.transform.SetParent(backdrop.transform, false);
         RectTransform panelRect = panel.GetComponent<RectTransform>();
+        gatePanelRect = panelRect;
         panelRect.anchorMin = new Vector2(0.5f, 0.5f);
         panelRect.anchorMax = new Vector2(0.5f, 0.5f);
         panelRect.pivot = new Vector2(0.5f, 0.5f);
         panelRect.sizeDelta = panelSize;
         panelRect.anchoredPosition = Vector2.zero;
         panel.GetComponent<Image>().color = panelColor;
+
+        GameObject tutorialImageGo = new GameObject("DirectionTutorialImage", typeof(RectTransform), typeof(Image));
+        tutorialImageGo.transform.SetParent(backdrop.transform, false);
+        directionTutorialImageRect = tutorialImageGo.GetComponent<RectTransform>();
+        directionTutorialImageRect.anchorMin = new Vector2(0.5f, 0.5f);
+        directionTutorialImageRect.anchorMax = new Vector2(0.5f, 0.5f);
+        directionTutorialImageRect.pivot = new Vector2(0.5f, 0.5f);
+        directionTutorialImageRect.sizeDelta = directionTutorialImageMaxSize;
+        directionTutorialImageRect.anchoredPosition = directionTutorialImageOffset;
+
+        directionTutorialImage = tutorialImageGo.GetComponent<Image>();
+        directionTutorialImage.color = Color.white;
+        directionTutorialImage.preserveAspect = true;
+        directionTutorialImage.raycastTarget = false;
+        directionTutorialImage.enabled = false;
 
         GameObject textGo = new GameObject("TutorialText", typeof(RectTransform), typeof(TextMeshProUGUI));
         textGo.transform.SetParent(panel.transform, false);
@@ -593,12 +631,15 @@ public class RhythmTutorialCoach : MonoBehaviour
         progressText.textWrappingMode = TextWrappingModes.NoWrap;
         progressText.raycastTarget = false;
         SetProgressVisible(false);
+        RefreshGateVisuals();
     }
 
     private void SetGateMessage(string message)
     {
         if (gateText != null)
             gateText.text = message;
+
+        RefreshGateVisuals();
     }
 
     private void SetGateVisible(bool visible)
@@ -685,6 +726,192 @@ public class RhythmTutorialCoach : MonoBehaviour
             case FlickDirection.Left: return "Left";
             case FlickDirection.Right: return "Right";
             default: return "Up";
+        }
+    }
+
+    private void RefreshGateVisuals()
+    {
+        bool showDirectionImage = flowState == FlowState.DirectionInfoGate;
+        float layoutShiftX = showDirectionImage ? -Mathf.Abs(directionTutorialImageLeftShift) : 0f;
+
+        if (gatePanelRect != null)
+        {
+            gatePanelRect.sizeDelta = showDirectionImage ? directionPanelSizeWithImage : panelSize;
+            gatePanelRect.anchoredPosition = new Vector2(layoutShiftX, 0f);
+        }
+
+        if (directionTutorialImageRect != null)
+            directionTutorialImageRect.anchoredPosition = directionTutorialImageOffset + new Vector2(layoutShiftX, 0f);
+
+        if (directionTutorialImage == null)
+            return;
+
+        Sprite tutorialSprite = showDirectionImage ? GetDirectionTutorialSprite(CurrentTargetDirection()) : null;
+        directionTutorialImage.sprite = tutorialSprite;
+        if (directionTutorialImageRect != null)
+            directionTutorialImageRect.sizeDelta = GetDirectionTutorialImageDisplaySize(tutorialSprite);
+        directionTutorialImage.enabled = showDirectionImage && tutorialSprite != null;
+    }
+
+    private Vector2 GetDirectionTutorialImageDisplaySize(Sprite sprite)
+    {
+        if (sprite == null)
+            return directionTutorialImageMaxSize;
+
+        Rect spriteRect = sprite.rect;
+        if (spriteRect.width <= 0f || spriteRect.height <= 0f)
+            return directionTutorialImageMaxSize;
+
+        float scaleByWidth = directionTutorialImageMaxSize.x / spriteRect.width;
+        float scaleByHeight = directionTutorialImageMaxSize.y / spriteRect.height;
+        float uniformScale = Mathf.Min(scaleByWidth, scaleByHeight);
+        if (float.IsNaN(uniformScale) || float.IsInfinity(uniformScale) || uniformScale <= 0f)
+            return directionTutorialImageMaxSize;
+
+        return new Vector2(spriteRect.width * uniformScale, spriteRect.height * uniformScale);
+    }
+
+    private Sprite GetDirectionTutorialSprite(FlickDirection direction)
+    {
+        switch (direction)
+        {
+            case FlickDirection.Left:
+                return LoadLeftTutorialSprite();
+
+            case FlickDirection.Right:
+                return LoadRightTutorialSprite();
+
+            default:
+                return LoadUpTutorialSprite();
+        }
+    }
+
+    private Sprite LoadUpTutorialSprite()
+    {
+        if (upTutorialSprite != null)
+            return upTutorialSprite;
+
+        Texture2D texture = null;
+        if (!string.IsNullOrWhiteSpace(upTutorialImageResourcePath))
+            texture = Resources.Load<Texture2D>(upTutorialImageResourcePath);
+
+#if UNITY_EDITOR
+        if (texture == null && !string.IsNullOrWhiteSpace(upTutorialImageEditorAssetPath))
+            texture = UnityEditor.AssetDatabase.LoadAssetAtPath<Texture2D>(upTutorialImageEditorAssetPath);
+#endif
+
+        if (texture == null)
+        {
+            if (!loggedMissingUpTutorialImage)
+            {
+                Debug.LogWarning(
+                    "RhythmTutorialCoach: Couldn't load Up tutorial image. " +
+                    "Expected Resources path '" + upTutorialImageResourcePath + "' " +
+                    "or editor asset '" + upTutorialImageEditorAssetPath + "'.");
+                loggedMissingUpTutorialImage = true;
+            }
+            return null;
+        }
+
+        upTutorialSprite = Sprite.Create(
+            texture,
+            new Rect(0f, 0f, texture.width, texture.height),
+            new Vector2(0.5f, 0.5f),
+            100f);
+        upTutorialSprite.name = "UpTutorialSprite";
+        return upTutorialSprite;
+    }
+
+    private Sprite LoadLeftTutorialSprite()
+    {
+        if (leftTutorialSprite != null)
+            return leftTutorialSprite;
+
+        Texture2D texture = null;
+        if (!string.IsNullOrWhiteSpace(leftTutorialImageResourcePath))
+            texture = Resources.Load<Texture2D>(leftTutorialImageResourcePath);
+
+#if UNITY_EDITOR
+        if (texture == null && !string.IsNullOrWhiteSpace(leftTutorialImageEditorAssetPath))
+            texture = UnityEditor.AssetDatabase.LoadAssetAtPath<Texture2D>(leftTutorialImageEditorAssetPath);
+#endif
+
+        if (texture == null)
+        {
+            if (!loggedMissingLeftTutorialImage)
+            {
+                Debug.LogWarning(
+                    "RhythmTutorialCoach: Couldn't load Left tutorial image. " +
+                    "Expected Resources path '" + leftTutorialImageResourcePath + "' " +
+                    "or editor asset '" + leftTutorialImageEditorAssetPath + "'.");
+                loggedMissingLeftTutorialImage = true;
+            }
+            return null;
+        }
+
+        leftTutorialSprite = Sprite.Create(
+            texture,
+            new Rect(0f, 0f, texture.width, texture.height),
+            new Vector2(0.5f, 0.5f),
+            100f);
+        leftTutorialSprite.name = "LeftTutorialSprite";
+        return leftTutorialSprite;
+    }
+
+    private Sprite LoadRightTutorialSprite()
+    {
+        if (rightTutorialSprite != null)
+            return rightTutorialSprite;
+
+        Texture2D texture = null;
+        if (!string.IsNullOrWhiteSpace(rightTutorialImageResourcePath))
+            texture = Resources.Load<Texture2D>(rightTutorialImageResourcePath);
+
+#if UNITY_EDITOR
+        if (texture == null && !string.IsNullOrWhiteSpace(rightTutorialImageEditorAssetPath))
+            texture = UnityEditor.AssetDatabase.LoadAssetAtPath<Texture2D>(rightTutorialImageEditorAssetPath);
+#endif
+
+        if (texture == null)
+        {
+            if (!loggedMissingRightTutorialImage)
+            {
+                Debug.LogWarning(
+                    "RhythmTutorialCoach: Couldn't load Right tutorial image. " +
+                    "Expected Resources path '" + rightTutorialImageResourcePath + "' " +
+                    "or editor asset '" + rightTutorialImageEditorAssetPath + "'.");
+                loggedMissingRightTutorialImage = true;
+            }
+            return null;
+        }
+
+        rightTutorialSprite = Sprite.Create(
+            texture,
+            new Rect(0f, 0f, texture.width, texture.height),
+            new Vector2(0.5f, 0.5f),
+            100f);
+        rightTutorialSprite.name = "RightTutorialSprite";
+        return rightTutorialSprite;
+    }
+
+    private void DestroyDirectionTutorialSprites()
+    {
+        if (upTutorialSprite != null)
+        {
+            Destroy(upTutorialSprite);
+            upTutorialSprite = null;
+        }
+
+        if (leftTutorialSprite != null)
+        {
+            Destroy(leftTutorialSprite);
+            leftTutorialSprite = null;
+        }
+
+        if (rightTutorialSprite != null)
+        {
+            Destroy(rightTutorialSprite);
+            rightTutorialSprite = null;
         }
     }
 

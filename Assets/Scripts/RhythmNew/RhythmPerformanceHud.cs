@@ -19,10 +19,13 @@ public class RhythmPerformanceHud : MonoBehaviour
     [SerializeField] private int judgementFontSize = 56;
     [SerializeField] private Sprite perfectJudgementSprite;
     [SerializeField] private Vector2 perfectJudgementImageSize = new Vector2(520f, 130f);
+    [SerializeField] private Vector2 perfectJudgementImageOffset = new Vector2(0f, -30f);
     [SerializeField] private Sprite goodJudgementSprite;
     [SerializeField] private Vector2 goodJudgementImageSize = new Vector2(420f, 120f);
+    [SerializeField] private Vector2 goodJudgementImageOffset = new Vector2(24f, -28f);
     [SerializeField] private Sprite missJudgementSprite;
     [SerializeField] private Vector2 missJudgementImageSize = new Vector2(420f, 120f);
+    [SerializeField] private Vector2 missJudgementImageOffset = new Vector2(-20f, 0f);
     [SerializeField] private Color perfectColor = new Color(0.95f, 1f, 0.35f, 1f);
     [SerializeField] private Color goodColor = new Color(0.4f, 0.95f, 1f, 1f);
     [SerializeField] private Color missColor = new Color(1f, 0.45f, 0.45f, 1f);
@@ -268,6 +271,12 @@ public class RhythmPerformanceHud : MonoBehaviour
         _goodJudgementRect = _goodJudgementImage.rectTransform;
         _missJudgementRect = _missJudgementImage.rectTransform;
         _judgementBasePosition = _judgementRect.anchoredPosition;
+        if (_perfectJudgementRect != null)
+            _perfectJudgementRect.anchoredPosition = _judgementBasePosition + perfectJudgementImageOffset;
+        if (_goodJudgementRect != null)
+            _goodJudgementRect.anchoredPosition = _judgementBasePosition + goodJudgementImageOffset;
+        if (_missJudgementRect != null)
+            _missJudgementRect.anchoredPosition = _judgementBasePosition + missJudgementImageOffset;
 
         Color perfectImageColor = _perfectJudgementImage.color;
         perfectImageColor.a = 0f;
@@ -859,22 +868,24 @@ public class RhythmPerformanceHud : MonoBehaviour
             alpha = 1f - Mathf.Clamp01(fadeT);
         }
 
+        Vector2 riseOffset = Vector2.up * (judgementRiseDistance * normalized);
+
         _judgementRect.localScale = Vector3.one * scale;
-        _judgementRect.anchoredPosition = _judgementBasePosition + (Vector2.up * (judgementRiseDistance * normalized));
+        _judgementRect.anchoredPosition = _judgementBasePosition + riseOffset;
         if (_perfectJudgementRect != null)
         {
             _perfectJudgementRect.localScale = Vector3.one * scale;
-            _perfectJudgementRect.anchoredPosition = _judgementBasePosition + (Vector2.up * (judgementRiseDistance * normalized));
+            _perfectJudgementRect.anchoredPosition = _judgementBasePosition + perfectJudgementImageOffset + riseOffset;
         }
         if (_goodJudgementRect != null)
         {
             _goodJudgementRect.localScale = Vector3.one * scale;
-            _goodJudgementRect.anchoredPosition = _judgementBasePosition + (Vector2.up * (judgementRiseDistance * normalized));
+            _goodJudgementRect.anchoredPosition = _judgementBasePosition + goodJudgementImageOffset + riseOffset;
         }
         if (_missJudgementRect != null)
         {
             _missJudgementRect.localScale = Vector3.one * scale;
-            _missJudgementRect.anchoredPosition = _judgementBasePosition + (Vector2.up * (judgementRiseDistance * normalized));
+            _missJudgementRect.anchoredPosition = _judgementBasePosition + missJudgementImageOffset + riseOffset;
         }
 
         Color c = _judgementBaseColor;
@@ -909,6 +920,21 @@ public class RhythmPerformanceHud : MonoBehaviour
         _judgementAnimTime = -1f;
         _judgementRect.localScale = Vector3.one;
         _judgementRect.anchoredPosition = _judgementBasePosition;
+        if (_perfectJudgementRect != null)
+        {
+            _perfectJudgementRect.localScale = Vector3.one;
+            _perfectJudgementRect.anchoredPosition = _judgementBasePosition + perfectJudgementImageOffset;
+        }
+        if (_goodJudgementRect != null)
+        {
+            _goodJudgementRect.localScale = Vector3.one;
+            _goodJudgementRect.anchoredPosition = _judgementBasePosition + goodJudgementImageOffset;
+        }
+        if (_missJudgementRect != null)
+        {
+            _missJudgementRect.localScale = Vector3.one;
+            _missJudgementRect.anchoredPosition = _judgementBasePosition + missJudgementImageOffset;
+        }
 
         Color c = _judgementText.color;
         c.a = 0f;
