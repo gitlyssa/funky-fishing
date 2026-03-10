@@ -13535,9 +13535,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RhythmJudge
   conductor: {fileID: 1610214992}
   processor: {fileID: 1949879679}
-  perfectWindow: 0.1
-  goodWindow: 0.3
-  badWindow: 0.5
+  perfectWindow: 0.15
+  goodWindow: 0.25
+  badWindow: 0.4
   logNoteResolutions: 0
   logReelOutcome: 0
 --- !u!4 &1610214995
