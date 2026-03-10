@@ -69,10 +69,10 @@ MonoBehaviour:
   Path: Assets/FMOD/Desktop/Master.strings.bank
   Name: Master.strings
   StudioPath: bank:/Master.strings
-  lastModified: 639077300495036493
+  lastModified: 639080840323150906
   FileSizes:
   - Name: 
-    Value: 1118
+    Value: 1166
   Exists: 1
 --- !u!114 &-2648038191006552393
 MonoBehaviour:
@@ -89,7 +89,7 @@ MonoBehaviour:
   Path: Assets/FMOD/Desktop/Master.bank
   Name: Master
   StudioPath: bank:/Master
-  lastModified: 639077300494966501
+  lastModified: 639080840323074540
   FileSizes: []
   Exists: 1
 --- !u!114 &-2567683884387202836
@@ -171,13 +171,14 @@ MonoBehaviour:
   - {fileID: 6166468259007007593}
   - {fileID: -235916971953375120}
   - {fileID: -3363737237843273750}
+  - {fileID: 612667523792534380}
   EditorParameters: []
   MasterBanks:
   - {fileID: -2648038191006552393}
   StringsBanks:
   - {fileID: -3217896682293650524}
   cacheVersion: 131858
-  cacheTime: 639077300495036493
+  cacheTime: 639080840323150906
   SerializableEventsDict:
   - key: event:/Music/TestMusic
     index: 0
@@ -197,6 +198,33 @@ MonoBehaviour:
     index: 7
   - key: event:/Sfx/okay
     index: 8
+--- !u!114 &612667523792534380
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Music/Fish2
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Music/Fish2
+  Guid:
+    Data1: 1815795368
+    Data2: 1074115134
+    Data3: -1093406294
+    Data4: 21482842
+  Banks:
+  - {fileID: -2648038191006552393}
+  IsStream: 1
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 21495
 --- !u!114 &761730912841408774
 MonoBehaviour:
   m_ObjectHideFlags: 0

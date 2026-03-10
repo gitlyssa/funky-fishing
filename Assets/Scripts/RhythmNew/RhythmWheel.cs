@@ -34,22 +34,20 @@ public class RhythmWheel3D : MonoBehaviour
 
         if (reel == null)
         {
-            _targetSpeed = 0f;
+            UpdateIdle();
         }
         else
         {
             UpdateReelLogic(reel);
         }
 
-        // 1. Calculate the smoothed speed
+
         _currentSpeed = Mathf.MoveTowards(_currentSpeed, _targetSpeed, acceleration * Time.deltaTime);
 
-        // 2. APPLY RELATIVE ROTATION
+
         if (rotatingWheelMesh != null && Mathf.Abs(_currentSpeed) > 0.01f)
         {
-            // Use Space.Self to respect the 90-degree X-tilt of the parent
-            // If your wheel is 'facing' the camera, it usually spins on its Local Z or Y.
-            // Try Vector3.forward (Z) first; if it's wrong, try Vector3.up (Y).
+
             float angleThisFrame = _currentSpeed * Time.deltaTime;
             rotatingWheelMesh.Rotate(Vector3.forward, angleThisFrame, Space.Self);
         }
@@ -77,18 +75,19 @@ public class RhythmWheel3D : MonoBehaviour
     private void UpdateIdle()
     {
         _targetSpeed = 0f;
-        SetWheelVisuals(Color.Lerp(GetCurrentColor(), idleColor, Time.deltaTime * 4f), 0f);
+        // Color nextColor = Color.Lerp(GetCurrentColor(), idleColor, Time.deltaTime * 8f);
+        
+
+        // if (Vector4.Distance(nextColor, idleColor) < 0.01f) nextColor = idleColor;
+        
+        // SetWheelVisuals(nextColor, 0f);
     }
 
     private void SetWheelVisuals(Color color, float glowIntensity)
     {
         if (_wheelMaterial == null) return;
         
-        // Update Base Color or Emission for that "Glow" effect
-        // _wheelMaterial.SetColor(emissionColorPropertyName, color * glowIntensity);
-        
-        // If you're using a standard shader without emission, use _Color instead
-        _wheelMaterial.color = color; 
+        // _wheelMaterial.color = color; 
     }
 
     private Color GetCurrentColor() => _wheelMaterial != null ? _wheelMaterial.GetColor(emissionColorPropertyName) : idleColor;

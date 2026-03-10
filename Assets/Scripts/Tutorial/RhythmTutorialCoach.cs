@@ -70,6 +70,7 @@ public class RhythmTutorialCoach : MonoBehaviour
 
     [Header("Style")]
     [SerializeField] private Vector2 panelSize = new Vector2(980f, 520f);
+    [SerializeField] private Vector2 directionPanelSizeWithImage = new Vector2(760f, 520f);
     [SerializeField] private Color backdropColor = new Color(0f, 0f, 0f, 0.6f);
     [SerializeField] private Color panelColor = new Color(0.05f, 0.05f, 0.05f, 0.92f);
     [SerializeField] private Color textColor = Color.white;
@@ -77,6 +78,17 @@ public class RhythmTutorialCoach : MonoBehaviour
     [SerializeField] private int minFontSize = 24;
     [SerializeField] private Vector2 progressOffset = new Vector2(-24f, -24f);
     [SerializeField] private int progressFontSize = 30;
+
+    [Header("Direction Tutorial Images")]
+    [SerializeField] private Vector2 directionTutorialImageMaxSize = new Vector2(560f, 460f);
+    [SerializeField] private Vector2 directionTutorialImageOffset = new Vector2(680f, 0f);
+    [SerializeField] private float directionTutorialImageLeftShift = 140f;
+    [SerializeField] private string upTutorialImageResourcePath = "Tutorial/tut4";
+    [SerializeField] private string upTutorialImageEditorAssetPath = "Assets/Images/Tutorial/tut4.jpg";
+    [SerializeField] private string leftTutorialImageResourcePath = "Tutorial/tut5";
+    [SerializeField] private string leftTutorialImageEditorAssetPath = "Assets/Images/Tutorial/tut5.jpg";
+    [SerializeField] private string rightTutorialImageResourcePath = "Tutorial/tut6";
+    [SerializeField] private string rightTutorialImageEditorAssetPath = "Assets/Images/Tutorial/tut6.jpg";
 
     private FlowState flowState = FlowState.WaitingForRhythm;
     private bool wasRhythmVisible;
@@ -105,6 +117,7 @@ public class RhythmTutorialCoach : MonoBehaviour
     private FishingSessionHud fishingSessionHud;
     private Canvas gateCanvas;
     private GameObject gateWindowRoot;
+    private RectTransform gatePanelRect;
     private TextMeshProUGUI gateText;
     private TextMeshProUGUI progressText;
     private GameObject rhythmStartTutorialUi;
@@ -190,6 +203,7 @@ public class RhythmTutorialCoach : MonoBehaviour
         RestoreConflictingHud();
         RestorePauseManagers();
         RestoreCursorState();
+        DestroyDirectionTutorialSprites();
         if (gateActive)
             Time.timeScale = 1f;
     }
@@ -557,12 +571,28 @@ public class RhythmTutorialCoach : MonoBehaviour
         GameObject panel = new GameObject("Panel", typeof(RectTransform), typeof(Image));
         panel.transform.SetParent(backdrop.transform, false);
         RectTransform panelRect = panel.GetComponent<RectTransform>();
+        gatePanelRect = panelRect;
         panelRect.anchorMin = new Vector2(0.5f, 0.5f);
         panelRect.anchorMax = new Vector2(0.5f, 0.5f);
         panelRect.pivot = new Vector2(0.5f, 0.5f);
         panelRect.sizeDelta = panelSize;
         panelRect.anchoredPosition = Vector2.zero;
         panel.GetComponent<Image>().color = panelColor;
+
+        GameObject tutorialImageGo = new GameObject("DirectionTutorialImage", typeof(RectTransform), typeof(Image));
+        tutorialImageGo.transform.SetParent(backdrop.transform, false);
+        directionTutorialImageRect = tutorialImageGo.GetComponent<RectTransform>();
+        directionTutorialImageRect.anchorMin = new Vector2(0.5f, 0.5f);
+        directionTutorialImageRect.anchorMax = new Vector2(0.5f, 0.5f);
+        directionTutorialImageRect.pivot = new Vector2(0.5f, 0.5f);
+        directionTutorialImageRect.sizeDelta = directionTutorialImageMaxSize;
+        directionTutorialImageRect.anchoredPosition = directionTutorialImageOffset;
+
+        directionTutorialImage = tutorialImageGo.GetComponent<Image>();
+        directionTutorialImage.color = Color.white;
+        directionTutorialImage.preserveAspect = true;
+        directionTutorialImage.raycastTarget = false;
+        directionTutorialImage.enabled = false;
 
         GameObject textGo = new GameObject("TutorialText", typeof(RectTransform), typeof(TextMeshProUGUI));
         textGo.transform.SetParent(panel.transform, false);
@@ -602,6 +632,7 @@ public class RhythmTutorialCoach : MonoBehaviour
         progressText.textWrappingMode = TextWrappingModes.NoWrap;
         progressText.raycastTarget = false;
         SetProgressVisible(false);
+        RefreshGateVisuals();
     }
 
     private void SetGateMessage(string message)

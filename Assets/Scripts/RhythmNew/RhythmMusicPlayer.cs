@@ -77,7 +77,7 @@ public class RhythmMusicPlayer : MonoBehaviour
                 sawPlaybackActiveInCurrentTension = true;
                 return;
             }
-
+            
             // If tension is active but playback has not started yet, retry a fresh start.
             if (!sawPlaybackActiveInCurrentTension && playbackState == PLAYBACK_STATE.STOPPED)
             {
@@ -85,6 +85,28 @@ public class RhythmMusicPlayer : MonoBehaviour
                 wasInTension = bobberArcCaster != null &&
                                bobberArcCaster.CurrentState == BobberArcCaster.State.Tension;
                 return;
+            }    
+
+            // if playback has happened, tension is active, but not currently playing, the song is over
+            // spawn the final reel note and enter overtime
+            if (!RhythmConductor.Instance.isOvertime && sawPlaybackActiveInCurrentTension && playbackState == PLAYBACK_STATE.STOPPED)
+            {
+                // If there's no active reel and no notes left, spawn the final one
+                if (RhythmConductor.Instance.activeReel == null && RhythmConductor.Instance.activeNotes.Count == 0)
+                {
+                    RhythmConductor.Instance.StartOvertime();
+                    RhythmConductor.Instance.SpawnFinalPlaytestReel();
+                    
+                    // sawPlaybackActiveInCurrentTension = false; 
+                    return;
+                }
+            }
+
+            if (RhythmConductor.Instance.activeReel != null)
+            {
+                // Still updating wasInTension so the tension-break logic doesn't fire
+                wasInTension = bobberArcCaster != null && bobberArcCaster.CurrentState == BobberArcCaster.State.Tension;
+                return; 
             }
 
             if (tutorialLoopMode && playbackState == PLAYBACK_STATE.STOPPED)
@@ -105,6 +127,7 @@ public class RhythmMusicPlayer : MonoBehaviour
 
             hasProcessedMusicEnd = true;
             StopRhythmPlayback();
+            Debug.Log("Music ended, resolving tension encounter.");
 
             if (bobberArcCaster != null)
                 bobberArcCaster.CompleteRhythmEncounter();

@@ -64,7 +64,9 @@ public class RhythmConductor : MonoBehaviour
     private FlickDirection[] tutorialPracticeSequence = new FlickDirection[0];
     private int tutorialPracticeSequenceIndex;
     private float tutorialPracticeClock = 0f;
-
+    private float _overtimeClock = 0f;
+    private bool _isUsingOvertime = false;
+    public bool isOvertime => _isUsingOvertime;
 
     void Start()
     {
@@ -110,8 +112,17 @@ public class RhythmConductor : MonoBehaviour
             UpdateTutorialPracticeSpawning();
             return;
         }
+        else if (_isUsingOvertime) 
+        {
+            // Artificially increment the clock using DeltaTime
+            _overtimeClock += Time.deltaTime;
+            songTime = _overtimeClock;
+        }
+        else 
+        {
+            songTime = GetFmodSongTimeSeconds();
+        }
 
-        songTime = GetFmodSongTimeSeconds();
         while (_chart.Count > 0 && songTime >= _chart[0].hitTime - noteTravelTime)
         {
             SpawnNote(_chart[0]);
@@ -124,27 +135,42 @@ public class RhythmConductor : MonoBehaviour
             _reelQueue.RemoveAt(0);
         }
 
-            // on pressing r, spawn a reel
-            // start time is when the reel becomes active
-            // lead in is how long before it starts winding up
-            // if (Input.GetKeyDown(KeyCode.R) && activeReel == null)
-            // {
-            //     ReelData testReel = new ReelData
-            //     {
-            //         startTime = songTime + 2.0f,
-            //         duration = 3.0f,
-            //         goalDegrees = (UnityEngine.Random.value > 0.5f) ? 720f : -720f, // 2 full spins in either direction
-            //         leadInTime = 1.0f
-            //     };
-            //     SpawnReel(testReel);
-            // }
-        // }
+        if (enableDebugInput)
+        {
+            // PRESS R: Spawn a Reel 2 seconds in the future
+            if (Input.GetKeyDown(KeyCode.R) && activeReel == null)
+            {
+                ReelData debugReel = new ReelData
+                {
+                    startTime = songTime + 2.0f, // Becomes active in 2s
+                    duration = 4.0f,             // Player has 4s to finish
+                    goalDegrees = -720f,          // 2 full rotations
+                    leadInTime = 1.0f            // Visuals start 1s before startTime
+                };
+                SpawnReel(debugReel);
+                Debug.Log($"Debug Reel Spawned! Will be active at: {debugReel.startTime}");
+            }
+
+            // PRESS F: Spawn a Flick 2 seconds in the future
+            if (Input.GetKeyDown(KeyCode.F))
+            {
+                NoteData debugNote = new NoteData
+                {
+                    hitTime = songTime + 2.0f,
+                    type = RhythmArcNote.NoteType.Flick,
+                    direction = FlickDirection.Up
+                };
+                SpawnNote(debugNote);
+                Debug.Log("Debug Flick Spawned!");
+            }
+        }
     }
 
 
     public void SpawnReel(ReelData data)
     {
         GameObject go = new GameObject("ReelLogic");
+        go.transform.SetParent(this.transform);
         go.layer = gameObject.layer;
         activeReel = go.AddComponent<RhythmReelNote>();
         activeReel.Initialize(data);
@@ -177,6 +203,21 @@ public class RhythmConductor : MonoBehaviour
             noteBeatSpacingBeats);
     }
 
+    public void SpawnFinalPlaytestReel()
+    {
+        // We spawn it at the current songTime (which is the end of the song)
+        ReelData finalReel = new ReelData
+        {
+            startTime = songTime + 0.5f, // Half second delay after music stops
+            duration = 5.0f,            // Give them 5 seconds to finish
+            goalDegrees = -1080f,        // 3 full rotations for a "final" feel
+            leadInTime = 0.4f            // Quick wind-up
+        };
+        
+        SpawnReel(finalReel);
+        Debug.Log("Final Playtest Reel Spawned!");
+    }
+
     public void StartTutorialDirectionalPracticeMode(
         FlickDirection direction,
         float bpm = 99f,
@@ -205,6 +246,12 @@ public class RhythmConductor : MonoBehaviour
         float leadIn = Mathf.Max(noteTravelTime + tutorialBeatInterval, noteTravelTime + 0.25f);
         tutorialNextHitTime = tutorialPracticeClock + leadIn;
         songTime = tutorialPracticeClock;
+    }
+
+    public void StartOvertime()
+    {
+        _isUsingOvertime = true;
+        _overtimeClock = songTime; // Start from wherever the music stopped
     }
 
     public void StartTutorialSequencePracticeMode(
@@ -272,6 +319,8 @@ public class RhythmConductor : MonoBehaviour
         ClearActiveRhythmObjects();
         _chart.Clear();
         _reelQueue.Clear();
+        _isUsingOvertime = false;
+        _overtimeClock = 0f;    
 
         foreach (NoteData note in _chartTemplate)
         {
