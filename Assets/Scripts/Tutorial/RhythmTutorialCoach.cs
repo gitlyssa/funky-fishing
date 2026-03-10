@@ -107,6 +107,12 @@ public class RhythmTutorialCoach : MonoBehaviour
     private GameObject gateWindowRoot;
     private TextMeshProUGUI gateText;
     private TextMeshProUGUI progressText;
+    private GameObject rhythmStartTutorialUi;
+    private GameObject upPracticeTutorialUi;
+    private GameObject leftPracticeTutorialUi;
+    private GameObject rightPracticeTutorialUi;
+    private GameObject sequenceTutorialUi;
+    private GameObject endTutorialUi;
 
     private bool cursorStateCached;
     private bool cachedCursorVisible;
@@ -163,6 +169,7 @@ public class RhythmTutorialCoach : MonoBehaviour
 
         BuildUi();
         SetGateVisible(false);
+        ResolveSceneTutorialUi();
         ResolveRhythmReferences();
     }
 
@@ -179,6 +186,7 @@ public class RhythmTutorialCoach : MonoBehaviour
     private void OnDestroy()
     {
         StopPracticeMode();
+        HideAllSceneTutorialUi();
         RestoreConflictingHud();
         RestorePauseManagers();
         RestoreCursorState();
@@ -439,6 +447,7 @@ public class RhythmTutorialCoach : MonoBehaviour
     private void HandleRhythmEncounterEnded()
     {
         StopPracticeMode();
+        HideAllSceneTutorialUi();
         RestoreConflictingHud();
         SetProgressVisible(false);
 
@@ -599,12 +608,24 @@ public class RhythmTutorialCoach : MonoBehaviour
     {
         if (gateText != null)
             gateText.text = message;
+
+        if (!gateActive)
+            return;
+
+        bool showingCustomTutorialUi = UpdateSceneTutorialUiVisibility();
+        if (gateWindowRoot != null)
+            gateWindowRoot.SetActive(!showingCustomTutorialUi);
     }
 
     private void SetGateVisible(bool visible)
     {
+        bool showingCustomTutorialUi = visible && UpdateSceneTutorialUiVisibility();
+
+        if (!visible)
+            HideAllSceneTutorialUi();
+
         if (gateWindowRoot != null)
-            gateWindowRoot.SetActive(visible);
+            gateWindowRoot.SetActive(visible && !showingCustomTutorialUi);
     }
 
     private string BuildUpPracticeMessage()
@@ -686,6 +707,89 @@ public class RhythmTutorialCoach : MonoBehaviour
             case FlickDirection.Right: return "Right";
             default: return "Up";
         }
+    }
+
+    private void ResolveSceneTutorialUi()
+    {
+        GameObject canvasObject = GameObject.Find("Canvas");
+        if (canvasObject == null)
+            return;
+
+        rhythmStartTutorialUi = FindTutorialUi(canvasObject.transform, "RhythmStartTutorial");
+        upPracticeTutorialUi = FindTutorialUi(canvasObject.transform, "UpPracticeTutorial");
+        leftPracticeTutorialUi = FindTutorialUi(canvasObject.transform, "LeftPracticeTutorial");
+        rightPracticeTutorialUi = FindTutorialUi(canvasObject.transform, "RightPracticeTutorial");
+        sequenceTutorialUi = FindTutorialUi(canvasObject.transform, "SequenceTutorial");
+        endTutorialUi = FindTutorialUi(canvasObject.transform, "EndTutorial");
+
+        HideAllSceneTutorialUi();
+    }
+
+    private static GameObject FindTutorialUi(Transform canvasTransform, string childName)
+    {
+        Transform child = canvasTransform.Find(childName);
+        return child != null ? child.gameObject : null;
+    }
+
+    private void HideAllSceneTutorialUi()
+    {
+        SetTutorialUiActive(rhythmStartTutorialUi, false);
+        SetTutorialUiActive(upPracticeTutorialUi, false);
+        SetTutorialUiActive(leftPracticeTutorialUi, false);
+        SetTutorialUiActive(rightPracticeTutorialUi, false);
+        SetTutorialUiActive(sequenceTutorialUi, false);
+        SetTutorialUiActive(endTutorialUi, false);
+    }
+
+    private bool UpdateSceneTutorialUiVisibility()
+    {
+        HideAllSceneTutorialUi();
+
+        GameObject tutorialUiToShow = null;
+        switch (flowState)
+        {
+            case FlowState.IntroHowToPlayGate:
+                tutorialUiToShow = rhythmStartTutorialUi;
+                break;
+
+            case FlowState.DirectionInfoGate:
+                switch (CurrentTargetDirection())
+                {
+                    case FlickDirection.Left:
+                        tutorialUiToShow = leftPracticeTutorialUi;
+                        break;
+
+                    case FlickDirection.Right:
+                        tutorialUiToShow = rightPracticeTutorialUi;
+                        break;
+
+                    default:
+                        tutorialUiToShow = upPracticeTutorialUi;
+                        break;
+                }
+                break;
+
+            case FlowState.SequenceInfoGate:
+                tutorialUiToShow = sequenceTutorialUi;
+                break;
+
+            case FlowState.SuccessGate:
+                tutorialUiToShow = endTutorialUi;
+                break;
+        }
+
+        bool hasCustomUi = tutorialUiToShow != null;
+        SetTutorialUiActive(tutorialUiToShow, hasCustomUi);
+        if (gateText != null)
+            gateText.gameObject.SetActive(!hasCustomUi);
+
+        return hasCustomUi;
+    }
+
+    private static void SetTutorialUiActive(GameObject tutorialUi, bool active)
+    {
+        if (tutorialUi != null)
+            tutorialUi.SetActive(active);
     }
 
     private void HandleSequenceJudgement(

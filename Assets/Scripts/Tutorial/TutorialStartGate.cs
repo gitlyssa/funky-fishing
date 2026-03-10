@@ -4,6 +4,9 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 public class TutorialStartGate : MonoBehaviour
 {
@@ -42,10 +45,8 @@ public class TutorialStartGate : MonoBehaviour
         "This tutorial will teach the basics.\n\n" +
         "Click, press Xbox A, or press Joy-Con confirm to continue.";
     [SerializeField, TextArea(3, 8)] private string castTargetMessage =
-        "Move your bobber casting target before casting:\n\n" +
-        "- Xbox: move the Right Stick\n" +
-        "- Joy-Con: move the joystick\n\n" +
-        "Press confirm to start.";
+        "Move the joystick to position your bobber\n\n" +
+        "Press confirm.";
     [SerializeField, TextArea(3, 8)] private string castMessage =
         "Nice! Now let's learn how to cast:\n\n" +
         "- Xbox: press A to cast the line\n" +
@@ -67,7 +68,7 @@ public class TutorialStartGate : MonoBehaviour
     [Header("Style")]
     [SerializeField] private Vector2 welcomePanelSize = new Vector2(860f, 360f);
     [SerializeField] private Vector2 castTargetPanelSize = new Vector2(980f, 520f);
-    [SerializeField] private Color backdropColor = new Color(0f, 0f, 0f, 0.6f);
+    [SerializeField] private Color backdropColor = new Color(0f, 0f, 0f, 0f);
     [SerializeField] private Color panelColor = new Color(0.05f, 0.05f, 0.05f, 0.92f);
     [SerializeField] private Color textColor = Color.white;
     [SerializeField] private int fontSize = 40;
@@ -77,6 +78,12 @@ public class TutorialStartGate : MonoBehaviour
     private GameObject gateRoot;
     private TextMeshProUGUI gateText;
     private RectTransform gatePanelRect;
+    private Image gateImage;
+    private GameObject welcomeTutorialUi;
+    private GameObject bobberTutorialUi;
+    private GameObject castTutorialUi;
+    private GameObject yankTutorialUi;
+    private GameObject catchTutorialUi;
     private bool gateActive;
     private int gateStepIndex;
     private TutorialFlowState flowState;
@@ -98,6 +105,7 @@ public class TutorialStartGate : MonoBehaviour
     private CursorLockMode cachedCursorLockMode;
     private bool cursorStateCached;
     private readonly List<PauseManager> disabledPauseManagers = new List<PauseManager>();
+    private Sprite stepOneTutorialSprite;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     private static void RegisterSceneHook()
@@ -154,6 +162,7 @@ public class TutorialStartGate : MonoBehaviour
 
         activeInstance = this;
 
+        ResolveBobberTutorialUi();
         BuildGateUi();
         flowState = TutorialFlowState.StartupGate;
         ActivateGate(0);
@@ -187,6 +196,17 @@ public class TutorialStartGate : MonoBehaviour
     {
         if (activeInstance == this)
             activeInstance = null;
+
+        if (welcomeTutorialUi != null)
+            welcomeTutorialUi.SetActive(false);
+        if (bobberTutorialUi != null)
+            bobberTutorialUi.SetActive(false);
+        if (castTutorialUi != null)
+            castTutorialUi.SetActive(false);
+        if (yankTutorialUi != null)
+            yankTutorialUi.SetActive(false);
+        if (catchTutorialUi != null)
+            catchTutorialUi.SetActive(false);
 
         if (gateActive)
             Time.timeScale = 1f;
@@ -231,6 +251,16 @@ public class TutorialStartGate : MonoBehaviour
             return;
 
         gateActive = false;
+        if (welcomeTutorialUi != null)
+            welcomeTutorialUi.SetActive(false);
+        if (bobberTutorialUi != null)
+            bobberTutorialUi.SetActive(false);
+        if (castTutorialUi != null)
+            castTutorialUi.SetActive(false);
+        if (yankTutorialUi != null)
+            yankTutorialUi.SetActive(false);
+        if (catchTutorialUi != null)
+            catchTutorialUi.SetActive(false);
         Time.timeScale = 1f;
         XboxFishingInput.BlockGameplayInputForRealtimeSeconds(resumeInputBlockSeconds);
         RestorePauseManagers();
@@ -308,19 +338,105 @@ public class TutorialStartGate : MonoBehaviour
         if (gateText == null)
             return;
 
+        bool showWelcomeTutorialObject = gateStepIndex == 0;
+        bool showBobberTutorialObject = gateStepIndex == 1;
+        bool showCastTutorialObject = gateStepIndex == 2;
+        bool showYankTutorialObject = gateStepIndex == 3;
+        bool showCatchTutorialObject = gateStepIndex == 4;
+        if (welcomeTutorialUi != null)
+            welcomeTutorialUi.SetActive(showWelcomeTutorialObject);
+        if (bobberTutorialUi != null)
+            bobberTutorialUi.SetActive(showBobberTutorialObject);
+        if (castTutorialUi != null)
+            castTutorialUi.SetActive(showCastTutorialObject);
+        if (yankTutorialUi != null)
+            yankTutorialUi.SetActive(showYankTutorialObject);
+        if (catchTutorialUi != null)
+            catchTutorialUi.SetActive(showCatchTutorialObject);
+
+        if (gatePanelRect != null)
+            gatePanelRect.gameObject.SetActive(!showWelcomeTutorialObject && !showBobberTutorialObject && !showCastTutorialObject && !showYankTutorialObject && !showCatchTutorialObject);
+
         if (gateStepIndex == 0)
+        {
             gateText.text = welcomeMessage;
+            gateText.gameObject.SetActive(false);
+        }
         else if (gateStepIndex == 1)
-            gateText.text = castTargetMessage;
+        {
+            gateText.gameObject.SetActive(false);
+        }
         else if (gateStepIndex == 2)
+        {
             gateText.text = castMessage;
+            gateText.gameObject.SetActive(false);
+        }
         else if (gateStepIndex == 3)
+        {
             gateText.text = yankMessage;
+            gateText.gameObject.SetActive(false);
+        }
         else
+        {
             gateText.text = catchMessage;
+            gateText.gameObject.SetActive(false);
+        }
 
         if (gatePanelRect != null)
             gatePanelRect.sizeDelta = gateStepIndex == 0 ? welcomePanelSize : castTargetPanelSize;
+
+        RefreshGateImage();
+    }
+
+    private void ResolveBobberTutorialUi()
+    {
+        GameObject canvasObject = GameObject.Find("Canvas");
+        if (canvasObject == null)
+            return;
+
+        Transform welcomeTutorialTransform = canvasObject.transform.Find("WelcomeTutorial");
+        if (welcomeTutorialTransform != null)
+        {
+            welcomeTutorialUi = welcomeTutorialTransform.gameObject;
+            welcomeTutorialUi.SetActive(false);
+        }
+
+        Transform bobberTutorialTransform = canvasObject.transform.Find("BobberTutorial");
+        if (bobberTutorialTransform != null)
+        {
+            bobberTutorialUi = bobberTutorialTransform.gameObject;
+            bobberTutorialUi.SetActive(false);
+        }
+
+        Transform castTutorialTransform = canvasObject.transform.Find("CastTutorial");
+        if (castTutorialTransform != null)
+        {
+            castTutorialUi = castTutorialTransform.gameObject;
+            castTutorialUi.SetActive(false);
+        }
+
+        Transform yankTutorialTransform = canvasObject.transform.Find("YankTutorial");
+        if (yankTutorialTransform != null)
+        {
+            yankTutorialUi = yankTutorialTransform.gameObject;
+            yankTutorialUi.SetActive(false);
+        }
+
+        Transform catchTutorialTransform = canvasObject.transform.Find("CatchTutorial");
+        if (catchTutorialTransform != null)
+        {
+            catchTutorialUi = catchTutorialTransform.gameObject;
+            catchTutorialUi.SetActive(false);
+        }
+    }
+
+    private void RefreshGateImage()
+    {
+        if (gateImage == null)
+            return;
+
+        gateImage.sprite = gateStepIndex == 1 ? GetStepOneTutorialSprite() : null;
+        gateImage.enabled = gateImage.sprite != null;
     }
 
     private void UpdatePostGateFlow()
@@ -614,7 +730,7 @@ public class TutorialStartGate : MonoBehaviour
         RectTransform textRect = textObject.GetComponent<RectTransform>();
         textRect.anchorMin = Vector2.zero;
         textRect.anchorMax = Vector2.one;
-        textRect.offsetMin = new Vector2(40f, 28f);
+        textRect.offsetMin = new Vector2(40f, 220f);
         textRect.offsetMax = new Vector2(-40f, -28f);
 
         TextMeshProUGUI text = textObject.GetComponent<TextMeshProUGUI>();
@@ -630,6 +746,32 @@ public class TutorialStartGate : MonoBehaviour
         text.alignment = TextAlignmentOptions.Center;
         text.textWrappingMode = TextWrappingModes.Normal;
         text.raycastTarget = false;
+
+        GameObject imageObject = new GameObject("GateImage", typeof(RectTransform), typeof(Image));
+        imageObject.transform.SetParent(panel.transform, false);
+        RectTransform imageRect = imageObject.GetComponent<RectTransform>();
+        imageRect.anchorMin = new Vector2(0.5f, 0f);
+        imageRect.anchorMax = new Vector2(0.5f, 0f);
+        imageRect.pivot = new Vector2(0.5f, 0f);
+        imageRect.anchoredPosition = new Vector2(0f, 28f);
+        imageRect.sizeDelta = new Vector2(320f, 160f);
+
+        gateImage = imageObject.GetComponent<Image>();
+        gateImage.preserveAspect = true;
+        gateImage.enabled = false;
+    }
+
+    private Sprite GetStepOneTutorialSprite()
+    {
+        if (stepOneTutorialSprite != null)
+            return stepOneTutorialSprite;
+
+        stepOneTutorialSprite = Resources.Load<Sprite>("Images/tut_img_1");
+#if UNITY_EDITOR
+        if (stepOneTutorialSprite == null)
+            stepOneTutorialSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Images/tut_img_1.png");
+#endif
+        return stepOneTutorialSprite;
     }
 
     private void DisablePauseManagers()
