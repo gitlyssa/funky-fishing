@@ -92,6 +92,21 @@ public class GamepadMenuNavigation : MonoBehaviour
 
     private void Update()
     {
+        if (IsTutorialGateBlockingUiNavigation())
+        {
+            EventSystem tutorialEvt = EventSystem.current;
+            if (tutorialEvt != null)
+            {
+                tutorialEvt.sendNavigationEvents = false;
+                if (tutorialEvt.currentSelectedGameObject != null)
+                    tutorialEvt.SetSelectedGameObject(null);
+            }
+
+            currentButton = null;
+            SetIndicatorVisible(false);
+            return;
+        }
+
         if (!IsEnabledScene())
         {
             EventSystem inactiveEvt = EventSystem.current;
@@ -166,6 +181,11 @@ public class GamepadMenuNavigation : MonoBehaviour
             return Time.timeScale <= 0f;
 
         return true;
+    }
+
+    private static bool IsTutorialGateBlockingUiNavigation()
+    {
+        return TutorialStartGate.IsOverlayGateActive() || RhythmTutorialCoach.IsOverlayGateActive();
     }
 
     private void RefreshActiveButtons()

@@ -259,6 +259,11 @@ public class TutorialStartGate : MonoBehaviour
         }
     }
 
+    public static bool IsOverlayGateActive()
+    {
+        return activeInstance != null && activeInstance.gateActive;
+    }
+
     private bool IsTutorialScene()
     {
         Scene tutorialScene = SceneManager.GetSceneByName(tutorialSceneName);

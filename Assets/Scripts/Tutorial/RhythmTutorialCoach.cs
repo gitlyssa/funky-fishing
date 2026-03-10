@@ -8,6 +8,7 @@ using UnityEngine.UI;
 public class RhythmTutorialCoach : MonoBehaviour
 {
     private static bool sceneHookRegistered;
+    private static RhythmTutorialCoach activeInstance;
 
     private enum FlowState
     {
@@ -188,6 +189,14 @@ public class RhythmTutorialCoach : MonoBehaviour
             return;
         }
 
+        if (activeInstance != null && activeInstance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        activeInstance = this;
+
         BuildUi();
         SetGateVisible(false);
         ResolveSceneTutorialUi();
@@ -206,6 +215,9 @@ public class RhythmTutorialCoach : MonoBehaviour
 
     private void OnDestroy()
     {
+        if (activeInstance == this)
+            activeInstance = null;
+
         StopPracticeMode();
         HideAllSceneTutorialUi();
         RestoreConflictingHud();
@@ -1146,6 +1158,11 @@ public class RhythmTutorialCoach : MonoBehaviour
             return true;
 
         return JoyConMenuInput.SubmitPressedThisFrame;
+    }
+
+    public static bool IsOverlayGateActive()
+    {
+        return activeInstance != null && activeInstance.gateActive;
     }
 
     private void DisablePauseManagers()
