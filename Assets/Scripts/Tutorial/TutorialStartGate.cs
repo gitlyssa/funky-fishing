@@ -68,6 +68,7 @@ public class TutorialStartGate : MonoBehaviour
     [Header("Style")]
     [SerializeField] private Vector2 welcomePanelSize = new Vector2(860f, 360f);
     [SerializeField] private Vector2 castTargetPanelSize = new Vector2(980f, 520f);
+    [SerializeField] private Vector2 castTargetPanelSizeWithImage = new Vector2(760f, 520f);
     [SerializeField] private Color backdropColor = new Color(0f, 0f, 0f, 0f);
     [SerializeField] private Color panelColor = new Color(0.05f, 0.05f, 0.05f, 0.92f);
     [SerializeField] private Color textColor = Color.white;
@@ -89,6 +90,8 @@ public class TutorialStartGate : MonoBehaviour
     private GameObject gateRoot;
     private TextMeshProUGUI gateText;
     private RectTransform gatePanelRect;
+    private RectTransform castTargetTutorialImageRect;
+    private Image castTargetTutorialImage;
     private Image gateImage;
     private GameObject welcomeTutorialUi;
     private GameObject bobberTutorialUi;
@@ -120,6 +123,9 @@ public class TutorialStartGate : MonoBehaviour
     private bool cursorStateCached;
     private readonly List<PauseManager> disabledPauseManagers = new List<PauseManager>();
     private Sprite stepOneTutorialSprite;
+    private Sprite castTargetTutorialSprite;
+    private Sprite castTutorialSprite;
+    private Sprite yankTutorialSprite;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     private static void RegisterSceneHook()
