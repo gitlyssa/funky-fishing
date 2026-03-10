@@ -45,9 +45,18 @@ public class RhythmArcNote : MonoBehaviour
     
     [Header("Visuals")]
         [SerializeField] private DynamicArc _visuals;
+        [SerializeField] private DynamicArc _borderVisuals;
         [SerializeField] private MeshRenderer _renderer;
+        [SerializeField] private MeshRenderer _borderRenderer;
         [SerializeField] private Material flickMaterial;
         [SerializeField] private Material slideMaterial;
+
+    [Header("Border Config")]
+    [SerializeField] private float borderPadding = 0.3f; // How much thicker the border is
+    [SerializeField] private float borderAnglePadding = 5f; // How much wider the border arc is
+    [SerializeField] private Color perfectBorderColor = new Color(1f, 0.85f, 0f); // Gold
+    [SerializeField] private Color goodBorderColor = Color.white;
+    [SerializeField] private Color defaultBorderColor = new Color(0.2f, 0.2f, 0.2f, 0.8f); // Dim gray
 
     public void Initialize(NoteData data, float duration, float sRadius, float oRadius, AnimationCurve sCurve)
     {
@@ -77,6 +86,14 @@ public class RhythmArcNote : MonoBehaviour
         _visuals.Setup(meshSegments);
         _visuals.SetMaterial(_renderer.sharedMaterial);
 
+        if (_borderVisuals != null)
+        {
+        _borderVisuals.Setup(meshSegments);
+
+        }
+
+    _isInitialized = true;
+
          _isInitialized = true;
     }
 
@@ -89,8 +106,11 @@ public class RhythmArcNote : MonoBehaviour
         float linearT = Mathf.Clamp01(elapsed / _travelDuration);
 
         float curvedT = _scaleCurve.Evaluate(linearT);
-        
+
+        UpdateBorderState(RhythmConductor.Instance.songTime);
         UpdatePositionAndScale(curvedT);
+        
+        
     }
 
     private void UpdatePositionAndScale(float t)
@@ -98,6 +118,33 @@ public class RhythmArcNote : MonoBehaviour
         
         float currentRadius = Mathf.Lerp(_spawnRadius, _outerRingRadius, t);
         _visuals.Redraw(currentRadius, noteThickness, laneAngle, meshSegments);
+        if (_borderVisuals != null)
+        {
+            _borderVisuals.Redraw(currentRadius, noteThickness + borderPadding, laneAngle + borderAnglePadding, meshSegments);
+        }
+    }
+
+    private void UpdateBorderState(float songTime)
+    {
+        if (_borderRenderer == null || RhythmJudge.Instance == null) return;
+
+        float absDiff = Mathf.Abs(targetHitTime - songTime);
+
+        // Change border color based on global timing windows
+        if (absDiff <= RhythmJudge.Instance.PerfectWindow)
+        {
+            _borderRenderer.material.color = perfectBorderColor;
+        }
+        else if (absDiff <= RhythmJudge.Instance.GoodWindow)
+        {
+            _borderRenderer.material.color = goodBorderColor;
+        }
+        else
+        {
+    
+            float t = Mathf.InverseLerp(RhythmJudge.Instance.GoodWindow, RhythmJudge.Instance.PerfectWindow, absDiff);
+            _borderRenderer.material.color = Color.Lerp(defaultBorderColor, goodBorderColor, t);
+        }
     }
 
     public void OnPerfectHit()

@@ -9,15 +9,19 @@ public class RhythmJudge : MonoBehaviour
     and has a reference to the conductor to get the position of all the acitve notes
     I have some manually set timing windows for now to control the scoring of the notes.
     */
+    public static RhythmJudge Instance { get; private set; }
     public enum JudgeRating { Perfect, Good, Bad, Miss }
     [Header("References")]
     public RhythmConductor conductor;
     public RhythmInputProcessorT processor;
 
     [Header("Timing Windows (Seconds)")]
-    public float perfectWindow = 0.1f;
-    public float goodWindow = 0.3f;
+    public float perfectWindow = 0.2f;
+    public float goodWindow = 0.4f;
     public float badWindow = 0.5f; // Beyond this is an automatic Miss
+    public float PerfectWindow => perfectWindow;
+    public float GoodWindow => goodWindow;
+    public float BadWindow => badWindow;
 
     [Header("Debug")]
     [SerializeField] private bool logNoteResolutions = false;
@@ -30,6 +34,12 @@ public class RhythmJudge : MonoBehaviour
     {
         if (processor != null)
             processor.OnValidFlick += HandleFlick;
+    }
+    private void Awake()
+    {
+        // Initialize Singleton
+        if (Instance == null) Instance = this;
+        else Destroy(gameObject);
     }
 
     void OnDestroy()

@@ -68,6 +68,13 @@ public class RhythmConductor : MonoBehaviour
     private bool _isUsingOvertime = false;
     public bool isOvertime => _isUsingOvertime;
 
+    [Header("Timing Ring Visuals")]
+    public GameObject timingRingPrefab; 
+    public float ringThickness = 0.05f;
+
+    public Color perfectZoneColor = new Color(1f, 0.85f, 0f, 0.4f); // Shaded Gold (with alpha!)
+    public Color goodGuidelineColor = new Color(0.2f, 1f, 1f, 1f);   // Bright Cyan
+
     void Start()
     {
         rhythmMusicPlayer = FindObjectOfType<RhythmMusicPlayer>();
@@ -79,6 +86,7 @@ public class RhythmConductor : MonoBehaviour
         noteTravelTime = (hitRingRadius - spawnRadius) / noteSpeed;
 
         // Load the beatmap and parse it into NoteData objects
+        Invoke(nameof(CreateTimingRings), 0.05f);
         LoadBeatmapFromCSV();
     }
 
@@ -166,7 +174,7 @@ public class RhythmConductor : MonoBehaviour
         }
     }
 
-
+    
     public void SpawnReel(ReelData data)
     {
         GameObject go = new GameObject("ReelLogic");
@@ -505,5 +513,62 @@ public class RhythmConductor : MonoBehaviour
         int ms;
         var result = rhythmMusicPlayer.musicInstance.getTimelinePosition(out ms);
         return ms / 1000f;
+    }
+    private void CreateTimingRings()
+    {
+        if (RhythmJudge.Instance == null) return;
+
+
+        SpawnStaticRing(hitRingRadius, Color.white, ringThickness * 0.5f, "Ring_AbsoluteCenter");
+
+        float pWindowSecs = RhythmJudge.Instance.PerfectWindow;
+    
+    // t=0.0 at spawn, t=1.0 at target.
+    float tStartPerf = 1f - (pWindowSecs / noteTravelTime); // Early Perfect
+    float tEndPerf = 1f;  
+
+    // Calculate radii using Lerp and your AnimationCurve
+    float rStartPerf = Mathf.Lerp(spawnRadius, hitRingRadius, noteScaleCurve.Evaluate(tStartPerf));
+    // We allow Evaluate to go past 1.0 to find where the visual boundary would be
+    float rEndPerf = Mathf.Lerp(spawnRadius, hitRingRadius, noteScaleCurve.Evaluate(tEndPerf)); 
+
+    // The new ring's parameters
+    float shadedCenterRadius = (rStartPerf + rEndPerf) / 2f;
+    float shadedThickness = Mathf.Abs(rEndPerf - rStartPerf);
+
+    // Spawn the wide, shaded golden ring
+    SpawnStaticRing(shadedCenterRadius, perfectZoneColor, shadedThickness, "Zone_Perfect_Shaded");
+
+    // Add a very thin border on the outside of the shaded zone for crispness
+    SpawnStaticRing(rStartPerf, new Color(1f, 0.9f, 0.5f, 0.8f), 0.02f, "Ring_Perfect_Border");
+
+        
+        float goodTimeOffset = RhythmJudge.Instance.GoodWindow;
+        float goodT = 1f - (goodTimeOffset / noteTravelTime);
+        float goodRadius = Mathf.Lerp(spawnRadius, hitRingRadius, noteScaleCurve.Evaluate(goodT));
+        SpawnStaticRing(goodRadius, goodGuidelineColor, ringThickness, "Ring_Good_Entry");
+
+    }
+
+    private void SpawnStaticRing(float radius, Color color, float thickness, string ringName)
+    {
+        GameObject ring = Instantiate(timingRingPrefab, transform);
+        ring.name = ringName;
+        ring.transform.localPosition = new Vector3(0, 0, 0.01f); 
+        ring.layer = gameObject.layer;
+
+        DynamicArc arc = ring.GetComponent<DynamicArc>();
+        if (arc != null)
+        {
+            arc.Setup(64); // Higher segments for a smooth circle
+            arc.Redraw(radius, thickness, 360f, 64);
+            
+            MeshRenderer ren = ring.GetComponent<MeshRenderer>();
+            if (ren != null)
+            {
+                // Creating a new material instance so they don't all share the same color
+                ren.material.color = color;
+            }
+        }
     }
 }
