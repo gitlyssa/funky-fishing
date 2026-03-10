@@ -711,7 +711,11 @@ public class RhythmTutorialCoach : MonoBehaviour
 
     private void ResolveSceneTutorialUi()
     {
-        GameObject canvasObject = GameObject.Find("Canvas");
+        Scene tutorialScene = SceneManager.GetSceneByName(tutorialSceneName);
+        if (!tutorialScene.IsValid() || !tutorialScene.isLoaded)
+            return;
+
+        GameObject canvasObject = FindSceneGameObject(tutorialScene, "Canvas");
         if (canvasObject == null)
             return;
 
@@ -729,6 +733,34 @@ public class RhythmTutorialCoach : MonoBehaviour
     {
         Transform child = canvasTransform.Find(childName);
         return child != null ? child.gameObject : null;
+    }
+
+    private static GameObject FindSceneGameObject(Scene scene, string objectName)
+    {
+        GameObject[] rootObjects = scene.GetRootGameObjects();
+        for (int i = 0; i < rootObjects.Length; i++)
+        {
+            Transform match = FindChildRecursive(rootObjects[i].transform, objectName);
+            if (match != null)
+                return match.gameObject;
+        }
+
+        return null;
+    }
+
+    private static Transform FindChildRecursive(Transform parent, string objectName)
+    {
+        if (parent.name == objectName)
+            return parent;
+
+        for (int i = 0; i < parent.childCount; i++)
+        {
+            Transform match = FindChildRecursive(parent.GetChild(i), objectName);
+            if (match != null)
+                return match;
+        }
+
+        return null;
     }
 
     private void HideAllSceneTutorialUi()

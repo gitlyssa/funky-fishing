@@ -338,11 +338,11 @@ public class TutorialStartGate : MonoBehaviour
         if (gateText == null)
             return;
 
-        bool showWelcomeTutorialObject = gateStepIndex == 0;
-        bool showBobberTutorialObject = gateStepIndex == 1;
-        bool showCastTutorialObject = gateStepIndex == 2;
-        bool showYankTutorialObject = gateStepIndex == 3;
-        bool showCatchTutorialObject = gateStepIndex == 4;
+        bool showWelcomeTutorialObject = gateStepIndex == 0 && welcomeTutorialUi != null;
+        bool showBobberTutorialObject = gateStepIndex == 1 && bobberTutorialUi != null;
+        bool showCastTutorialObject = gateStepIndex == 2 && castTutorialUi != null;
+        bool showYankTutorialObject = gateStepIndex == 3 && yankTutorialUi != null;
+        bool showCatchTutorialObject = gateStepIndex == 4 && catchTutorialUi != null;
         if (welcomeTutorialUi != null)
             welcomeTutorialUi.SetActive(showWelcomeTutorialObject);
         if (bobberTutorialUi != null)
@@ -360,26 +360,26 @@ public class TutorialStartGate : MonoBehaviour
         if (gateStepIndex == 0)
         {
             gateText.text = welcomeMessage;
-            gateText.gameObject.SetActive(false);
+            gateText.gameObject.SetActive(!showWelcomeTutorialObject);
         }
         else if (gateStepIndex == 1)
         {
-            gateText.gameObject.SetActive(false);
+            gateText.gameObject.SetActive(!showBobberTutorialObject);
         }
         else if (gateStepIndex == 2)
         {
             gateText.text = castMessage;
-            gateText.gameObject.SetActive(false);
+            gateText.gameObject.SetActive(!showCastTutorialObject);
         }
         else if (gateStepIndex == 3)
         {
             gateText.text = yankMessage;
-            gateText.gameObject.SetActive(false);
+            gateText.gameObject.SetActive(!showYankTutorialObject);
         }
         else
         {
             gateText.text = catchMessage;
-            gateText.gameObject.SetActive(false);
+            gateText.gameObject.SetActive(!showCatchTutorialObject);
         }
 
         if (gatePanelRect != null)
@@ -390,7 +390,11 @@ public class TutorialStartGate : MonoBehaviour
 
     private void ResolveBobberTutorialUi()
     {
-        GameObject canvasObject = GameObject.Find("Canvas");
+        Scene tutorialScene = SceneManager.GetSceneByName(tutorialSceneName);
+        if (!tutorialScene.IsValid() || !tutorialScene.isLoaded)
+            return;
+
+        GameObject canvasObject = FindSceneGameObject(tutorialScene, "Canvas");
         if (canvasObject == null)
             return;
 
@@ -428,6 +432,34 @@ public class TutorialStartGate : MonoBehaviour
             catchTutorialUi = catchTutorialTransform.gameObject;
             catchTutorialUi.SetActive(false);
         }
+    }
+
+    private static GameObject FindSceneGameObject(Scene scene, string objectName)
+    {
+        GameObject[] rootObjects = scene.GetRootGameObjects();
+        for (int i = 0; i < rootObjects.Length; i++)
+        {
+            Transform match = FindChildRecursive(rootObjects[i].transform, objectName);
+            if (match != null)
+                return match.gameObject;
+        }
+
+        return null;
+    }
+
+    private static Transform FindChildRecursive(Transform parent, string objectName)
+    {
+        if (parent.name == objectName)
+            return parent;
+
+        for (int i = 0; i < parent.childCount; i++)
+        {
+            Transform match = FindChildRecursive(parent.GetChild(i), objectName);
+            if (match != null)
+                return match;
+        }
+
+        return null;
     }
 
     private void RefreshGateImage()
