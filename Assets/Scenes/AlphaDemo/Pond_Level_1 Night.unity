@@ -26,7 +26,7 @@ RenderSettings:
   m_AmbientIntensity: 1
   m_AmbientMode: 1
   m_SubtractiveShadowColor: {r: 0.11777139, g: 0.21153124, b: 0.4490565, a: 1}
-  m_SkyboxMaterial: {fileID: 0}
+  m_SkyboxMaterial: {fileID: 2100000, guid: 2d9e8a47bfbb94c40ad9fdc253c3d3cd, type: 2}
   m_HaloStrength: 0.5
   m_FlareStrength: 1
   m_FlareFadeSpeed: 3
@@ -9175,7 +9175,7 @@ GameObject:
   - component: {fileID: 1884577691}
   - component: {fileID: 1884577690}
   m_Layer: 0
-  m_Name: Sunlight (1)
+  m_Name: Moonlight
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
