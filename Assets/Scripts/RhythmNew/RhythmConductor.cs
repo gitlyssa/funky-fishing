@@ -525,7 +525,7 @@ public class RhythmConductor : MonoBehaviour
     
     // t=0.0 at spawn, t=1.0 at target.
     float tStartPerf = 1f - (pWindowSecs / noteTravelTime); // Early Perfect
-    float tEndPerf = 1f + (pWindowSecs / noteTravelTime);  // Late Perfect (Extrapolated past ring)
+    float tEndPerf = 1f;  
 
     // Calculate radii using Lerp and your AnimationCurve
     float rStartPerf = Mathf.Lerp(spawnRadius, hitRingRadius, noteScaleCurve.Evaluate(tStartPerf));

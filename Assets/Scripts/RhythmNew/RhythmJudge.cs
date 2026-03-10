@@ -16,8 +16,8 @@ public class RhythmJudge : MonoBehaviour
     public RhythmInputProcessorT processor;
 
     [Header("Timing Windows (Seconds)")]
-    public float perfectWindow = 0.15f;
-    public float goodWindow = 0.3f;
+    public float perfectWindow = 0.2f;
+    public float goodWindow = 0.4f;
     public float badWindow = 0.5f; // Beyond this is an automatic Miss
     public float PerfectWindow => perfectWindow;
     public float GoodWindow => goodWindow;
