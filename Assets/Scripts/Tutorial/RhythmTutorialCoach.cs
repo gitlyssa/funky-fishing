@@ -120,14 +120,12 @@ public class RhythmTutorialCoach : MonoBehaviour
     private RectTransform gatePanelRect;
     private TextMeshProUGUI gateText;
     private TextMeshProUGUI progressText;
-    private RectTransform directionTutorialImageRect;
-    private Image directionTutorialImage;
-    private Sprite upTutorialSprite;
-    private Sprite leftTutorialSprite;
-    private Sprite rightTutorialSprite;
-    private bool loggedMissingUpTutorialImage;
-    private bool loggedMissingLeftTutorialImage;
-    private bool loggedMissingRightTutorialImage;
+    private GameObject rhythmStartTutorialUi;
+    private GameObject upPracticeTutorialUi;
+    private GameObject leftPracticeTutorialUi;
+    private GameObject rightPracticeTutorialUi;
+    private GameObject sequenceTutorialUi;
+    private GameObject endTutorialUi;
 
     private bool cursorStateCached;
     private bool cachedCursorVisible;
@@ -184,6 +182,7 @@ public class RhythmTutorialCoach : MonoBehaviour
 
         BuildUi();
         SetGateVisible(false);
+        ResolveSceneTutorialUi();
         ResolveRhythmReferences();
     }
 
@@ -200,6 +199,7 @@ public class RhythmTutorialCoach : MonoBehaviour
     private void OnDestroy()
     {
         StopPracticeMode();
+        HideAllSceneTutorialUi();
         RestoreConflictingHud();
         RestorePauseManagers();
         RestoreCursorState();
@@ -461,6 +461,7 @@ public class RhythmTutorialCoach : MonoBehaviour
     private void HandleRhythmEncounterEnded()
     {
         StopPracticeMode();
+        HideAllSceneTutorialUi();
         RestoreConflictingHud();
         SetProgressVisible(false);
 
@@ -639,13 +640,23 @@ public class RhythmTutorialCoach : MonoBehaviour
         if (gateText != null)
             gateText.text = message;
 
-        RefreshGateVisuals();
+        if (!gateActive)
+            return;
+
+        bool showingCustomTutorialUi = UpdateSceneTutorialUiVisibility();
+        if (gateWindowRoot != null)
+            gateWindowRoot.SetActive(!showingCustomTutorialUi);
     }
 
     private void SetGateVisible(bool visible)
     {
+        bool showingCustomTutorialUi = visible && UpdateSceneTutorialUiVisibility();
+
+        if (!visible)
+            HideAllSceneTutorialUi();
+
         if (gateWindowRoot != null)
-            gateWindowRoot.SetActive(visible);
+            gateWindowRoot.SetActive(visible && !showingCustomTutorialUi);
     }
 
     private string BuildUpPracticeMessage()
@@ -729,190 +740,119 @@ public class RhythmTutorialCoach : MonoBehaviour
         }
     }
 
-    private void RefreshGateVisuals()
+    private void ResolveSceneTutorialUi()
     {
-        bool showDirectionImage = flowState == FlowState.DirectionInfoGate;
-        float layoutShiftX = showDirectionImage ? -Mathf.Abs(directionTutorialImageLeftShift) : 0f;
-
-        if (gatePanelRect != null)
-        {
-            gatePanelRect.sizeDelta = showDirectionImage ? directionPanelSizeWithImage : panelSize;
-            gatePanelRect.anchoredPosition = new Vector2(layoutShiftX, 0f);
-        }
-
-        if (directionTutorialImageRect != null)
-            directionTutorialImageRect.anchoredPosition = directionTutorialImageOffset + new Vector2(layoutShiftX, 0f);
-
-        if (directionTutorialImage == null)
+        Scene tutorialScene = SceneManager.GetSceneByName(tutorialSceneName);
+        if (!tutorialScene.IsValid() || !tutorialScene.isLoaded)
             return;
 
-        Sprite tutorialSprite = showDirectionImage ? GetDirectionTutorialSprite(CurrentTargetDirection()) : null;
-        directionTutorialImage.sprite = tutorialSprite;
-        if (directionTutorialImageRect != null)
-            directionTutorialImageRect.sizeDelta = GetDirectionTutorialImageDisplaySize(tutorialSprite);
-        directionTutorialImage.enabled = showDirectionImage && tutorialSprite != null;
+        GameObject canvasObject = FindSceneGameObject(tutorialScene, "Canvas");
+        if (canvasObject == null)
+            return;
+
+        rhythmStartTutorialUi = FindTutorialUi(canvasObject.transform, "RhythmStartTutorial");
+        upPracticeTutorialUi = FindTutorialUi(canvasObject.transform, "UpPracticeTutorial");
+        leftPracticeTutorialUi = FindTutorialUi(canvasObject.transform, "LeftPracticeTutorial");
+        rightPracticeTutorialUi = FindTutorialUi(canvasObject.transform, "RightPracticeTutorial");
+        sequenceTutorialUi = FindTutorialUi(canvasObject.transform, "SequenceTutorial");
+        endTutorialUi = FindTutorialUi(canvasObject.transform, "EndTutorial");
+
+        HideAllSceneTutorialUi();
     }
 
-    private Vector2 GetDirectionTutorialImageDisplaySize(Sprite sprite)
+    private static GameObject FindTutorialUi(Transform canvasTransform, string childName)
     {
-        if (sprite == null)
-            return directionTutorialImageMaxSize;
-
-        Rect spriteRect = sprite.rect;
-        if (spriteRect.width <= 0f || spriteRect.height <= 0f)
-            return directionTutorialImageMaxSize;
-
-        float scaleByWidth = directionTutorialImageMaxSize.x / spriteRect.width;
-        float scaleByHeight = directionTutorialImageMaxSize.y / spriteRect.height;
-        float uniformScale = Mathf.Min(scaleByWidth, scaleByHeight);
-        if (float.IsNaN(uniformScale) || float.IsInfinity(uniformScale) || uniformScale <= 0f)
-            return directionTutorialImageMaxSize;
-
-        return new Vector2(spriteRect.width * uniformScale, spriteRect.height * uniformScale);
+        Transform child = canvasTransform.Find(childName);
+        return child != null ? child.gameObject : null;
     }
 
-    private Sprite GetDirectionTutorialSprite(FlickDirection direction)
+    private static GameObject FindSceneGameObject(Scene scene, string objectName)
     {
-        switch (direction)
+        GameObject[] rootObjects = scene.GetRootGameObjects();
+        for (int i = 0; i < rootObjects.Length; i++)
         {
-            case FlickDirection.Left:
-                return LoadLeftTutorialSprite();
-
-            case FlickDirection.Right:
-                return LoadRightTutorialSprite();
-
-            default:
-                return LoadUpTutorialSprite();
+            Transform match = FindChildRecursive(rootObjects[i].transform, objectName);
+            if (match != null)
+                return match.gameObject;
         }
+
+        return null;
     }
 
-    private Sprite LoadUpTutorialSprite()
+    private static Transform FindChildRecursive(Transform parent, string objectName)
     {
-        if (upTutorialSprite != null)
-            return upTutorialSprite;
+        if (parent.name == objectName)
+            return parent;
 
-        Texture2D texture = null;
-        if (!string.IsNullOrWhiteSpace(upTutorialImageResourcePath))
-            texture = Resources.Load<Texture2D>(upTutorialImageResourcePath);
-
-#if UNITY_EDITOR
-        if (texture == null && !string.IsNullOrWhiteSpace(upTutorialImageEditorAssetPath))
-            texture = UnityEditor.AssetDatabase.LoadAssetAtPath<Texture2D>(upTutorialImageEditorAssetPath);
-#endif
-
-        if (texture == null)
+        for (int i = 0; i < parent.childCount; i++)
         {
-            if (!loggedMissingUpTutorialImage)
-            {
-                Debug.LogWarning(
-                    "RhythmTutorialCoach: Couldn't load Up tutorial image. " +
-                    "Expected Resources path '" + upTutorialImageResourcePath + "' " +
-                    "or editor asset '" + upTutorialImageEditorAssetPath + "'.");
-                loggedMissingUpTutorialImage = true;
-            }
-            return null;
+            Transform match = FindChildRecursive(parent.GetChild(i), objectName);
+            if (match != null)
+                return match;
         }
 
-        upTutorialSprite = Sprite.Create(
-            texture,
-            new Rect(0f, 0f, texture.width, texture.height),
-            new Vector2(0.5f, 0.5f),
-            100f);
-        upTutorialSprite.name = "UpTutorialSprite";
-        return upTutorialSprite;
+        return null;
     }
 
-    private Sprite LoadLeftTutorialSprite()
+    private void HideAllSceneTutorialUi()
     {
-        if (leftTutorialSprite != null)
-            return leftTutorialSprite;
-
-        Texture2D texture = null;
-        if (!string.IsNullOrWhiteSpace(leftTutorialImageResourcePath))
-            texture = Resources.Load<Texture2D>(leftTutorialImageResourcePath);
-
-#if UNITY_EDITOR
-        if (texture == null && !string.IsNullOrWhiteSpace(leftTutorialImageEditorAssetPath))
-            texture = UnityEditor.AssetDatabase.LoadAssetAtPath<Texture2D>(leftTutorialImageEditorAssetPath);
-#endif
-
-        if (texture == null)
-        {
-            if (!loggedMissingLeftTutorialImage)
-            {
-                Debug.LogWarning(
-                    "RhythmTutorialCoach: Couldn't load Left tutorial image. " +
-                    "Expected Resources path '" + leftTutorialImageResourcePath + "' " +
-                    "or editor asset '" + leftTutorialImageEditorAssetPath + "'.");
-                loggedMissingLeftTutorialImage = true;
-            }
-            return null;
-        }
-
-        leftTutorialSprite = Sprite.Create(
-            texture,
-            new Rect(0f, 0f, texture.width, texture.height),
-            new Vector2(0.5f, 0.5f),
-            100f);
-        leftTutorialSprite.name = "LeftTutorialSprite";
-        return leftTutorialSprite;
+        SetTutorialUiActive(rhythmStartTutorialUi, false);
+        SetTutorialUiActive(upPracticeTutorialUi, false);
+        SetTutorialUiActive(leftPracticeTutorialUi, false);
+        SetTutorialUiActive(rightPracticeTutorialUi, false);
+        SetTutorialUiActive(sequenceTutorialUi, false);
+        SetTutorialUiActive(endTutorialUi, false);
     }
 
-    private Sprite LoadRightTutorialSprite()
+    private bool UpdateSceneTutorialUiVisibility()
     {
-        if (rightTutorialSprite != null)
-            return rightTutorialSprite;
+        HideAllSceneTutorialUi();
 
-        Texture2D texture = null;
-        if (!string.IsNullOrWhiteSpace(rightTutorialImageResourcePath))
-            texture = Resources.Load<Texture2D>(rightTutorialImageResourcePath);
-
-#if UNITY_EDITOR
-        if (texture == null && !string.IsNullOrWhiteSpace(rightTutorialImageEditorAssetPath))
-            texture = UnityEditor.AssetDatabase.LoadAssetAtPath<Texture2D>(rightTutorialImageEditorAssetPath);
-#endif
-
-        if (texture == null)
+        GameObject tutorialUiToShow = null;
+        switch (flowState)
         {
-            if (!loggedMissingRightTutorialImage)
-            {
-                Debug.LogWarning(
-                    "RhythmTutorialCoach: Couldn't load Right tutorial image. " +
-                    "Expected Resources path '" + rightTutorialImageResourcePath + "' " +
-                    "or editor asset '" + rightTutorialImageEditorAssetPath + "'.");
-                loggedMissingRightTutorialImage = true;
-            }
-            return null;
+            case FlowState.IntroHowToPlayGate:
+                tutorialUiToShow = rhythmStartTutorialUi;
+                break;
+
+            case FlowState.DirectionInfoGate:
+                switch (CurrentTargetDirection())
+                {
+                    case FlickDirection.Left:
+                        tutorialUiToShow = leftPracticeTutorialUi;
+                        break;
+
+                    case FlickDirection.Right:
+                        tutorialUiToShow = rightPracticeTutorialUi;
+                        break;
+
+                    default:
+                        tutorialUiToShow = upPracticeTutorialUi;
+                        break;
+                }
+                break;
+
+            case FlowState.SequenceInfoGate:
+                tutorialUiToShow = sequenceTutorialUi;
+                break;
+
+            case FlowState.SuccessGate:
+                tutorialUiToShow = endTutorialUi;
+                break;
         }
 
-        rightTutorialSprite = Sprite.Create(
-            texture,
-            new Rect(0f, 0f, texture.width, texture.height),
-            new Vector2(0.5f, 0.5f),
-            100f);
-        rightTutorialSprite.name = "RightTutorialSprite";
-        return rightTutorialSprite;
+        bool hasCustomUi = tutorialUiToShow != null;
+        SetTutorialUiActive(tutorialUiToShow, hasCustomUi);
+        if (gateText != null)
+            gateText.gameObject.SetActive(!hasCustomUi);
+
+        return hasCustomUi;
     }
 
-    private void DestroyDirectionTutorialSprites()
+    private static void SetTutorialUiActive(GameObject tutorialUi, bool active)
     {
-        if (upTutorialSprite != null)
-        {
-            Destroy(upTutorialSprite);
-            upTutorialSprite = null;
-        }
-
-        if (leftTutorialSprite != null)
-        {
-            Destroy(leftTutorialSprite);
-            leftTutorialSprite = null;
-        }
-
-        if (rightTutorialSprite != null)
-        {
-            Destroy(rightTutorialSprite);
-            rightTutorialSprite = null;
-        }
+        if (tutorialUi != null)
+            tutorialUi.SetActive(active);
     }
 
     private void HandleSequenceJudgement(
