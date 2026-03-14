@@ -12,6 +12,7 @@ public class RhythmMusicPlayer : MonoBehaviour
     private bool wasInTension = false;
     private bool sawPlaybackActiveInCurrentTension = false;
     private bool isPausedForGame = false;
+    private bool tutorialLoopMode = false;
 
     void Awake()
     {
@@ -28,13 +29,7 @@ public class RhythmMusicPlayer : MonoBehaviour
 
     void Start()
     {
-        if (musicEvent.IsNull)
-        {
-            Debug.LogError("RhythmMusicPlayer has no FMOD music event assigned.");
-            return;
-        }
-
-        musicInstance = RuntimeManager.CreateInstance(musicEvent);
+        RecreateMusicInstance();
         ResolveBobberArcCaster();
     }
 
@@ -62,6 +57,7 @@ public class RhythmMusicPlayer : MonoBehaviour
         {
             hasProcessedMusicEnd = false;
             sawPlaybackActiveInCurrentTension = false;
+            tutorialLoopMode = false;
             StopRhythmPlayback();
         }
 
@@ -81,9 +77,39 @@ public class RhythmMusicPlayer : MonoBehaviour
                 sawPlaybackActiveInCurrentTension = true;
                 return;
             }
-
+            
             // If tension is active but playback has not started yet, retry a fresh start.
             if (!sawPlaybackActiveInCurrentTension && playbackState == PLAYBACK_STATE.STOPPED)
+            {
+                StartRhythmPlayback();
+                wasInTension = bobberArcCaster != null &&
+                               bobberArcCaster.CurrentState == BobberArcCaster.State.Tension;
+                return;
+            }    
+
+            // if playback has happened, tension is active, but not currently playing, the song is over
+            // spawn the final reel note and enter overtime
+            if (!RhythmConductor.Instance.isOvertime && sawPlaybackActiveInCurrentTension && playbackState == PLAYBACK_STATE.STOPPED)
+            {
+                // If there's no active reel and no notes left, spawn the final one
+                if (RhythmConductor.Instance.activeReel == null && RhythmConductor.Instance.activeNotes.Count == 0)
+                {
+                    RhythmConductor.Instance.StartOvertime();
+                    RhythmConductor.Instance.SpawnFinalPlaytestReel();
+                    
+                    // sawPlaybackActiveInCurrentTension = false; 
+                    return;
+                }
+            }
+
+            if (RhythmConductor.Instance.activeReel != null)
+            {
+                // Still updating wasInTension so the tension-break logic doesn't fire
+                wasInTension = bobberArcCaster != null && bobberArcCaster.CurrentState == BobberArcCaster.State.Tension;
+                return; 
+            }
+
+            if (tutorialLoopMode && playbackState == PLAYBACK_STATE.STOPPED)
             {
                 StartRhythmPlayback();
                 wasInTension = bobberArcCaster != null &&
@@ -101,12 +127,12 @@ public class RhythmMusicPlayer : MonoBehaviour
 
             hasProcessedMusicEnd = true;
             StopRhythmPlayback();
-
-            if (SceneLoading.Instance != null)
-                SceneLoading.Instance.EndRhythmEncounter();
+            Debug.Log("Music ended, resolving tension encounter.");
 
             if (bobberArcCaster != null)
                 bobberArcCaster.CompleteRhythmEncounter();
+            else if (SceneLoading.Instance != null)
+                SceneLoading.Instance.EndRhythmEncounter();
         }
 
         wasInTension = bobberArcCaster != null &&
@@ -117,11 +143,16 @@ public class RhythmMusicPlayer : MonoBehaviour
     {
         hasProcessedMusicEnd = false;
 
-        if (RhythmConductor.Instance != null)
+        // Keep tutorial practice notes alive across music loops.
+        if (RhythmConductor.Instance != null && !tutorialLoopMode)
             RhythmConductor.Instance.ResetBeatmapForReplay();
 
         StopRhythmPlayback();
         musicInstance.setTimelinePosition(0);
+        musicInstance.start();
+            if (RhythmBeatPulse.Instance != null)
+            RhythmBeatPulse.Instance.ResetTimer();
+
         musicInstance.start();
     }
 
@@ -158,16 +189,45 @@ public class RhythmMusicPlayer : MonoBehaviour
         wasInTension = false;
         sawPlaybackActiveInCurrentTension = false;
         isPausedForGame = false;
+        tutorialLoopMode = false;
         StopRhythmPlayback();
 
         if (RhythmConductor.Instance != null)
             RhythmConductor.Instance.ResetBeatmapForReplay();
     }
 
+    public void SetMusicEvent(EventReference newMusicEvent)
+    {
+        musicEvent = newMusicEvent;
+        RecreateMusicInstance();
+    }
+
     private void ResolveBobberArcCaster()
     {
         if (bobberArcCaster == null)
             bobberArcCaster = FindObjectOfType<BobberArcCaster>();
+    }
+
+    private void RecreateMusicInstance()
+    {
+        if (musicInstance.isValid())
+        {
+            musicInstance.stop(FMOD.Studio.STOP_MODE.IMMEDIATE);
+            musicInstance.release();
+        }
+
+        if (musicEvent.IsNull)
+        {
+            Debug.LogError("RhythmMusicPlayer has no FMOD music event assigned.");
+            return;
+        }
+
+        musicInstance = RuntimeManager.CreateInstance(musicEvent);
+    }
+    
+    public void SetTutorialLoopMode(bool enabled)
+    {
+        tutorialLoopMode = enabled;
     }
 
     void OnDestroy()

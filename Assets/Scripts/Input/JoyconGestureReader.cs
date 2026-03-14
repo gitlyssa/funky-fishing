@@ -5,6 +5,7 @@ public class JoyconGestureReader : MonoBehaviour
 {
     RhythmInputProcessor processor;
     public int deviceId = -1;
+    private int _knownConnectionRevision = -1;
 
     public float sensitivity = 2.0f;
     private Vector3 currentEuler = Vector3.zero;
@@ -21,29 +22,40 @@ public class JoyconGestureReader : MonoBehaviour
     {
         processor = GetComponent<RhythmInputProcessor>();
         currentPos = transform.position - Vector3.forward * sensitivity;
-        int devicesFound = JSL.JslConnectDevices();
-        if (devicesFound > 0)
-        {
-            int[] deviceHandles = new int[devicesFound];
-            JSL.JslGetConnectedDeviceHandles(deviceHandles, devicesFound);
-            deviceId = deviceHandles[0]; // Use the first connected device
-            Debug.Log("Connected to Joy-Con with Device ID: " + deviceId);
-            JSL.JslStartContinuousCalibration(deviceId);
-        }
-        else
-        {
-            Debug.LogWarning("No Joy-Con devices found.");
-        }
+        ConnectDevice();
+        _knownConnectionRevision = JoyConConnectionService.GetRevision();
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (deviceId == -1) return; 
+        int revision = JoyConConnectionService.GetRevision();
+        if (revision != _knownConnectionRevision)
+        {
+            _knownConnectionRevision = revision;
+            ConnectDevice();
+        }
 
-        JSL.IMU_STATE imuState = JSL.JslGetIMUState(deviceId);
+        if (deviceId < 0 || !JoyConConnectionService.IsHandleConnected(deviceId))
+        {
+            deviceId = -1;
+            JoyConConnectionService.RequestScan();
+            return;
+        }
 
-        JSL.MOTION_STATE motState = JSL.JslGetMotionState(deviceId);
+        JSL.MOTION_STATE motState;
+        JSL.JOY_SHOCK_STATE state;
+        try
+        {
+            motState = JSL.JslGetMotionState(deviceId);
+            state = JSL.JslGetSimpleState(deviceId);
+        }
+        catch
+        {
+            deviceId = -1;
+            JoyConConnectionService.RequestScan();
+            return;
+        }
 
         Quaternion currentRot = new Quaternion(motState.quatX, -motState.quatY, motState.quatZ, motState.quatW);
 
@@ -74,10 +86,6 @@ public class JoyconGestureReader : MonoBehaviour
             Mathf.Clamp(yInput, -1.5f, 1.5f)
         );
 
-        JSL.JOY_SHOCK_STATE state = JSL.JslGetSimpleState(deviceId);
-
-        if (deviceId == -1) return; 
-
 
         bool northPressed = (state.buttons & (1 << JSL.ButtonMaskN)) != 0;
         bool upPressed = (state.buttons & (1 << JSL.ButtonMaskUp)) != 0;
@@ -100,5 +108,29 @@ public class JoyconGestureReader : MonoBehaviour
 
         processor.SpinInput = new Vector2(stickX, stickY);
 
+    }
+
+    private void ConnectDevice()
+    {
+        int[] handles = JoyConConnectionService.GetConnectedHandles();
+        if (handles == null || handles.Length == 0)
+        {
+            deviceId = -1;
+            JoyConConnectionService.RequestScan();
+            Debug.LogWarning("No Joy-Con devices found.");
+            return;
+        }
+
+        deviceId = handles[0];
+        Debug.Log("Connected to Joy-Con with Device ID: " + deviceId);
+        try
+        {
+            JSL.JslStartContinuousCalibration(deviceId);
+        }
+        catch
+        {
+            deviceId = -1;
+            JoyConConnectionService.RequestScan();
+        }
     }
 }

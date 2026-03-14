@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
+using UnityEngine.UI;
 using System.Collections;
 
 public class PauseManager : MonoBehaviour
@@ -36,6 +37,7 @@ public class PauseManager : MonoBehaviour
         if (ControlsPanel != null)
             ControlsPanel.SetActive(false);
 
+        DisableDecorativePauseOverlayRaycasts();
         ResolveSelectionReferences();
         ClearSelectedObject();
     }
@@ -53,6 +55,9 @@ public class PauseManager : MonoBehaviour
 
         if (isPaused && WasCancelBackPressed())
         {
+            if (TryCloseTuningPanel())
+                return;
+
             if (IsControlsOpen())
                 BackToPauseMenu();
             else
@@ -61,7 +66,10 @@ public class PauseManager : MonoBehaviour
         }
 
         if (isPaused)
-            EnsurePausedSelection();
+        {
+            if (!TryEnsureTuningSelection())
+                EnsurePausedSelection();
+        }
     }
 
     public void PauseGame()
@@ -148,6 +156,40 @@ public class PauseManager : MonoBehaviour
         return ControlsPanel != null && ControlsPanel.activeInHierarchy;
     }
 
+    private bool TryCloseTuningPanel()
+    {
+        FishingPauseTuningPanel fishing = GetComponent<FishingPauseTuningPanel>();
+        if (fishing != null && fishing.IsTuningPanelOpen())
+        {
+            fishing.CloseTuningPanel();
+            return true;
+        }
+
+        RhythmPauseTuningPanel tuning = GetComponent<RhythmPauseTuningPanel>();
+        if (tuning == null || !tuning.IsTuningPanelOpen())
+            return false;
+
+        tuning.CloseTuningPanel();
+        return true;
+    }
+
+    private bool TryEnsureTuningSelection()
+    {
+        FishingPauseTuningPanel fishing = GetComponent<FishingPauseTuningPanel>();
+        if (fishing != null && fishing.IsTuningPanelOpen())
+        {
+            fishing.EnsureSelection();
+            return true;
+        }
+
+        RhythmPauseTuningPanel tuning = GetComponent<RhythmPauseTuningPanel>();
+        if (tuning == null || !tuning.IsTuningPanelOpen())
+            return false;
+
+        tuning.EnsureSelection();
+        return true;
+    }
+
     private void EnsurePausedSelection()
     {
         EventSystem evt = EventSystem.current;
@@ -192,6 +234,26 @@ public class PauseManager : MonoBehaviour
         }
 
         return null;
+    }
+
+    private void DisableDecorativePauseOverlayRaycasts()
+    {
+        if (PausePanel == null)
+            return;
+
+        DisableGraphicRaycastTargetByName(PausePanel.transform, "PausedTextImg");
+        DisableGraphicRaycastTargetByName(PausePanel.transform, "PausedText");
+    }
+
+    private static void DisableGraphicRaycastTargetByName(Transform root, string targetName)
+    {
+        GameObject target = FindByNameRecursive(root, targetName);
+        if (target == null)
+            return;
+
+        Graphic graphic = target.GetComponent<Graphic>();
+        if (graphic != null)
+            graphic.raycastTarget = false;
     }
 
     private void QueueSelect(GameObject target)

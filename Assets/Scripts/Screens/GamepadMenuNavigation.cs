@@ -14,7 +14,8 @@ public class GamepadMenuNavigation : MonoBehaviour
         "MainMenu",
         "PondSelect",
         "ControllerMenu",
-        "Pond_Level_1"
+        "Pond_Level_1",
+        "Tutorial_Level"
     };
 
     [Header("Navigation Input")]
@@ -91,6 +92,21 @@ public class GamepadMenuNavigation : MonoBehaviour
 
     private void Update()
     {
+        if (IsTutorialGateBlockingUiNavigation())
+        {
+            EventSystem tutorialEvt = EventSystem.current;
+            if (tutorialEvt != null)
+            {
+                tutorialEvt.sendNavigationEvents = false;
+                if (tutorialEvt.currentSelectedGameObject != null)
+                    tutorialEvt.SetSelectedGameObject(null);
+            }
+
+            currentButton = null;
+            SetIndicatorVisible(false);
+            return;
+        }
+
         if (!IsEnabledScene())
         {
             EventSystem inactiveEvt = EventSystem.current;
@@ -161,10 +177,15 @@ public class GamepadMenuNavigation : MonoBehaviour
         if (!enabledScenes.Contains(sceneName))
             return false;
 
-        if (sceneName == "Pond_Level_1")
+        if (sceneName == "Pond_Level_1" || sceneName == "Tutorial_Level")
             return Time.timeScale <= 0f;
 
         return true;
+    }
+
+    private static bool IsTutorialGateBlockingUiNavigation()
+    {
+        return TutorialStartGate.IsOverlayGateActive() || RhythmTutorialCoach.IsOverlayGateActive();
     }
 
     private void RefreshActiveButtons()

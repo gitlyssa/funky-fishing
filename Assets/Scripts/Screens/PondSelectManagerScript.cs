@@ -8,4 +8,10 @@ public class PondSelectManagerScript : MonoBehaviour
         Debug.Log("Funk Pond Selected");
         SceneTransitionManager.LoadSceneWithLoading("Pond_Level_1");
     }
+
+    public void TutorialSelected()
+    {
+        Debug.Log("Tutorial Selected");
+        SceneTransitionManager.LoadSceneWithLoading("Tutorial_Level");
+    }
 } 

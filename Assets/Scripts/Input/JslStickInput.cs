@@ -16,15 +16,6 @@ public class JslStickInput : MonoBehaviour
     }
 
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
-    private static extern int JslConnectDevices();
-
-    [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
-    private static extern int JslGetConnectedDeviceHandles([Out] int[] deviceHandleArray, int size);
-
-    [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
-    private static extern bool JslStillConnected(int deviceId);
-
-    [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
     private static extern JOY_SHOCK_STATE JslGetSimpleState(int deviceId);
 
     [Header("Device")]
@@ -49,17 +40,26 @@ public class JslStickInput : MonoBehaviour
 
     private int[] _handles = Array.Empty<int>();
     private int _id = -1;
+    private int _knownConnectionRevision = -1;
     private float _nextReconnectTime;
     private float _nextMissingDeviceWarningTime;
 
     void Start()
     {
         Connect();
+        _knownConnectionRevision = JoyConConnectionService.GetRevision();
         _nextReconnectTime = Time.unscaledTime + Mathf.Max(0.1f, reconnectInterval);
     }
 
     void Update()
     {
+        int revision = JoyConConnectionService.GetRevision();
+        if (revision != _knownConnectionRevision)
+        {
+            _knownConnectionRevision = revision;
+            Connect();
+        }
+
         if (toggleDebugKey != KeyCode.None && Input.GetKeyDown(toggleDebugKey))
         {
             showDebugOverlay = !showDebugOverlay;
@@ -144,12 +144,13 @@ public class JslStickInput : MonoBehaviour
     [ContextMenu("Reconnect")]
     public void Connect()
     {
-        int count = JslConnectDevices();
-        _handles = new int[Mathf.Max(0, count)];
-        if (count > 0) JslGetConnectedDeviceHandles(_handles, _handles.Length);
+        _handles = JoyConConnectionService.GetConnectedHandles();
+        _knownConnectionRevision = JoyConConnectionService.GetRevision();
 
-        if (_handles.Length == 0)
+        if (_handles == null || _handles.Length == 0)
         {
+            _handles = Array.Empty<int>();
+            JoyConConnectionService.RequestScan();
             if (Time.unscaledTime >= _nextMissingDeviceWarningTime)
             {
                 Debug.LogWarning("JslStickInput: No JoyShockLibrary devices found.");
@@ -171,10 +172,19 @@ public class JslStickInput : MonoBehaviour
     {
         rawStick = Vector2.zero;
 
-        if (deviceId < 0 || !JslStillConnected(deviceId))
+        if (!JoyConConnectionService.IsHandleConnected(deviceId))
             return false;
 
-        var st = JslGetSimpleState(deviceId);
+        JOY_SHOCK_STATE st;
+        try
+        {
+            st = JslGetSimpleState(deviceId);
+        }
+        catch
+        {
+            JoyConConnectionService.RequestScan();
+            return false;
+        }
 
         Vector2 left = new Vector2(st.stickLX, st.stickLY);
         Vector2 right = new Vector2(st.stickRX, st.stickRY);
