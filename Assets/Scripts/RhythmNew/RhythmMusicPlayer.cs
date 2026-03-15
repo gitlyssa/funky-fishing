@@ -13,6 +13,7 @@ public class RhythmMusicPlayer : MonoBehaviour
     private bool sawPlaybackActiveInCurrentTension = false;
     private bool isPausedForGame = false;
     private bool tutorialLoopMode = false;
+    private bool tutorialPlaybackSuppressed = false;
 
     void Awake()
     {
@@ -46,6 +47,13 @@ public class RhythmMusicPlayer : MonoBehaviour
 
         bool inTension = bobberArcCaster != null &&
                          bobberArcCaster.CurrentState == BobberArcCaster.State.Tension;
+
+        if (tutorialPlaybackSuppressed)
+        {
+            StopRhythmPlayback();
+            wasInTension = inTension;
+            return;
+        }
 
         if (inTension && !wasInTension)
         {
@@ -89,7 +97,10 @@ public class RhythmMusicPlayer : MonoBehaviour
 
             // if playback has happened, tension is active, but not currently playing, the song is over
             // spawn the final reel note and enter overtime
-            if (!RhythmConductor.Instance.isOvertime && sawPlaybackActiveInCurrentTension && playbackState == PLAYBACK_STATE.STOPPED)
+            if (!RhythmConductor.Instance.isOvertime &&
+                sawPlaybackActiveInCurrentTension &&
+                playbackState == PLAYBACK_STATE.STOPPED &&
+                !RhythmConductor.Instance.AreTutorialReelsSuppressed())
             {
                 // If there's no active reel and no notes left, spawn the final one
                 if (RhythmConductor.Instance.activeReel == null && RhythmConductor.Instance.activeNotes.Count == 0)
@@ -228,6 +239,14 @@ public class RhythmMusicPlayer : MonoBehaviour
     public void SetTutorialLoopMode(bool enabled)
     {
         tutorialLoopMode = enabled;
+    }
+
+    public void SetTutorialPlaybackSuppressed(bool suppressed)
+    {
+        tutorialPlaybackSuppressed = suppressed;
+
+        if (suppressed)
+            StopRhythmPlayback();
     }
 
     void OnDestroy()
