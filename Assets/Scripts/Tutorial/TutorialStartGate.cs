@@ -208,6 +208,54 @@ public class TutorialStartGate : MonoBehaviour
         Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
 
+        if (gateStepIndex == 1)
+        {
+            if (flowState != TutorialFlowState.AwaitCastingTargetMove)
+                BeginAwaitCastingTargetMove();
+
+            if (HasMovedCastingTarget())
+            {
+                DismissGate();
+                flowState = TutorialFlowState.AwaitCastHintDelay;
+                showCastHintAtUnscaledTime = Time.unscaledTime + castHintDelaySeconds;
+            }
+
+            return;
+        }
+
+        if (gateStepIndex == 2)
+        {
+            if (flowState != TutorialFlowState.AwaitSuccessfulCast)
+                BeginAwaitSuccessfulCast();
+
+            if (HasSuccessfullyCast())
+            {
+                DismissGate();
+                flowState = TutorialFlowState.AwaitYankHintDelay;
+                showYankHintAtUnscaledTime = Time.unscaledTime + yankHintDelayAfterLandSeconds;
+            }
+
+            return;
+        }
+
+        if (gateStepIndex == 3)
+        {
+            if (flowState != TutorialFlowState.AwaitSuccessfulYank)
+                BeginAwaitSuccessfulYank();
+
+            if (HasSuccessfullyYanked())
+            {
+                DismissGate();
+                if (SpawnSingleTutorialFish())
+                {
+                    flowState = TutorialFlowState.AwaitCatchHintDelay;
+                    showCatchHintAtUnscaledTime = Time.unscaledTime + catchHintDelayAfterSpawnSeconds;
+                }
+            }
+
+            return;
+        }
+
         if (WasConfirmPressedThisFrame())
             AdvanceGateOrDismiss();
     }
@@ -278,7 +326,7 @@ public class TutorialStartGate : MonoBehaviour
         Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
 
-        Time.timeScale = 0f;
+        Time.timeScale = IsInteractiveGameplayGate(stepIndex) ? 1f : 0f;
         gateActive = true;
         gateStepIndex = stepIndex;
         DisablePauseManagers();
@@ -342,33 +390,34 @@ public class TutorialStartGate : MonoBehaviour
         cursorStateCached = true;
     }
 
+    private bool IsInteractiveGameplayGate(int stepIndex)
+    {
+        return stepIndex == 1 || stepIndex == 2 || stepIndex == 3;
+    }
+
     private void AdvanceGateOrDismiss()
     {
         if (gateStepIndex == 0)
         {
             gateStepIndex = 1;
+            BeginAwaitCastingTargetMove();
+            Time.timeScale = 1f;
             RefreshGateText();
             return;
         }
 
         if (gateStepIndex == 1)
         {
-            DismissGate();
-            BeginAwaitCastingTargetMove();
             return;
         }
 
         if (gateStepIndex == 2)
         {
-            DismissGate();
-            BeginAwaitSuccessfulCast();
             return;
         }
 
         if (gateStepIndex == 3)
         {
-            DismissGate();
-            BeginAwaitSuccessfulYank();
             return;
         }
 
