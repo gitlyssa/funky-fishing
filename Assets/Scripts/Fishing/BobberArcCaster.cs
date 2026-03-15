@@ -150,6 +150,7 @@ public class BobberArcCaster : MonoBehaviour
     private Vector3 _hookedFishCenterTarget;
     private bool _hookedFishMovingToCenter;
     private float _hookedFishSwimSeed;
+    private bool _isSuccessSequenceActive;
 
     [Header("Success Requirements")]
     public int minimumAccuracyForCatch = 65;
@@ -162,6 +163,7 @@ public class BobberArcCaster : MonoBehaviour
         CurrentState == State.Tension &&
         _hookedFish != null;
     public GameObject HookedFish => _hookedFish;
+    public bool IsSuccessSequenceActive => _isSuccessSequenceActive;
 
     void Start()
     {
@@ -317,6 +319,7 @@ public class BobberArcCaster : MonoBehaviour
             if (SceneLoading.Instance != null)
                 SceneLoading.Instance.HideScoringCircleForCatchSequence();
 
+            _isSuccessSequenceActive = true;
             BeginRodReturnForSuccessSequence();
 
             _hookedFish = null; // Remove reference so Consume/Restore doesn't touch it
@@ -479,6 +482,8 @@ public class BobberArcCaster : MonoBehaviour
         }
         else if (TryResolveCatchAnimation())
         {
+            if (pondManager != null)
+                pondManager.UnregisterFish(fish);
             yield return StartCoroutine(catchAnimation.TrophyRoutine(fish));
         }
         else
@@ -495,6 +500,7 @@ public class BobberArcCaster : MonoBehaviour
 
     private void FinishTensionState()
     {
+        _isSuccessSequenceActive = false;
         SceneLoading.MigratedFish = null;
         if (SceneLoading.Instance != null)
             SceneLoading.Instance.EndRhythmEncounter();
