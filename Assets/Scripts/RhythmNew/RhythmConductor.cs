@@ -543,10 +543,10 @@ public class RhythmConductor : MonoBehaviour
     SpawnStaticRing(rStartPerf, new Color(1f, 0.9f, 0.5f, 0.8f), 0.02f, "Ring_Perfect_Border");
 
         
-        float goodTimeOffset = RhythmJudge.Instance.GoodWindow;
-        float goodT = 1f - (goodTimeOffset / noteTravelTime);
-        float goodRadius = Mathf.Lerp(spawnRadius, hitRingRadius, noteScaleCurve.Evaluate(goodT));
-        SpawnStaticRing(goodRadius, goodGuidelineColor, ringThickness, "Ring_Good_Entry");
+        // float goodTimeOffset = RhythmJudge.Instance.GoodWindow;
+        // float goodT = 1f - (goodTimeOffset / noteTravelTime);
+        // float goodRadius = Mathf.Lerp(spawnRadius, hitRingRadius, noteScaleCurve.Evaluate(goodT));
+        // SpawnStaticRing(goodRadius, goodGuidelineColor, ringThickness, "Ring_Good_Entry");
 
     }
 
