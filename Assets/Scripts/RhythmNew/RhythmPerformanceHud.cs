@@ -90,6 +90,8 @@ public class RhythmPerformanceHud : MonoBehaviour
     private int _score;
     private int _baseScore;
     private float _lastFiredMultiplier = 1f;
+    private float _maxPowerTimer = 0f; // New timer for the visual loop
+    [SerializeField] private float maxPowerFlashInterval = 0.5f;
 
     [Header("Reel Status (Pulsing)")]
     [SerializeField] private Sprite reelStatusSprite;
@@ -112,6 +114,12 @@ public class RhythmPerformanceHud : MonoBehaviour
             return totalJudged > 0 ? ((_perfectCount * 1f) + (_goodCount * 0.7f)) / totalJudged * 100f : 0f;
         }
     }
+
+    public int CurrentCombo => _combo;
+    public int PerfectCount => _perfectCount;
+    public int GoodCount => _goodCount;
+    public int MissCount => _missCount;
+    public int MaxCombo => _maxCombo;
 
     private enum ResultType
     {
@@ -819,6 +827,8 @@ public class RhythmPerformanceHud : MonoBehaviour
         _combo = 0;
         _maxCombo = 0;
         _score = 0;
+        _baseScore = 0;
+        _lastFiredMultiplier = 1f;
         HideComboImmediate();
     }
 
@@ -1031,17 +1041,32 @@ public class RhythmPerformanceHud : MonoBehaviour
 
             float currentMultiplier = 1f + (activeReel.Progress * 0.5f);
             currentMultiplier = Mathf.Min(currentMultiplier, 2f); 
-            if (currentMultiplier >= _lastFiredMultiplier + 0.1f) // Only update when multiplier increases by 0.1 or more
-            {
-                _lastFiredMultiplier = currentMultiplier;
 
-                //scale score by multiplier?
-                _score = Mathf.RoundToInt(_baseScore * currentMultiplier);
-                RefreshDetailText();
-      
-  
-                string multText = string.Format(multiplierFormat, currentMultiplier);
-                ShowJudgement(multText, multiplierColor);
+            if(_lastFiredMultiplier < 2.0f)
+            {
+                if (currentMultiplier >= _lastFiredMultiplier + 0.099f || currentMultiplier >= 2.0f)
+                {
+                    _lastFiredMultiplier = (currentMultiplier >= 2.0f) ? 2.0f : Mathf.Floor(currentMultiplier * 10f) / 10f;
+
+                    _score = Mathf.RoundToInt(_baseScore * _lastFiredMultiplier);
+                    RefreshDetailText();
+
+                    // Trigger the Judgement Popup (e.g., "2.0x")
+                    string multText = string.Format(multiplierFormat, _lastFiredMultiplier);
+                    
+                    // Color shift to Red/Neon when Max is reached
+                    Color displayColor = (_lastFiredMultiplier >= 2.0f) ? Color.red : multiplierColor;
+                    ShowJudgement(multText, displayColor);
+                }
+            }
+            else if (_lastFiredMultiplier >= 2.0f)
+            {
+                _maxPowerTimer += Time.deltaTime;
+                if (_maxPowerTimer >= maxPowerFlashInterval)
+                {
+                    _maxPowerTimer = 0f;
+                    TriggerMultiplierPop(2.0f);
+                }
             }
         }
         else
@@ -1050,8 +1075,17 @@ public class RhythmPerformanceHud : MonoBehaviour
             c.a = 0f;
             _reelStatusImage.color = c;
             _lastFiredMultiplier = 1f;
+            _maxPowerTimer = 0f;
 
         }
+    }
+
+    private void TriggerMultiplierPop(float multValue)
+    {
+        string multText = string.Format(multiplierFormat, multValue);
+        Color displayColor = (multValue >= 2.0f) ? Color.red : multiplierColor;
+        
+        ShowJudgement(multText, displayColor);
     }
 
     private static class ListPool
