@@ -418,7 +418,7 @@ public class FishingPauseTuningPanel : MonoBehaviour
         go.transform.SetParent(parent, false);
 
         Image image = go.GetComponent<Image>();
-        image.color = new Color(0.12f, 0.34f, 0.21f, 0.92f);
+        image.color = new Color(0.14f, 0.25f, 0.36f, 0.92f);
 
         _openButton = go.GetComponent<Button>();
         _openButton.targetGraphic = image;
@@ -788,7 +788,7 @@ public class FishingPauseTuningPanel : MonoBehaviour
         fillGo.transform.SetParent(fillAreaGo.transform, false);
         RectTransform fill = fillGo.GetComponent<RectTransform>();
         Stretch(fill);
-        fillGo.GetComponent<Image>().color = new Color(0.30f, 0.80f, 0.46f, 1f);
+        fillGo.GetComponent<Image>().color = new Color(0.20f, 0.72f, 1f, 1f);
 
         GameObject handleGo = new GameObject("Handle", typeof(RectTransform), typeof(Image));
         handleGo.transform.SetParent(sliderGo.transform, false);

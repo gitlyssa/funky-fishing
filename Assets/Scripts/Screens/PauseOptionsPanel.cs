@@ -14,7 +14,7 @@ public class PauseOptionsPanel : MonoBehaviour
     {
         GeneralSettings,
         Controllers,
-        RythmAdvanced,
+        RhythmAdvanced,
         FishingAdvanced
     }
 
@@ -69,7 +69,6 @@ public class PauseOptionsPanel : MonoBehaviour
     {
         public RectTransform Root;
         public Button BackButton;
-        public Button ResetButton;
         public ControllerManagerScript Manager;
     }
 
@@ -93,14 +92,14 @@ public class PauseOptionsPanel : MonoBehaviour
     private RectTransform _panelRoot;
     private RectTransform _contentRoot;
     private RectTransform _fishingHostRoot;
-    private RectTransform _rythmHostRoot;
+    private RectTransform _rhythmHostRoot;
     private GeneralSettingsPage _generalPage;
     private ControllerStatusPage _controllersPage;
-    private PlaceholderPage _rythmLockedPage;
+    private PlaceholderPage _rhythmLockedPage;
     private PlaceholderPage _fishingLockedPage;
     private Button _generalTabButton;
     private Button _controllersTabButton;
-    private Button _rythmTabButton;
+    private Button _rhythmTabButton;
     private Button _fishingTabButton;
 
     private bool _built;
@@ -110,20 +109,22 @@ public class PauseOptionsPanel : MonoBehaviour
     private string _standaloneBackSceneName = "MainMenu";
     private bool _fullscreenEnabled;
     private float _generalRhythmSensitivity;
-    private bool _rythmAdvancedEnabled;
+    private bool _rhythmAdvancedEnabled;
     private bool _fishingAdvancedEnabled;
     private OptionsTab _activeTab = OptionsTab.GeneralSettings;
 
     private const string FullscreenPrefKey = "FunkyFishing.Options.FullscreenEnabled";
     private const string GeneralRhythmSensitivityPrefKey = "FunkyFishing.Options.GeneralRhythmSensitivity";
-    private const string RythmAdvancedPrefKey = "FunkyFishing.Options.RythmAdvancedEnabled";
+    private const string RhythmAdvancedPrefKey = "FunkyFishing.Options.RhythmAdvancedEnabled";
+    private const string LegacyRhythmAdvancedPrefKey = "FunkyFishing.Options.RythmAdvancedEnabled";
     private const string FishingAdvancedPrefKey = "FunkyFishing.Options.FishingAdvancedEnabled";
 
     private void Awake()
     {
         _fullscreenEnabled = PlayerPrefs.GetInt(FullscreenPrefKey, 1) != 0;
         _generalRhythmSensitivity = Mathf.Clamp01(PlayerPrefs.GetFloat(GeneralRhythmSensitivityPrefKey, RhythmPauseTuningPanel.GeneralSensitivityDefault));
-        _rythmAdvancedEnabled = PlayerPrefs.GetInt(RythmAdvancedPrefKey, 0) != 0;
+        _rhythmAdvancedEnabled =
+            PlayerPrefs.GetInt(RhythmAdvancedPrefKey, PlayerPrefs.GetInt(LegacyRhythmAdvancedPrefKey, 0)) != 0;
         _fishingAdvancedEnabled = PlayerPrefs.GetInt(FishingAdvancedPrefKey, 0) != 0;
 
         _pauseManager = GetComponent<PauseManager>();
@@ -280,8 +281,8 @@ public class PauseOptionsPanel : MonoBehaviour
         if (_fishingPanel != null && _fishingHostRoot != null)
             _fishingPanel.PrepareForUnifiedOptions(_fishingHostRoot, CloseOptionsPanel);
 
-        if (_rhythmPanel != null && _rythmHostRoot != null)
-            _rhythmPanel.PrepareForUnifiedOptions(_rythmHostRoot, CloseOptionsPanel);
+        if (_rhythmPanel != null && _rhythmHostRoot != null)
+            _rhythmPanel.PrepareForUnifiedOptions(_rhythmHostRoot, CloseOptionsPanel);
     }
 
     private void CreateOpenButton(Transform parent)
@@ -337,24 +338,24 @@ public class PauseOptionsPanel : MonoBehaviour
 
         _generalTabButton = CreateTabButton(tabRow, "GeneralSettingsTabButton", "General Settings", OptionsTab.GeneralSettings);
         _controllersTabButton = CreateTabButton(tabRow, "ControllersTabButton", "Controllers", OptionsTab.Controllers);
-        _rythmTabButton = CreateTabButton(tabRow, "RythmAdvancedTabButton", "Rythm Advanced", OptionsTab.RythmAdvanced);
+        _rhythmTabButton = CreateTabButton(tabRow, "RhythmAdvancedTabButton", "Rhythm Advanced", OptionsTab.RhythmAdvanced);
         _fishingTabButton = CreateTabButton(tabRow, "FishingAdvancedTabButton", "Fishing Advanced", OptionsTab.FishingAdvanced);
 
         _contentRoot = CreateRect(_panelRoot, "ContentRoot", new Vector2(0f, 0f), new Vector2(1f, 1f), new Vector2(12f, 12f), new Vector2(-12f, -54f));
 
         _generalPage = CreateGeneralSettingsPage(_contentRoot, "GeneralSettingsPage");
         _controllersPage = CreateControllerStatusPage(_contentRoot, "ControllersPage");
-        _rythmLockedPage = CreateAdvancedSettingsLockedPage(
+        _rhythmLockedPage = CreateAdvancedSettingsLockedPage(
             _contentRoot,
-            "RythmAdvancedLockedPage",
-            "Rythm Advanced",
+            "RhythmAdvancedLockedPage",
+            "Rhythm Advanced",
             "Rhythm advanced settings are currently off.\n\nTurn on Rhythm Advanced in the General Settings tab to change this tuning.");
         _fishingLockedPage = CreateAdvancedSettingsLockedPage(
             _contentRoot,
             "FishingAdvancedLockedPage",
             "Fishing Advanced",
             "Fishing advanced settings are currently off.\n\nTurn on Fishing Advanced in the General Settings tab to change this tuning.");
-        _rythmHostRoot = CreatePageRoot(_contentRoot, "RythmAdvancedPage");
+        _rhythmHostRoot = CreatePageRoot(_contentRoot, "RhythmAdvancedPage");
         _fishingHostRoot = CreatePageRoot(_contentRoot, "FishingAdvancedPage");
         RefreshGeneralSettingsUi();
     }
@@ -457,6 +458,7 @@ public class PauseOptionsPanel : MonoBehaviour
         viewportGo.transform.SetParent(body, false);
         RectTransform viewport = viewportGo.GetComponent<RectTransform>();
         Stretch(viewport);
+        viewport.offsetMax = new Vector2(-14f, 0f);
         Image viewportImage = viewportGo.GetComponent<Image>();
         viewportImage.color = new Color(0f, 0f, 0f, 0.01f);
         viewportGo.GetComponent<Mask>().showMaskGraphic = false;
@@ -472,11 +474,11 @@ public class PauseOptionsPanel : MonoBehaviour
         column.offsetMax = new Vector2(-18f, 0f);
 
         VerticalLayoutGroup columnLayout = columnGo.GetComponent<VerticalLayoutGroup>();
-        columnLayout.spacing = 10f;
-        columnLayout.padding = new RectOffset(0, 0, 14, 14);
+        columnLayout.spacing = 6f;
+        columnLayout.padding = new RectOffset(0, 0, 8, 8);
         columnLayout.childAlignment = TextAnchor.UpperLeft;
         columnLayout.childControlWidth = true;
-        columnLayout.childControlHeight = false;
+        columnLayout.childControlHeight = true;
         columnLayout.childForceExpandWidth = true;
         columnLayout.childForceExpandHeight = false;
 
@@ -491,12 +493,15 @@ public class PauseOptionsPanel : MonoBehaviour
         scrollRect.vertical = true;
         scrollRect.movementType = ScrollRect.MovementType.Clamped;
         scrollRect.scrollSensitivity = 24f;
+        scrollRect.verticalScrollbar = CreateGeneralSettingsScrollbar(body);
+        scrollRect.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.AutoHideAndExpandViewport;
+        scrollRect.verticalScrollbarSpacing = 8f;
 
         page.RhythmSensitivityRow = CreateGeneralSliderCard(
             column,
             "RhythmSensitivityCard",
             "Joy-Con Rhythm Sensitivity",
-            "Simplified rhythm sensitivity. This only works while Rythm Advanced is off.",
+            "Higher values make rhythm input stricter and less prone to accidental triggers. Lower values make it looser and easier to trigger by mistake.",
             () => _generalRhythmSensitivity,
             SetGeneralRhythmSensitivity,
             FormatGeneralRhythmSensitivityValue);
@@ -539,8 +544,8 @@ public class PauseOptionsPanel : MonoBehaviour
             column,
             "RhythmAdvancedCard",
             "Rhythm Advanced",
-            "Turn this on to edit the Rythm Advanced tuning tab.",
-            () => SetRythmAdvancedEnabled(!_rythmAdvancedEnabled));
+            "Turn this on to edit the Rhythm Advanced tuning tab.",
+            () => SetRhythmAdvancedEnabled(!_rhythmAdvancedEnabled));
         page.FishingAdvancedToggle = CreateGeneralToggleCard(
             column,
             "FishingAdvancedCard",
@@ -564,35 +569,35 @@ public class PauseOptionsPanel : MonoBehaviour
         cardGo.transform.SetParent(parent, false);
 
         LayoutElement cardLayout = cardGo.GetComponent<LayoutElement>();
-        cardLayout.preferredHeight = 84f;
+        cardLayout.preferredHeight = 72f;
 
         Image cardBg = cardGo.GetComponent<Image>();
         cardBg.color = new Color(0.10f, 0.11f, 0.14f, 0.92f);
 
         RectTransform card = cardGo.GetComponent<RectTransform>();
 
-        TextMeshProUGUI titleLabel = CreateText(card, "Title", title, 16f, FontStyles.Bold, TextAlignmentOptions.Left);
+        TextMeshProUGUI titleLabel = CreateText(card, "Title", title, 14f, FontStyles.Bold, TextAlignmentOptions.Left);
         titleLabel.color = new Color(1f, 0.95f, 0.72f, 1f);
         titleLabel.rectTransform.anchorMin = new Vector2(0f, 1f);
         titleLabel.rectTransform.anchorMax = new Vector2(1f, 1f);
-        titleLabel.rectTransform.offsetMin = new Vector2(16f, -32f);
-        titleLabel.rectTransform.offsetMax = new Vector2(-160f, -8f);
+        titleLabel.rectTransform.offsetMin = new Vector2(16f, -28f);
+        titleLabel.rectTransform.offsetMax = new Vector2(-120f, -8f);
 
-        TextMeshProUGUI descriptionLabel = CreateText(card, "Description", description, 10f, FontStyles.Normal, TextAlignmentOptions.Left);
+        TextMeshProUGUI descriptionLabel = CreateText(card, "Description", description, 9f, FontStyles.Normal, TextAlignmentOptions.Left);
         descriptionLabel.textWrappingMode = TextWrappingModes.Normal;
         descriptionLabel.color = new Color(0.82f, 0.88f, 0.94f, 1f);
         descriptionLabel.rectTransform.anchorMin = new Vector2(0f, 1f);
         descriptionLabel.rectTransform.anchorMax = new Vector2(1f, 1f);
-        descriptionLabel.rectTransform.offsetMin = new Vector2(16f, -54f);
-        descriptionLabel.rectTransform.offsetMax = new Vector2(-120f, -28f);
+        descriptionLabel.rectTransform.offsetMin = new Vector2(16f, -48f);
+        descriptionLabel.rectTransform.offsetMax = new Vector2(-112f, -22f);
 
-        TextMeshProUGUI valueLabel = CreateText(card, "Value", "100%", 15f, FontStyles.Bold, TextAlignmentOptions.Right);
+        TextMeshProUGUI valueLabel = CreateText(card, "Value", "100%", 13f, FontStyles.Bold, TextAlignmentOptions.Right);
         valueLabel.color = new Color(0.95f, 0.87f, 0.45f, 1f);
         valueLabel.rectTransform.anchorMin = new Vector2(1f, 1f);
         valueLabel.rectTransform.anchorMax = new Vector2(1f, 1f);
         valueLabel.rectTransform.pivot = new Vector2(1f, 1f);
-        valueLabel.rectTransform.sizeDelta = new Vector2(92f, 24f);
-        valueLabel.rectTransform.anchoredPosition = new Vector2(-16f, -12f);
+        valueLabel.rectTransform.sizeDelta = new Vector2(92f, 20f);
+        valueLabel.rectTransform.anchoredPosition = new Vector2(-16f, -11f);
 
         Slider slider = CreateStandardSlider(card, "Slider");
         slider.minValue = 0f;
@@ -602,8 +607,8 @@ public class PauseOptionsPanel : MonoBehaviour
         RectTransform sliderRect = slider.transform as RectTransform;
         sliderRect.anchorMin = new Vector2(0f, 0f);
         sliderRect.anchorMax = new Vector2(1f, 0f);
-        sliderRect.offsetMin = new Vector2(16f, 12f);
-        sliderRect.offsetMax = new Vector2(-16f, 26f);
+        sliderRect.offsetMin = new Vector2(16f, 10f);
+        sliderRect.offsetMax = new Vector2(-16f, 20f);
 
         VolumeSliderRow row = new VolumeSliderRow
         {
@@ -635,35 +640,35 @@ public class PauseOptionsPanel : MonoBehaviour
         cardGo.transform.SetParent(parent, false);
 
         LayoutElement cardLayout = cardGo.GetComponent<LayoutElement>();
-        cardLayout.preferredHeight = 84f;
+        cardLayout.preferredHeight = 72f;
 
         Image cardBg = cardGo.GetComponent<Image>();
         cardBg.color = new Color(0.10f, 0.11f, 0.14f, 0.92f);
 
         RectTransform card = cardGo.GetComponent<RectTransform>();
 
-        TextMeshProUGUI titleLabel = CreateText(card, "Title", title, 16f, FontStyles.Bold, TextAlignmentOptions.Left);
+        TextMeshProUGUI titleLabel = CreateText(card, "Title", title, 14f, FontStyles.Bold, TextAlignmentOptions.Left);
         titleLabel.color = new Color(1f, 0.95f, 0.72f, 1f);
         titleLabel.rectTransform.anchorMin = new Vector2(0f, 1f);
         titleLabel.rectTransform.anchorMax = new Vector2(1f, 1f);
-        titleLabel.rectTransform.offsetMin = new Vector2(16f, -32f);
-        titleLabel.rectTransform.offsetMax = new Vector2(-160f, -8f);
+        titleLabel.rectTransform.offsetMin = new Vector2(16f, -28f);
+        titleLabel.rectTransform.offsetMax = new Vector2(-120f, -8f);
 
-        TextMeshProUGUI descriptionLabel = CreateText(card, "Description", description, 10f, FontStyles.Normal, TextAlignmentOptions.Left);
+        TextMeshProUGUI descriptionLabel = CreateText(card, "Description", description, 9f, FontStyles.Normal, TextAlignmentOptions.Left);
         descriptionLabel.textWrappingMode = TextWrappingModes.Normal;
         descriptionLabel.color = new Color(0.82f, 0.88f, 0.94f, 1f);
         descriptionLabel.rectTransform.anchorMin = new Vector2(0f, 1f);
         descriptionLabel.rectTransform.anchorMax = new Vector2(1f, 1f);
-        descriptionLabel.rectTransform.offsetMin = new Vector2(16f, -54f);
-        descriptionLabel.rectTransform.offsetMax = new Vector2(-120f, -28f);
+        descriptionLabel.rectTransform.offsetMin = new Vector2(16f, -48f);
+        descriptionLabel.rectTransform.offsetMax = new Vector2(-112f, -22f);
 
-        TextMeshProUGUI valueLabel = CreateText(card, "Value", formatter != null ? formatter(getter()) : string.Empty, 15f, FontStyles.Bold, TextAlignmentOptions.Right);
+        TextMeshProUGUI valueLabel = CreateText(card, "Value", formatter != null ? formatter(getter()) : string.Empty, 13f, FontStyles.Bold, TextAlignmentOptions.Right);
         valueLabel.color = new Color(0.95f, 0.87f, 0.45f, 1f);
         valueLabel.rectTransform.anchorMin = new Vector2(1f, 1f);
         valueLabel.rectTransform.anchorMax = new Vector2(1f, 1f);
         valueLabel.rectTransform.pivot = new Vector2(1f, 1f);
-        valueLabel.rectTransform.sizeDelta = new Vector2(110f, 24f);
-        valueLabel.rectTransform.anchoredPosition = new Vector2(-16f, -12f);
+        valueLabel.rectTransform.sizeDelta = new Vector2(100f, 20f);
+        valueLabel.rectTransform.anchoredPosition = new Vector2(-16f, -11f);
 
         Slider slider = CreateStandardSlider(card, "Slider");
         slider.minValue = 0f;
@@ -673,8 +678,8 @@ public class PauseOptionsPanel : MonoBehaviour
         RectTransform sliderRect = slider.transform as RectTransform;
         sliderRect.anchorMin = new Vector2(0f, 0f);
         sliderRect.anchorMax = new Vector2(1f, 0f);
-        sliderRect.offsetMin = new Vector2(16f, 12f);
-        sliderRect.offsetMax = new Vector2(-16f, 26f);
+        sliderRect.offsetMin = new Vector2(16f, 10f);
+        sliderRect.offsetMax = new Vector2(-16f, 20f);
 
         GeneralSliderRow row = new GeneralSliderRow
         {
@@ -710,35 +715,35 @@ public class PauseOptionsPanel : MonoBehaviour
         cardGo.transform.SetParent(parent, false);
 
         LayoutElement cardLayout = cardGo.GetComponent<LayoutElement>();
-        cardLayout.preferredHeight = 84f;
+        cardLayout.preferredHeight = 62f;
 
         Image cardBg = cardGo.GetComponent<Image>();
         cardBg.color = new Color(0.10f, 0.11f, 0.14f, 0.92f);
 
         RectTransform card = cardGo.GetComponent<RectTransform>();
 
-        TextMeshProUGUI titleLabel = CreateText(card, "Title", title, 16f, FontStyles.Bold, TextAlignmentOptions.Left);
+        TextMeshProUGUI titleLabel = CreateText(card, "Title", title, 14f, FontStyles.Bold, TextAlignmentOptions.Left);
         titleLabel.color = new Color(1f, 0.95f, 0.72f, 1f);
         titleLabel.rectTransform.anchorMin = new Vector2(0f, 1f);
         titleLabel.rectTransform.anchorMax = new Vector2(1f, 1f);
-        titleLabel.rectTransform.offsetMin = new Vector2(16f, -32f);
-        titleLabel.rectTransform.offsetMax = new Vector2(-150f, -8f);
+        titleLabel.rectTransform.offsetMin = new Vector2(16f, -26f);
+        titleLabel.rectTransform.offsetMax = new Vector2(-112f, -8f);
 
-        TextMeshProUGUI descriptionLabel = CreateText(card, "Description", description, 10f, FontStyles.Normal, TextAlignmentOptions.Left);
+        TextMeshProUGUI descriptionLabel = CreateText(card, "Description", description, 8f, FontStyles.Normal, TextAlignmentOptions.Left);
         descriptionLabel.textWrappingMode = TextWrappingModes.Normal;
         descriptionLabel.color = new Color(0.82f, 0.88f, 0.94f, 1f);
         descriptionLabel.rectTransform.anchorMin = new Vector2(0f, 1f);
         descriptionLabel.rectTransform.anchorMax = new Vector2(1f, 1f);
-        descriptionLabel.rectTransform.offsetMin = new Vector2(16f, -54f);
-        descriptionLabel.rectTransform.offsetMax = new Vector2(-150f, -28f);
+        descriptionLabel.rectTransform.offsetMin = new Vector2(16f, -42f);
+        descriptionLabel.rectTransform.offsetMax = new Vector2(-108f, -18f);
 
         Button toggleButton = CreateButton(card, name + "ToggleButton", "Off", onClick, new Color(0.28f, 0.18f, 0.18f, 1f), 12f);
         RectTransform toggleRect = toggleButton.transform as RectTransform;
         toggleRect.anchorMin = new Vector2(1f, 0.5f);
         toggleRect.anchorMax = new Vector2(1f, 0.5f);
         toggleRect.pivot = new Vector2(1f, 0.5f);
-        toggleRect.sizeDelta = new Vector2(96f, 34f);
-        toggleRect.anchoredPosition = new Vector2(-16f, -2f);
+        toggleRect.sizeDelta = new Vector2(82f, 28f);
+        toggleRect.anchoredPosition = new Vector2(-14f, -1f);
 
         return new ToggleSettingRow
         {
@@ -758,8 +763,8 @@ public class PauseOptionsPanel : MonoBehaviour
             page.ResetButton.onClick.RemoveAllListeners();
             page.ResetButton.onClick.AddListener(() =>
             {
-                if (name.Contains("Rythm"))
-                    SetRythmAdvancedEnabled(false);
+                if (name.Contains("Rhythm"))
+                    SetRhythmAdvancedEnabled(false);
                 else if (name.Contains("Fishing"))
                     SetFishingAdvancedEnabled(false);
                 if (page.MessageLabel != null)
@@ -785,25 +790,11 @@ public class PauseOptionsPanel : MonoBehaviour
         backRect.sizeDelta = new Vector2(92f, 0f);
         backRect.anchoredPosition = Vector2.zero;
 
-        page.ResetButton = CreateButton(
-            header,
-            "ResetDefaultsButton",
-            "Reset Defaults",
-            () => page.Manager?.RefreshNow(),
-            new Color(0.3f, 0.16f, 0.16f, 1f),
-            11f);
-        RectTransform resetRect = page.ResetButton.transform as RectTransform;
-        resetRect.anchorMin = new Vector2(1f, 0f);
-        resetRect.anchorMax = new Vector2(1f, 1f);
-        resetRect.pivot = new Vector2(1f, 0.5f);
-        resetRect.sizeDelta = new Vector2(128f, 0f);
-        resetRect.anchoredPosition = Vector2.zero;
-
         TextMeshProUGUI titleLabel = CreateText(header, "Title", "Controllers", 16f, FontStyles.Bold, TextAlignmentOptions.Center);
         titleLabel.color = new Color(1f, 0.95f, 0.72f, 1f);
         Stretch(titleLabel.rectTransform);
         titleLabel.rectTransform.offsetMin = new Vector2(98f, 0f);
-        titleLabel.rectTransform.offsetMax = new Vector2(-134f, 0f);
+        titleLabel.rectTransform.offsetMax = new Vector2(-12f, 0f);
 
         RectTransform body = CreateRect(page.Root, "Body", new Vector2(0f, 0f), new Vector2(1f, 1f), new Vector2(24f, 24f), new Vector2(-24f, -54f));
         Image bodyBg = body.gameObject.AddComponent<Image>();
@@ -909,16 +900,16 @@ public class PauseOptionsPanel : MonoBehaviour
                     _controllersPage.Root.gameObject.SetActive(true);
                 break;
 
-            case OptionsTab.RythmAdvanced:
-                if (!IsAdvancedTabEnabled(OptionsTab.RythmAdvanced))
+            case OptionsTab.RhythmAdvanced:
+                if (!IsAdvancedTabEnabled(OptionsTab.RhythmAdvanced))
                 {
-                    if (_rythmLockedPage?.Root != null)
-                        _rythmLockedPage.Root.gameObject.SetActive(true);
+                    if (_rhythmLockedPage?.Root != null)
+                        _rhythmLockedPage.Root.gameObject.SetActive(true);
                     break;
                 }
 
-                if (_rythmHostRoot != null)
-                    _rythmHostRoot.gameObject.SetActive(true);
+                if (_rhythmHostRoot != null)
+                    _rhythmHostRoot.gameObject.SetActive(true);
                 if (_rhythmPanel != null)
                     _rhythmPanel.OpenTuningPanel();
                 break;
@@ -948,12 +939,12 @@ public class PauseOptionsPanel : MonoBehaviour
             _generalPage.Root.gameObject.SetActive(false);
         if (_controllersPage?.Root != null)
             _controllersPage.Root.gameObject.SetActive(false);
-        if (_rythmLockedPage?.Root != null)
-            _rythmLockedPage.Root.gameObject.SetActive(false);
+        if (_rhythmLockedPage?.Root != null)
+            _rhythmLockedPage.Root.gameObject.SetActive(false);
         if (_fishingLockedPage?.Root != null)
             _fishingLockedPage.Root.gameObject.SetActive(false);
-        if (_rythmHostRoot != null)
-            _rythmHostRoot.gameObject.SetActive(false);
+        if (_rhythmHostRoot != null)
+            _rhythmHostRoot.gameObject.SetActive(false);
         if (_fishingHostRoot != null)
             _fishingHostRoot.gameObject.SetActive(false);
 
@@ -967,7 +958,7 @@ public class PauseOptionsPanel : MonoBehaviour
     {
         UpdateTabVisual(_generalTabButton, _activeTab == OptionsTab.GeneralSettings, false);
         UpdateTabVisual(_controllersTabButton, _activeTab == OptionsTab.Controllers, false);
-        UpdateTabVisual(_rythmTabButton, _activeTab == OptionsTab.RythmAdvanced, !IsAdvancedTabEnabled(OptionsTab.RythmAdvanced));
+        UpdateTabVisual(_rhythmTabButton, _activeTab == OptionsTab.RhythmAdvanced, !IsAdvancedTabEnabled(OptionsTab.RhythmAdvanced));
         UpdateTabVisual(_fishingTabButton, _activeTab == OptionsTab.FishingAdvanced, !IsAdvancedTabEnabled(OptionsTab.FishingAdvanced));
     }
 
@@ -1006,12 +997,12 @@ public class PauseOptionsPanel : MonoBehaviour
 
         switch (_activeTab)
         {
-            case OptionsTab.RythmAdvanced:
-                if (!IsAdvancedTabEnabled(OptionsTab.RythmAdvanced))
+            case OptionsTab.RhythmAdvanced:
+                if (!IsAdvancedTabEnabled(OptionsTab.RhythmAdvanced))
                 {
-                    if (_rythmLockedPage?.BackButton != null)
+                    if (_rhythmLockedPage?.BackButton != null)
                     {
-                        evt.SetSelectedGameObject(_rythmLockedPage.BackButton.gameObject);
+                        evt.SetSelectedGameObject(_rhythmLockedPage.BackButton.gameObject);
                         return;
                     }
                     break;
@@ -1155,15 +1146,15 @@ public class PauseOptionsPanel : MonoBehaviour
         sliderGo.transform.SetParent(parent, false);
 
         LayoutElement layout = sliderGo.GetComponent<LayoutElement>();
-        layout.preferredHeight = 18f;
+        layout.preferredHeight = 11f;
 
         Slider slider = sliderGo.GetComponent<Slider>();
 
         GameObject bgGo = new GameObject("Background", typeof(RectTransform), typeof(Image));
         bgGo.transform.SetParent(sliderGo.transform, false);
         RectTransform bg = bgGo.GetComponent<RectTransform>();
-        bg.anchorMin = new Vector2(0f, 0.35f);
-        bg.anchorMax = new Vector2(1f, 0.65f);
+        bg.anchorMin = new Vector2(0f, 0.42f);
+        bg.anchorMax = new Vector2(1f, 0.58f);
         bg.offsetMin = Vector2.zero;
         bg.offsetMax = Vector2.zero;
         bgGo.GetComponent<Image>().color = new Color(0.2f, 0.2f, 0.2f, 1f);
@@ -1171,8 +1162,8 @@ public class PauseOptionsPanel : MonoBehaviour
         GameObject fillAreaGo = new GameObject("Fill Area", typeof(RectTransform));
         fillAreaGo.transform.SetParent(sliderGo.transform, false);
         RectTransform fillArea = fillAreaGo.GetComponent<RectTransform>();
-        fillArea.anchorMin = new Vector2(0f, 0.30f);
-        fillArea.anchorMax = new Vector2(1f, 0.70f);
+        fillArea.anchorMin = new Vector2(0f, 0.36f);
+        fillArea.anchorMax = new Vector2(1f, 0.64f);
         fillArea.offsetMin = new Vector2(4f, 0f);
         fillArea.offsetMax = new Vector2(-4f, 0f);
 
@@ -1185,7 +1176,7 @@ public class PauseOptionsPanel : MonoBehaviour
         GameObject handleGo = new GameObject("Handle", typeof(RectTransform), typeof(Image));
         handleGo.transform.SetParent(sliderGo.transform, false);
         RectTransform handle = handleGo.GetComponent<RectTransform>();
-        handle.sizeDelta = new Vector2(8f, 18f);
+        handle.sizeDelta = new Vector2(6f, 8f);
         Image handleImage = handleGo.GetComponent<Image>();
         handleImage.color = new Color(1f, 0.95f, 0.75f, 1f);
 
@@ -1194,6 +1185,44 @@ public class PauseOptionsPanel : MonoBehaviour
         slider.targetGraphic = handleImage;
         slider.direction = Slider.Direction.LeftToRight;
         return slider;
+    }
+
+    private static Scrollbar CreateGeneralSettingsScrollbar(Transform parent)
+    {
+        GameObject scrollbarGo = new GameObject("Scrollbar", typeof(RectTransform), typeof(Image), typeof(Scrollbar));
+        scrollbarGo.transform.SetParent(parent, false);
+
+        RectTransform scrollbarRect = scrollbarGo.GetComponent<RectTransform>();
+        scrollbarRect.anchorMin = new Vector2(1f, 0f);
+        scrollbarRect.anchorMax = new Vector2(1f, 1f);
+        scrollbarRect.pivot = new Vector2(1f, 0.5f);
+        scrollbarRect.sizeDelta = new Vector2(12f, 0f);
+        scrollbarRect.anchoredPosition = new Vector2(-6f, 0f);
+
+        Image background = scrollbarGo.GetComponent<Image>();
+        background.color = new Color(0.12f, 0.13f, 0.16f, 0.9f);
+
+        GameObject slidingAreaGo = new GameObject("Sliding Area", typeof(RectTransform));
+        slidingAreaGo.transform.SetParent(scrollbarGo.transform, false);
+        RectTransform slidingArea = slidingAreaGo.GetComponent<RectTransform>();
+        Stretch(slidingArea);
+        slidingArea.offsetMin = new Vector2(1f, 6f);
+        slidingArea.offsetMax = new Vector2(-1f, -6f);
+
+        GameObject handleGo = new GameObject("Handle", typeof(RectTransform), typeof(Image));
+        handleGo.transform.SetParent(slidingAreaGo.transform, false);
+        RectTransform handle = handleGo.GetComponent<RectTransform>();
+        Stretch(handle);
+
+        Image handleImage = handleGo.GetComponent<Image>();
+        handleImage.color = new Color(0.76f, 0.82f, 0.9f, 0.95f);
+
+        Scrollbar scrollbar = scrollbarGo.GetComponent<Scrollbar>();
+        scrollbar.direction = Scrollbar.Direction.BottomToTop;
+        scrollbar.handleRect = handle;
+        scrollbar.targetGraphic = handleImage;
+        scrollbar.size = 0.25f;
+        return scrollbar;
     }
 
     private static Image CreateImage(Transform parent, string name, Sprite sprite, Color color)
@@ -1234,7 +1263,7 @@ public class PauseOptionsPanel : MonoBehaviour
     {
         return tab switch
         {
-            OptionsTab.RythmAdvanced => _rythmAdvancedEnabled,
+            OptionsTab.RhythmAdvanced => _rhythmAdvancedEnabled,
             OptionsTab.FishingAdvanced => _fishingAdvancedEnabled,
             _ => true
         };
@@ -1242,7 +1271,7 @@ public class PauseOptionsPanel : MonoBehaviour
 
     private void SetGeneralRhythmSensitivity(float value)
     {
-        if (_rythmAdvancedEnabled)
+        if (_rhythmAdvancedEnabled)
         {
             RefreshGeneralSettingsUi();
             return;
@@ -1264,7 +1293,7 @@ public class PauseOptionsPanel : MonoBehaviour
 
     private void ApplyGeneralRhythmSensitivityIfNeeded(bool persist)
     {
-        if (_rythmAdvancedEnabled || _rhythmPanel == null)
+        if (_rhythmAdvancedEnabled || _rhythmPanel == null)
             return;
 
         _rhythmPanel.ApplyGeneralSensitivityPreset(_generalRhythmSensitivity, persist);
@@ -1302,17 +1331,17 @@ public class PauseOptionsPanel : MonoBehaviour
         Screen.fullScreen = false;
     }
 
-    private void SetRythmAdvancedEnabled(bool enabled)
+    private void SetRhythmAdvancedEnabled(bool enabled)
     {
-        if (_rythmAdvancedEnabled == enabled)
+        if (_rhythmAdvancedEnabled == enabled)
         {
             RefreshGeneralSettingsUi();
             UpdateTabVisuals();
             return;
         }
 
-        _rythmAdvancedEnabled = enabled;
-        PlayerPrefs.SetInt(RythmAdvancedPrefKey, enabled ? 1 : 0);
+        _rhythmAdvancedEnabled = enabled;
+        PlayerPrefs.SetInt(RhythmAdvancedPrefKey, enabled ? 1 : 0);
         PlayerPrefs.Save();
 
         if (!enabled)
@@ -1321,7 +1350,7 @@ public class PauseOptionsPanel : MonoBehaviour
         RefreshGeneralSettingsUi();
         UpdateTabVisuals();
 
-        if (_activeTab == OptionsTab.RythmAdvanced)
+        if (_activeTab == OptionsTab.RhythmAdvanced)
             ShowTab(_activeTab);
     }
 
@@ -1352,7 +1381,7 @@ public class PauseOptionsPanel : MonoBehaviour
         _generalRhythmSensitivity = RhythmPauseTuningPanel.GeneralSensitivityDefault;
         PlayerPrefs.SetFloat(GeneralRhythmSensitivityPrefKey, _generalRhythmSensitivity);
         PlayerPrefs.Save();
-        SetRythmAdvancedEnabled(false);
+        SetRhythmAdvancedEnabled(false);
         SetFishingAdvancedEnabled(false);
         RefreshGeneralSettingsUi();
     }
@@ -1383,7 +1412,7 @@ public class PauseOptionsPanel : MonoBehaviour
                     _generalPage.RhythmSensitivityRow.ValueLabel.text = _generalPage.RhythmSensitivityRow.Formatter(sensitivityValue);
             }
 
-            SetGeneralSliderEnabledState(_generalPage.RhythmSensitivityRow, !_rythmAdvancedEnabled);
+            SetGeneralSliderEnabledState(_generalPage.RhythmSensitivityRow, !_rhythmAdvancedEnabled);
         }
 
         if (_generalPage.FullscreenToggle?.Label != null)
@@ -1398,12 +1427,12 @@ public class PauseOptionsPanel : MonoBehaviour
         }
 
         if (_generalPage.RhythmAdvancedToggle?.Label != null)
-            _generalPage.RhythmAdvancedToggle.Label.text = _rythmAdvancedEnabled ? "On" : "Off";
+            _generalPage.RhythmAdvancedToggle.Label.text = _rhythmAdvancedEnabled ? "On" : "Off";
 
         if (_generalPage.RhythmAdvancedToggle?.Button != null &&
             _generalPage.RhythmAdvancedToggle.Button.TryGetComponent(out Image rhythmToggleImage))
         {
-            rhythmToggleImage.color = _rythmAdvancedEnabled
+            rhythmToggleImage.color = _rhythmAdvancedEnabled
                 ? new Color(0.18f, 0.42f, 0.26f, 1f)
                 : new Color(0.28f, 0.18f, 0.18f, 1f);
         }
