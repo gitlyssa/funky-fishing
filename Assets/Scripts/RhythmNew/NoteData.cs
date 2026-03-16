@@ -8,6 +8,10 @@ public class NoteData
     public float hitTime;               // time the note needs to be hit
     public RhythmArcNote.NoteType type; // flick or slide
     public FlickDirection direction;    // left right up down ( i guess diagonals are okay too technically)
+    public bool isGolden = false;                // whether the note is a golden note, which gives bonus points and has a stricter timing window
+    public bool isGhost = false;                 // whether the note is a ghost note which has trailing afterimage notes that are auto hit
+    public int ghostRepeats = 0;              // how many times the ghost note repeats, if it's a ghost note. 
+    public float ghostRepeatInterval = 1f;    // the interval between ghost note repeats, if it's a ghost note
 }
 
 [System.Serializable]
