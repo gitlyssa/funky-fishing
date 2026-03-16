@@ -19,6 +19,7 @@ public class PondLevelCompletionPopup : MonoBehaviour
 
     [Header("Scene Scope")]
     [SerializeField] private string pondSceneName = "Pond_Level_1";
+    [SerializeField] private string mainMenuSceneName = "MainMenu";
 
     [Header("Copy")]
     [SerializeField] private string titleMessage = "Pond Cleared!";
@@ -26,6 +27,7 @@ public class PondLevelCompletionPopup : MonoBehaviour
         "You caught every fish in the pond.\nHere are your results:";
     [SerializeField] private string scoreboardSubtitleMessage = "Session Top 5";
     [SerializeField] private string restartButtonLabel = "Restart Level";
+    [SerializeField] private string mainMenuButtonLabel = "Main Menu";
     [SerializeField] private string continuePromptLabel = "Click to view top scores";
 
     [Header("Style")]
@@ -46,6 +48,7 @@ public class PondLevelCompletionPopup : MonoBehaviour
     private TextMeshProUGUI bodyText;
     private TextMeshProUGUI promptText;
     private Button restartButton;
+    private Button mainMenuButton;
 
     private bool popupShown;
     private bool restarting;
@@ -213,6 +216,20 @@ public class PondLevelCompletionPopup : MonoBehaviour
         SceneTransitionManager.LoadSceneWithLoading(pondSceneName);
     }
 
+    private void ReturnToMainMenu()
+    {
+        if (restarting)
+            return;
+
+        restarting = true;
+        FishingSessionHud.ResetSessionForLevelRestart();
+        Time.timeScale = 1f;
+        RestorePauseManagers();
+        RestoreCursorState();
+        XboxFishingInput.BlockGameplayInputForRealtimeSeconds(0.35f);
+        SceneTransitionManager.LoadSceneWithLoading(mainMenuSceneName);
+    }
+
     private void RefreshSummaryText()
     {
         if (bodyText == null)
@@ -270,6 +287,8 @@ public class PondLevelCompletionPopup : MonoBehaviour
         }
         if (restartButton != null)
             restartButton.gameObject.SetActive(false);
+        if (mainMenuButton != null)
+            mainMenuButton.gameObject.SetActive(false);
     }
 
     private void ShowScoreboardStage()
@@ -280,6 +299,8 @@ public class PondLevelCompletionPopup : MonoBehaviour
             promptText.gameObject.SetActive(false);
         if (restartButton != null)
             restartButton.gameObject.SetActive(true);
+        if (mainMenuButton != null)
+            mainMenuButton.gameObject.SetActive(true);
         SetInitialSelection();
     }
 
@@ -417,6 +438,39 @@ public class PondLevelCompletionPopup : MonoBehaviour
             TextAlignmentOptions.Center,
             restartButtonLabel);
         buttonText.color = new Color(0.18f, 0.18f, 0.18f, 1f);
+
+        GameObject mainMenuButtonObject = new GameObject(
+            "MainMenuButton",
+            typeof(RectTransform),
+            typeof(Image),
+            typeof(Button));
+        mainMenuButtonObject.transform.SetParent(panel.transform, false);
+
+        RectTransform mainMenuButtonRect = mainMenuButtonObject.GetComponent<RectTransform>();
+        mainMenuButtonRect.anchorMin = new Vector2(0.5f, 0f);
+        mainMenuButtonRect.anchorMax = new Vector2(0.5f, 0f);
+        mainMenuButtonRect.pivot = new Vector2(0.5f, 0f);
+        mainMenuButtonRect.anchoredPosition = new Vector2(0f, 104f);
+        mainMenuButtonRect.sizeDelta = new Vector2(360f, 68f);
+
+        Image mainMenuButtonImage = mainMenuButtonObject.GetComponent<Image>();
+        mainMenuButtonImage.color = buttonColor;
+
+        mainMenuButton = mainMenuButtonObject.GetComponent<Button>();
+        mainMenuButton.onClick.AddListener(ReturnToMainMenu);
+
+        TextMeshProUGUI mainMenuText = CreateText(
+            "ButtonText",
+            mainMenuButtonObject.transform,
+            Vector2.zero,
+            Vector2.one,
+            new Vector2(0.5f, 0.5f),
+            Vector2.zero,
+            Vector2.zero,
+            buttonFontSize,
+            TextAlignmentOptions.Center,
+            mainMenuButtonLabel);
+        mainMenuText.color = new Color(0.18f, 0.18f, 0.18f, 1f);
     }
 
     private static TextMeshProUGUI CreateText(
@@ -461,29 +515,37 @@ public class PondLevelCompletionPopup : MonoBehaviour
     private void SetInitialSelection()
     {
         EventSystem evt = EventSystem.current;
-        if (evt == null || restartButton == null)
+        if (evt == null)
             return;
 
-        if (!restartButton.gameObject.activeInHierarchy)
+        Button targetButton = restartButton != null && restartButton.gameObject.activeInHierarchy
+            ? restartButton
+            : mainMenuButton;
+
+        if (targetButton == null || !targetButton.gameObject.activeInHierarchy)
             return;
 
         evt.SetSelectedGameObject(null);
-        evt.SetSelectedGameObject(restartButton.gameObject);
+        evt.SetSelectedGameObject(targetButton.gameObject);
     }
 
     private void EnsureSelection()
     {
         EventSystem evt = EventSystem.current;
-        if (evt == null || restartButton == null)
+        if (evt == null)
             return;
 
-        if (!restartButton.gameObject.activeInHierarchy)
+        if ((restartButton == null || !restartButton.gameObject.activeInHierarchy) &&
+            (mainMenuButton == null || !mainMenuButton.gameObject.activeInHierarchy))
             return;
 
         if (evt.currentSelectedGameObject != null)
             return;
 
-        evt.SetSelectedGameObject(restartButton.gameObject);
+        if (restartButton != null && restartButton.gameObject.activeInHierarchy)
+            evt.SetSelectedGameObject(restartButton.gameObject);
+        else if (mainMenuButton != null && mainMenuButton.gameObject.activeInHierarchy)
+            evt.SetSelectedGameObject(mainMenuButton.gameObject);
     }
 
     private void DisablePauseManagers()
