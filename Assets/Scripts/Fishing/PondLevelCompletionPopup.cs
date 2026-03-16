@@ -8,6 +8,13 @@ using UnityEngine.UI;
 
 public class PondLevelCompletionPopup : MonoBehaviour
 {
+    private enum PopupStage
+    {
+        Hidden,
+        Summary,
+        Scoreboard
+    }
+
     private static bool sceneHookRegistered;
 
     [Header("Scene Scope")]
@@ -17,7 +24,9 @@ public class PondLevelCompletionPopup : MonoBehaviour
     [SerializeField] private string titleMessage = "Pond Cleared!";
     [SerializeField] private string subtitleMessage =
         "You caught every fish in the pond.\nHere are your results:";
+    [SerializeField] private string scoreboardSubtitleMessage = "Session Top 5";
     [SerializeField] private string restartButtonLabel = "Restart Level";
+    [SerializeField] private string continuePromptLabel = "Click to view top scores";
 
     [Header("Style")]
     [SerializeField] private Vector2 panelSize = new Vector2(880f, 560f);
@@ -35,10 +44,12 @@ public class PondLevelCompletionPopup : MonoBehaviour
     private Canvas canvas;
     private GameObject canvasRoot;
     private TextMeshProUGUI bodyText;
+    private TextMeshProUGUI promptText;
     private Button restartButton;
 
     private bool popupShown;
     private bool restarting;
+    private PopupStage popupStage = PopupStage.Hidden;
     private bool cursorStateCached;
     private bool cachedCursorVisible;
     private CursorLockMode cachedCursorLockMode;
@@ -113,6 +124,9 @@ public class PondLevelCompletionPopup : MonoBehaviour
             return;
         }
 
+        if (popupStage == PopupStage.Summary && WasContinuePressedThisFrame())
+            ShowScoreboardStage();
+
         EnsureSelection();
         Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
@@ -176,10 +190,11 @@ public class PondLevelCompletionPopup : MonoBehaviour
     private void ShowPopup()
     {
         popupShown = true;
+        popupStage = PopupStage.Summary;
         CacheCursorState();
         DisablePauseManagers();
         Time.timeScale = 0f;
-        RefreshSummaryText();
+        ShowSummaryStage();
         SetPopupVisible(true);
         SetInitialSelection();
     }
@@ -219,6 +234,73 @@ public class PondLevelCompletionPopup : MonoBehaviour
             $"Last Combo: {s.LastCatchBestCombo}\n" +
             $"Last P/G/M: {s.LastCatchPerfect}/{s.LastCatchGood}/{s.LastCatchMiss}\n" +
             $"Last Accuracy: {s.LastCatchAccuracy:F1}%";
+    }
+
+    private void RefreshScoreboardText()
+    {
+        if (bodyText == null)
+            return;
+
+        var topScores = SessionTopScoresTracker.TopScores;
+        System.Text.StringBuilder builder = new System.Text.StringBuilder();
+        builder.Append(scoreboardSubtitleMessage);
+
+        for (int i = 0; i < SessionTopScoresTracker.MaxTrackedScores; i++)
+        {
+            builder.Append("\n");
+            builder.Append(i + 1);
+            builder.Append(". ");
+            builder.Append(i < topScores.Count ? topScores[i].ToString() : "---");
+        }
+
+        bodyText.text = builder.ToString();
+        bodyText.alignment = TextAlignmentOptions.Center;
+    }
+
+    private void ShowSummaryStage()
+    {
+        popupStage = PopupStage.Summary;
+        RefreshSummaryText();
+        if (bodyText != null)
+            bodyText.alignment = TextAlignmentOptions.TopLeft;
+        if (promptText != null)
+        {
+            promptText.text = continuePromptLabel;
+            promptText.gameObject.SetActive(true);
+        }
+        if (restartButton != null)
+            restartButton.gameObject.SetActive(false);
+    }
+
+    private void ShowScoreboardStage()
+    {
+        popupStage = PopupStage.Scoreboard;
+        RefreshScoreboardText();
+        if (promptText != null)
+            promptText.gameObject.SetActive(false);
+        if (restartButton != null)
+            restartButton.gameObject.SetActive(true);
+        SetInitialSelection();
+    }
+
+    private static bool WasContinuePressedThisFrame()
+    {
+        if (Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1))
+            return true;
+
+        if (Keyboard.current != null && Keyboard.current.anyKey.wasPressedThisFrame)
+            return true;
+
+        if (Gamepad.current != null)
+        {
+            if (Gamepad.current.buttonSouth.wasPressedThisFrame ||
+                Gamepad.current.startButton.wasPressedThisFrame)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private void BuildUi()
@@ -289,6 +371,19 @@ public class PondLevelCompletionPopup : MonoBehaviour
         bodyText.enableAutoSizing = true;
         bodyText.fontSizeMin = 20;
         bodyText.fontSizeMax = bodyFontSize;
+
+        promptText = CreateText(
+            "PromptText",
+            panel.transform,
+            new Vector2(0.5f, 0f),
+            new Vector2(0.5f, 0f),
+            new Vector2(0.5f, 0f),
+            new Vector2(0f, 100f),
+            new Vector2(panelSize.x - 120f, 40f),
+            24,
+            TextAlignmentOptions.Center,
+            continuePromptLabel);
+        promptText.color = textColor;
 
         GameObject buttonObject = new GameObject(
             "RestartButton",
@@ -369,6 +464,9 @@ public class PondLevelCompletionPopup : MonoBehaviour
         if (evt == null || restartButton == null)
             return;
 
+        if (!restartButton.gameObject.activeInHierarchy)
+            return;
+
         evt.SetSelectedGameObject(null);
         evt.SetSelectedGameObject(restartButton.gameObject);
     }
@@ -377,6 +475,9 @@ public class PondLevelCompletionPopup : MonoBehaviour
     {
         EventSystem evt = EventSystem.current;
         if (evt == null || restartButton == null)
+            return;
+
+        if (!restartButton.gameObject.activeInHierarchy)
             return;
 
         if (evt.currentSelectedGameObject != null)

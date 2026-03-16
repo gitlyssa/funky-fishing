@@ -237,6 +237,8 @@ public class FishingSessionHud : MonoBehaviour
         sessionTotalGood += runGood;
         sessionTotalMiss += runMiss;
 
+        SessionTopScoresTracker.TryRecordScore(runScore, out _);
+
         if (catchSucceeded)
         {
             sessionFishCaught++;
