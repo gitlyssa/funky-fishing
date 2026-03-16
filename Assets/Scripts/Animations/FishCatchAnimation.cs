@@ -10,6 +10,8 @@ public class FishCatchAnimation : MonoBehaviour
     public TextMeshProUGUI judgementText; // "Perfect Catch!"
     public TextMeshProUGUI fishNameText;  // "Redbelly caught!"
     public TextMeshProUGUI clickText;        // press any key to continue
+    [SerializeField] private GameObject nameEntryPanel;
+    [SerializeField] private TMP_InputField nameInputField;
     [SerializeField] private GameObject scoreboardPanel;
     [SerializeField] private TextMeshProUGUI rank1Text;
     [SerializeField] private TextMeshProUGUI rank2Text;
@@ -33,13 +35,17 @@ public class FishCatchAnimation : MonoBehaviour
     public float spinSpeed = 150f;
     private bool _continuePressed = false;
     private bool _continueInputReady = true;
+    private bool _awaitingNameEntry;
+    private bool _nameEntrySubmitted;
 
     private void Awake()
     {
+        ResolveNameEntryReferences();
         ResolveScoreboardReferences();
 
         // Ensure everything is hidden at start
         if (overlayPanel != null) overlayPanel.SetActive(false);
+        if (nameEntryPanel != null) nameEntryPanel.SetActive(false);
         if (scoreboardPanel != null) scoreboardPanel.SetActive(false);
         if (clickText != null) clickText.gameObject.SetActive(false);
         if (clickText != null) _defaultClickText = clickText.text;
@@ -49,6 +55,14 @@ public class FishCatchAnimation : MonoBehaviour
     }
     private void Update()
     {
+        if (_awaitingNameEntry)
+        {
+            ApplyNameInputSanitization();
+            if (WasNameSubmitPressedThisFrame())
+                TrySubmitNameEntry();
+            return;
+        }
+
         bool continueInputHeld = IsContinueInputHeld();
         if (!continueInputHeld)
         {
@@ -77,6 +91,24 @@ public class FishCatchAnimation : MonoBehaviour
     private bool IsContinueInputHeld()
     {
         if (Input.anyKey)
+            return true;
+
+        for (int i = 0; i < 4; i++)
+        {
+            if (!JSL.JslStillConnected(i))
+                continue;
+
+            JSL.JOY_SHOCK_STATE state = JSL.JslGetSimpleState(i);
+            if (state.buttons != 0)
+                return true;
+        }
+
+        return false;
+    }
+
+    private bool WasNameSubmitPressedThisFrame()
+    {
+        if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter))
             return true;
 
         for (int i = 0; i < 4; i++)
@@ -133,6 +165,24 @@ public class FishCatchAnimation : MonoBehaviour
         if (rank3Text == null) rank3Text = FindTextByName(scoreboardRoot, "Rank3Text");
         if (rank4Text == null) rank4Text = FindTextByName(scoreboardRoot, "Rank4Text");
         if (rank5Text == null) rank5Text = FindTextByName(scoreboardRoot, "Rank5Text");
+    }
+
+    private void ResolveNameEntryReferences()
+    {
+        if (nameEntryPanel == null)
+        {
+            Transform panelTransform = FindSceneTransformByName("NameEntryPanel");
+            if (panelTransform != null)
+                nameEntryPanel = panelTransform.gameObject;
+        }
+
+        Transform panelRoot = nameEntryPanel != null ? nameEntryPanel.transform : null;
+        if (nameInputField == null && panelRoot != null)
+        {
+            Transform inputFieldTransform = FindChildRecursive(panelRoot, "NameInputField");
+            if (inputFieldTransform != null)
+                nameInputField = inputFieldTransform.GetComponent<TMP_InputField>();
+        }
     }
 
     private static TextMeshProUGUI FindTextByName(Transform root, string childName)
@@ -197,9 +247,12 @@ public class FishCatchAnimation : MonoBehaviour
             if (rankText == null)
                 continue;
 
+            string name = i < topScores.Count && !string.IsNullOrEmpty(topScores[i].Name)
+                ? topScores[i].Name
+                : "---";
             rankText.gameObject.SetActive(true);
             rankText.text = i < topScores.Count
-                ? $"{i + 1}. {topScores[i]}"
+                ? $"{i + 1}. {name} {topScores[i].Score}"
                 : $"{i + 1}. ---";
         }
 
@@ -216,6 +269,72 @@ public class FishCatchAnimation : MonoBehaviour
     {
         if (scoreboardPanel != null)
             scoreboardPanel.SetActive(false);
+    }
+
+    private void ShowNameEntryPanel()
+    {
+        ResolveNameEntryReferences();
+
+        if (nameEntryPanel == null || nameInputField == null)
+        {
+            Debug.LogWarning("FishCatchAnimation could not resolve NameEntryPanel or NameInputField. Falling back to AAA.");
+            SessionTopScoresTracker.TrySubmitPendingName("AAA");
+            _nameEntrySubmitted = true;
+            _awaitingNameEntry = false;
+            return;
+        }
+
+        nameEntryPanel.SetActive(true);
+        nameInputField.text = string.Empty;
+        nameInputField.characterLimit = 3;
+        nameInputField.lineType = TMP_InputField.LineType.SingleLine;
+        nameInputField.contentType = TMP_InputField.ContentType.Standard;
+        nameInputField.Select();
+        nameInputField.ActivateInputField();
+        if (clickText != null)
+            clickText.gameObject.SetActive(false);
+
+        _awaitingNameEntry = true;
+        _nameEntrySubmitted = false;
+    }
+
+    private void HideNameEntryPanel()
+    {
+        _awaitingNameEntry = false;
+        if (nameEntryPanel != null)
+            nameEntryPanel.SetActive(false);
+    }
+
+    private void ApplyNameInputSanitization()
+    {
+        if (nameInputField == null)
+            return;
+
+        string sanitizedName = SessionTopScoresTracker.SanitizeName(nameInputField.text);
+        if (nameInputField.text == sanitizedName)
+            return;
+
+        nameInputField.text = sanitizedName;
+        nameInputField.caretPosition = nameInputField.text.Length;
+    }
+
+    private void TrySubmitNameEntry()
+    {
+        if (nameInputField == null)
+            return;
+
+        if (!SessionTopScoresTracker.TrySubmitPendingName(nameInputField.text))
+            return;
+
+        _nameEntrySubmitted = true;
+        HideNameEntryPanel();
+    }
+
+    private IEnumerator WaitForNameEntrySubmission()
+    {
+        ShowNameEntryPanel();
+        while (!_nameEntrySubmitted)
+            yield return null;
     }
 
     private IEnumerator WaitForContinuePressed()
@@ -325,6 +444,10 @@ public class FishCatchAnimation : MonoBehaviour
         if (fishNameText != null) fishNameText.gameObject.SetActive(false);
         fishXform.gameObject.SetActive(false);
         HideAllJudgements();
+
+        if (SessionTopScoresTracker.HasPendingNameEntry)
+            yield return WaitForNameEntrySubmission();
+
         ShowTopScores();
 
         yield return WaitForContinuePressed();

@@ -267,7 +267,17 @@ public class PondLevelCompletionPopup : MonoBehaviour
             builder.Append("\n");
             builder.Append(i + 1);
             builder.Append(". ");
-            builder.Append(i < topScores.Count ? topScores[i].ToString() : "---");
+            if (i < topScores.Count)
+            {
+                string name = string.IsNullOrEmpty(topScores[i].Name) ? "---" : topScores[i].Name;
+                builder.Append(name);
+                builder.Append(" ");
+                builder.Append(topScores[i].Score);
+            }
+            else
+            {
+                builder.Append("---");
+            }
         }
 
         bodyText.text = builder.ToString();
@@ -417,8 +427,8 @@ public class PondLevelCompletionPopup : MonoBehaviour
         buttonRect.anchorMin = new Vector2(0.5f, 0f);
         buttonRect.anchorMax = new Vector2(0.5f, 0f);
         buttonRect.pivot = new Vector2(0.5f, 0f);
-        buttonRect.anchoredPosition = new Vector2(0f, 24f);
-        buttonRect.sizeDelta = new Vector2(360f, 68f);
+        buttonRect.anchoredPosition = new Vector2(-200f, 24f);
+        buttonRect.sizeDelta = new Vector2(320f, 68f);
 
         Image buttonImage = buttonObject.GetComponent<Image>();
         buttonImage.color = buttonColor;
@@ -450,8 +460,8 @@ public class PondLevelCompletionPopup : MonoBehaviour
         mainMenuButtonRect.anchorMin = new Vector2(0.5f, 0f);
         mainMenuButtonRect.anchorMax = new Vector2(0.5f, 0f);
         mainMenuButtonRect.pivot = new Vector2(0.5f, 0f);
-        mainMenuButtonRect.anchoredPosition = new Vector2(0f, 104f);
-        mainMenuButtonRect.sizeDelta = new Vector2(360f, 68f);
+        mainMenuButtonRect.anchoredPosition = new Vector2(200f, 24f);
+        mainMenuButtonRect.sizeDelta = new Vector2(320f, 68f);
 
         Image mainMenuButtonImage = mainMenuButtonObject.GetComponent<Image>();
         mainMenuButtonImage.color = buttonColor;
