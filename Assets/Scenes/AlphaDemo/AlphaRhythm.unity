@@ -14123,6 +14123,13 @@ MonoBehaviour:
   comboPulseRiseDistance: 10
   detailAnchoredPosition: {x: -28, y: -28}
   detailFontSize: 26
+  reelStatusSprite: {fileID: 21300000, guid: c502aa7907ffec54d9709e82b69d85f5, type: 3}
+  reelStatusPosition: {x: 0, y: 250}
+  reelStatusSize: {x: 300, y: 100}
+  reelPulseSpeed: 12
+  reelPulseAmount: 0.15
+  multiplierColor: {r: 1, g: 0.8, b: 0.2, a: 1}
+  multiplierFormat: '{0:F1}x'
 --- !u!4 &2115724248
 Transform:
   m_ObjectHideFlags: 0

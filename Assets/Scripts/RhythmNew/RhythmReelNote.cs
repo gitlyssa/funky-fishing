@@ -63,8 +63,8 @@ public class RhythmReelNote : MonoBehaviour
     public void AddSpin(float deltaDegrees)
     {
         
-        bool isCorrectDirection = (_data.goalDegrees > 0) ? (deltaDegrees > 0) : (deltaDegrees < 0);
-
+        // bool isCorrectDirection = (_data.goalDegrees > 0) ? (deltaDegrees > 0) : (deltaDegrees < 0);
+        bool isCorrectDirection = true;
         if (isCorrectDirection)
         {
             _accumulatedSpin += Mathf.Abs(deltaDegrees);

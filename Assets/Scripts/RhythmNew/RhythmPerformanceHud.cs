@@ -88,6 +88,22 @@ public class RhythmPerformanceHud : MonoBehaviour
     private int _combo;
     private int _maxCombo;
     private int _score;
+    private int _baseScore;
+    private float _lastFiredMultiplier = 1f;
+
+    [Header("Reel Status (Pulsing)")]
+    [SerializeField] private Sprite reelStatusSprite;
+    [SerializeField] private Vector2 reelStatusPosition = new Vector2(0f, 250f); // Higher up
+    [SerializeField] private Vector2 reelStatusSize = new Vector2(300f, 100f);
+    [SerializeField] private float reelPulseSpeed = 12f;
+    [SerializeField] private float reelPulseAmount = 0.15f;
+
+    [Header("Reel Judgement (Multiplier)")]
+    [SerializeField] private Color multiplierColor = new Color(1f, 0.8f, 0.2f); // Golden/Orange
+    [SerializeField] private string multiplierFormat = "{0:F1}x"; // Displays as 1.1x, 1.2x etc.
+
+    private Image _reelStatusImage;
+    private RectTransform _reelStatusRect;
 
     public int CurrentScore => _score;
     public float CurrentAccuracy {
@@ -144,6 +160,7 @@ public class RhythmPerformanceHud : MonoBehaviour
             return;
 
         bool playbackActive = IsRhythmPlaybackActive();
+        bool isReeling = _conductor != null && _conductor.activeReel != null;
 
         if (playbackActive && !_wasPlaybackActive)
         {
@@ -161,13 +178,14 @@ public class RhythmPerformanceHud : MonoBehaviour
 
         _wasPlaybackActive = playbackActive;
 
-        if (!playbackActive)
+        if (!playbackActive && !isReeling)
             return;
 
         CollectNewNotes();
         ResolveRemovedNotes();
         TickJudgementAnimation();
         TickComboPulseAnimation();
+        TickReelVisuals();
     }
 
     private void EnsureReferences()
@@ -252,6 +270,20 @@ public class RhythmPerformanceHud : MonoBehaviour
             detailFontSize,
             TextAlignmentOptions.TopRight,
             string.Empty);
+
+        _reelStatusImage = CreateImage(
+        "ReelStatusImage",
+        _canvas.transform,
+        new Vector2(0.5f, 0.5f),
+        new Vector2(0.5f, 0.5f),
+        new Vector2(0.5f, 0.5f),
+        reelStatusPosition,
+        reelStatusSize,
+        reelStatusSprite);
+
+        _reelStatusRect = _reelStatusImage.rectTransform;
+        _reelStatusImage.color = new Color(1, 1, 1, 0);
+            
 
         _comboText.gameObject.layer = _canvas.gameObject.layer;
         _judgementText.gameObject.layer = _canvas.gameObject.layer;
@@ -506,7 +538,8 @@ public class RhythmPerformanceHud : MonoBehaviour
             case ResultType.Perfect:
                 _perfectCount++;
                 _combo++;
-                _score += perfectPoints;
+                _baseScore += perfectPoints;
+                _score = _baseScore;
                 ShowComboPulseIfEligible();
                 ShowPerfectJudgement();
                 break;
@@ -514,7 +547,8 @@ public class RhythmPerformanceHud : MonoBehaviour
             case ResultType.Good:
                 _goodCount++;
                 _combo++;
-                _score += goodPoints;
+                _baseScore += goodPoints;
+                _score = _baseScore;
                 ShowComboPulseIfEligible();
                 ShowGoodJudgement();
                 break;
@@ -522,7 +556,8 @@ public class RhythmPerformanceHud : MonoBehaviour
             default:
                 _missCount++;
                 _combo = 0;
-                _score += missPoints;
+                _baseScore += missPoints;
+                _score = _baseScore;
                 HideComboImmediate();
                 ShowMissJudgement();
                 break;
@@ -975,6 +1010,48 @@ public class RhythmPerformanceHud : MonoBehaviour
         Color c = _comboText.color;
         c.a = 0f;
         _comboText.color = c;
+    }
+
+    private void TickReelVisuals()
+    {
+        if (_conductor == null || _reelStatusImage == null) return;
+
+        RhythmReelNote activeReel = _conductor.activeReel;
+        bool isReeling = activeReel != null;
+        
+        if (isReeling)
+        {
+            Color c = Color.white;
+            c.a = 1f;
+            _reelStatusImage.color = c;
+
+            float pulse = 1f + Mathf.Sin(Time.time * reelPulseSpeed) * reelPulseAmount;
+            _reelStatusRect.localScale = Vector3.one * pulse;
+
+
+            float currentMultiplier = 1f + (activeReel.Progress * 0.5f);
+            currentMultiplier = Mathf.Min(currentMultiplier, 2f); 
+            if (currentMultiplier >= _lastFiredMultiplier + 0.1f) // Only update when multiplier increases by 0.1 or more
+            {
+                _lastFiredMultiplier = currentMultiplier;
+
+                //scale score by multiplier?
+                _score = Mathf.RoundToInt(_baseScore * currentMultiplier);
+                RefreshDetailText();
+      
+  
+                string multText = string.Format(multiplierFormat, currentMultiplier);
+                ShowJudgement(multText, multiplierColor);
+            }
+        }
+        else
+        {
+            Color c = _reelStatusImage.color;
+            c.a = 0f;
+            _reelStatusImage.color = c;
+            _lastFiredMultiplier = 1f;
+
+        }
     }
 
     private static class ListPool

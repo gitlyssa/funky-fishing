@@ -212,7 +212,7 @@ public class BobberArcCaster : MonoBehaviour
 
         // don't allow yanking if rhythm encounter is still active in overtine
         if (RhythmConductor.Instance != null && 
-        (RhythmConductor.Instance.activeReel != null || RhythmConductor.Instance.isOvertime))
+        (RhythmConductor.Instance.activeReel != null || RhythmConductor.Instance.activeNotes.Count > 0))
         {
             return; 
         }
