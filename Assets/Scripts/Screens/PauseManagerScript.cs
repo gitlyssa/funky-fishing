@@ -23,6 +23,7 @@ public class PauseManager : MonoBehaviour
     [SerializeField] private string controlsDefaultSelectedName = "BackButtton";
 
     private bool isPaused = false;
+    private bool isStandaloneMenuMode = false;
     private Coroutine selectRoutine;
     private RhythmMusicPlayer rhythmMusicPlayer;
 
@@ -44,6 +45,23 @@ public class PauseManager : MonoBehaviour
 
     void Update()
     {
+        if (isStandaloneMenuMode)
+        {
+            if (WasCancelBackPressed())
+            {
+                if (TryCloseTuningPanel())
+                    return;
+
+                GoToMainMenu();
+                return;
+            }
+
+            if (!TryEnsureTuningSelection())
+                EnsurePausedSelection();
+
+            return;
+        }
+
         if (WasPauseTogglePressed())
         {
             if (isPaused)
@@ -70,6 +88,24 @@ public class PauseManager : MonoBehaviour
             if (!TryEnsureTuningSelection())
                 EnsurePausedSelection();
         }
+    }
+
+    public void EnterStandaloneMenuMode()
+    {
+        isStandaloneMenuMode = true;
+        allowControllerPauseToggle = false;
+        allowControllerCancelBack = true;
+        isPaused = true;
+
+        if (PausePanel != null)
+            PausePanel.SetActive(true);
+
+        if (ControlsPanel != null)
+            ControlsPanel.SetActive(false);
+
+        Time.timeScale = 1f;
+        ResolveSelectionReferences();
+        ClearSelectedObject();
     }
 
     public void PauseGame()
@@ -158,6 +194,13 @@ public class PauseManager : MonoBehaviour
 
     private bool TryCloseTuningPanel()
     {
+        PauseOptionsPanel optionsPanel = GetComponent<PauseOptionsPanel>();
+        if (optionsPanel != null && optionsPanel.IsOptionsPanelOpen())
+        {
+            optionsPanel.CloseOptionsPanel();
+            return true;
+        }
+
         FishingPauseTuningPanel fishing = GetComponent<FishingPauseTuningPanel>();
         if (fishing != null && fishing.IsTuningPanelOpen())
         {
@@ -175,6 +218,13 @@ public class PauseManager : MonoBehaviour
 
     private bool TryEnsureTuningSelection()
     {
+        PauseOptionsPanel optionsPanel = GetComponent<PauseOptionsPanel>();
+        if (optionsPanel != null && optionsPanel.IsOptionsPanelOpen())
+        {
+            optionsPanel.EnsureSelection();
+            return true;
+        }
+
         FishingPauseTuningPanel fishing = GetComponent<FishingPauseTuningPanel>();
         if (fishing != null && fishing.IsTuningPanelOpen())
         {

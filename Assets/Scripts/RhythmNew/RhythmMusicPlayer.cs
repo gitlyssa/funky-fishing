@@ -38,6 +38,8 @@ public class RhythmMusicPlayer : MonoBehaviour
         if (!musicInstance.isValid())
             return;
 
+        FunkyAudioSettings.ApplyCategoryVolume(musicInstance, FunkyAudioCategory.Music);
+
         if (isPausedForGame)
             return;
 
@@ -223,6 +225,7 @@ public class RhythmMusicPlayer : MonoBehaviour
         }
 
         musicInstance = RuntimeManager.CreateInstance(musicEvent);
+        FunkyAudioSettings.ApplyCategoryVolume(musicInstance, FunkyAudioCategory.Music);
     }
     
     public void SetTutorialLoopMode(bool enabled)

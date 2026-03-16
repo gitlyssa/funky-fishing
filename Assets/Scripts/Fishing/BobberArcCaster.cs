@@ -206,7 +206,7 @@ public class BobberArcCaster : MonoBehaviour
 
         Vector3 to = targetMarker.position + Vector3.up * castTargetYOffset;
 
-        FMODUnity.RuntimeManager.PlayOneShot("event:/Sfx/castPH");
+        FunkyAudioSettings.PlayOneShot("event:/Sfx/castPH", transform.position, FunkyAudioCategory.Sfx);
 
         BeginRodActionMotion(RodActionMotion.Cast, castDuration);
         StartArcMove(

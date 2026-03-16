@@ -40,6 +40,7 @@ public class ControllerManagerScript : MonoBehaviour
         if (!enableControllerDetection)
             return;
 
+        AutoBindUiIfNeeded();
         RefreshControllerStatus(forceLog: false);
     }
 
@@ -59,17 +60,34 @@ public class ControllerManagerScript : MonoBehaviour
     {
         if (xboxConnectedText == null)
         {
-            GameObject xboxGo = GameObject.Find("XboxConnected");
-            if (xboxGo != null)
-                xboxConnectedText = xboxGo.GetComponent<TMP_Text>();
+            xboxConnectedText = FindTextByName(transform, "XboxConnected");
+            if (xboxConnectedText == null)
+            {
+                GameObject xboxGo = GameObject.Find("XboxConnected");
+                if (xboxGo != null)
+                    xboxConnectedText = xboxGo.GetComponent<TMP_Text>();
+            }
         }
 
         if (joyConConnectedText == null)
         {
-            GameObject joyConGo = GameObject.Find("JoyConConnected");
-            if (joyConGo != null)
-                joyConConnectedText = joyConGo.GetComponent<TMP_Text>();
+            joyConConnectedText = FindTextByName(transform, "JoyConConnected");
+            if (joyConConnectedText == null)
+            {
+                GameObject joyConGo = GameObject.Find("JoyConConnected");
+                if (joyConGo != null)
+                    joyConConnectedText = joyConGo.GetComponent<TMP_Text>();
+            }
         }
+    }
+
+    public void RefreshNow()
+    {
+        if (!enableControllerDetection)
+            return;
+
+        AutoBindUiIfNeeded();
+        RefreshControllerStatus(forceLog: false);
     }
 
     private void RefreshControllerStatus(bool forceLog)
@@ -217,6 +235,25 @@ public class ControllerManagerScript : MonoBehaviour
 
         text.text = connected ? connectedLabel : disconnectedLabel;
         text.color = connected ? connectedColor : disconnectedColor;
+    }
+
+    private static TMP_Text FindTextByName(Transform root, string name)
+    {
+        if (root == null)
+            return null;
+
+        for (int i = 0; i < root.childCount; i++)
+        {
+            Transform child = root.GetChild(i);
+            if (child.name == name && child.TryGetComponent(out TMP_Text text))
+                return text;
+
+            TMP_Text nested = FindTextByName(child, name);
+            if (nested != null)
+                return nested;
+        }
+
+        return null;
     }
 
     public void BackToMenu()
