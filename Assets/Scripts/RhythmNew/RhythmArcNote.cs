@@ -53,9 +53,9 @@ public class RhythmArcNote : MonoBehaviour
         [SerializeField] private Material goldenMaterial;
 
         [Header("Directional Colors")]
-    [SerializeField] private Material sapphireLeftMat;
-    [SerializeField] private Material rubyRightMat;
-    [SerializeField] private Material emeraldUpMat;
+    [SerializeField] private Material LeftMat;
+    [SerializeField] private Material RightMat;
+    [SerializeField] private Material UpMat;
 
     [Header("Border Config")]
     [SerializeField] private float borderPadding = 0.3f; // How much thicker the border is
