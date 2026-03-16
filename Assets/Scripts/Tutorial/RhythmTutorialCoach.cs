@@ -1039,11 +1039,27 @@ public class RhythmTutorialCoach : MonoBehaviour
         if (canvasObject == null)
             return;
 
-        rhythmStartTutorialUi = FindTutorialUi(canvasObject.transform, "RhythmStartTutorial");
-        upPracticeTutorialUi = FindTutorialUi(canvasObject.transform, "UpPracticeTutorial");
-        leftPracticeTutorialUi = FindTutorialUi(canvasObject.transform, "LeftPracticeTutorial");
-        rightPracticeTutorialUi = FindTutorialUi(canvasObject.transform, "RightPracticeTutorial");
-        sequenceTutorialUi = FindTutorialUi(canvasObject.transform, "SequenceTutorial");
+        bool useXBoxTutorialUi = TutorialStartGate.IsXBoxControllerSelected();
+        rhythmStartTutorialUi = FindTutorialUiWithFallback(
+            canvasObject.transform,
+            useXBoxTutorialUi ? FindTutorialUiAny(canvasObject.transform, "RhythmStartTutorialXbox", "RhythmStartTutorialXBox") : FindTutorialUi(canvasObject.transform, "RhythmStartTutorial"),
+            "RhythmStartTutorial");
+        upPracticeTutorialUi = FindTutorialUiWithFallback(
+            canvasObject.transform,
+            useXBoxTutorialUi ? FindTutorialUiAny(canvasObject.transform, "UpPracticeTutorialXbox", "UpPracticeTutorialXBox") : FindTutorialUi(canvasObject.transform, "UpPracticeTutorial"),
+            "UpPracticeTutorial");
+        leftPracticeTutorialUi = FindTutorialUiWithFallback(
+            canvasObject.transform,
+            useXBoxTutorialUi ? FindTutorialUiAny(canvasObject.transform, "LeftPracticeTutorialXbox", "LeftPracticeTutorialXBox") : FindTutorialUi(canvasObject.transform, "LeftPracticeTutorial"),
+            "LeftPracticeTutorial");
+        rightPracticeTutorialUi = FindTutorialUiWithFallback(
+            canvasObject.transform,
+            useXBoxTutorialUi ? FindTutorialUiAny(canvasObject.transform, "RightPracticeTutorialXbox", "RightPracticeTutorialXBox") : FindTutorialUi(canvasObject.transform, "RightPracticeTutorial"),
+            "RightPracticeTutorial");
+        sequenceTutorialUi = FindTutorialUiWithFallback(
+            canvasObject.transform,
+            useXBoxTutorialUi ? FindTutorialUiAny(canvasObject.transform, "SequenceTutorialXbox", "SequenceTutorialXBox") : FindTutorialUi(canvasObject.transform, "SequenceTutorial"),
+            "SequenceTutorial");
         endTutorialUi = FindTutorialUi(canvasObject.transform, "EndTutorial");
 
         HideAllSceneTutorialUi();
@@ -1053,6 +1069,29 @@ public class RhythmTutorialCoach : MonoBehaviour
     {
         Transform child = canvasTransform.Find(childName);
         return child != null ? child.gameObject : null;
+    }
+
+    private static GameObject FindTutorialUiWithFallback(
+        Transform canvasTransform,
+        GameObject preferred,
+        string fallbackChildName)
+    {
+        if (preferred != null)
+            return preferred;
+
+        return FindTutorialUi(canvasTransform, fallbackChildName);
+    }
+
+    private static GameObject FindTutorialUiAny(Transform canvasTransform, params string[] childNames)
+    {
+        for (int i = 0; i < childNames.Length; i++)
+        {
+            GameObject match = FindTutorialUi(canvasTransform, childNames[i]);
+            if (match != null)
+                return match;
+        }
+
+        return null;
     }
 
     private static GameObject FindSceneGameObject(Scene scene, string objectName)
@@ -1095,6 +1134,7 @@ public class RhythmTutorialCoach : MonoBehaviour
 
     private bool UpdateSceneTutorialUiVisibility()
     {
+        ResolveSceneTutorialUi();
         HideAllSceneTutorialUi();
 
         GameObject tutorialUiToShow = null;
