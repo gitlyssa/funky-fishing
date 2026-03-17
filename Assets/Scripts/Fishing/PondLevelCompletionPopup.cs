@@ -12,6 +12,7 @@ public class PondLevelCompletionPopup : MonoBehaviour
     {
         Hidden,
         Summary,
+        NameEntry,
         Scoreboard
     }
 
@@ -45,14 +46,20 @@ public class PondLevelCompletionPopup : MonoBehaviour
 
     private Canvas canvas;
     private GameObject canvasRoot;
+    private GameObject backdropObject;
+    private GameObject contentPanel;
     private TextMeshProUGUI bodyText;
     private TextMeshProUGUI promptText;
+    private TextMeshProUGUI titleText;
     private Button restartButton;
     private Button mainMenuButton;
+    [SerializeField] private GameObject nameEntryPanel;
+    [SerializeField] private TMP_InputField nameInputField;
 
     private bool popupShown;
     private bool restarting;
     private PopupStage popupStage = PopupStage.Hidden;
+    private bool sessionScoreRecorded;
     private bool cursorStateCached;
     private bool cachedCursorVisible;
     private CursorLockMode cachedCursorLockMode;
@@ -105,7 +112,9 @@ public class PondLevelCompletionPopup : MonoBehaviour
             return;
         }
 
+        ResolveNameEntryReferences();
         BuildUi();
+        HideNameEntryPanel();
         SetPopupVisible(false);
     }
 
@@ -128,7 +137,18 @@ public class PondLevelCompletionPopup : MonoBehaviour
         }
 
         if (popupStage == PopupStage.Summary && WasContinuePressedThisFrame())
-            ShowScoreboardStage();
+        {
+            if (SessionTopScoresTracker.HasPendingNameEntry)
+                ShowNameEntryStage();
+            else
+                ShowScoreboardStage();
+        }
+        else if (popupStage == PopupStage.NameEntry)
+        {
+            ApplyNameInputSanitization();
+            if (WasNameSubmitPressedThisFrame())
+                TrySubmitNameEntry();
+        }
 
         EnsureSelection();
         Cursor.visible = true;
@@ -194,6 +214,7 @@ public class PondLevelCompletionPopup : MonoBehaviour
     {
         popupShown = true;
         popupStage = PopupStage.Summary;
+        RecordSessionScoreIfNeeded();
         CacheCursorState();
         DisablePauseManagers();
         Time.timeScale = 0f;
@@ -284,12 +305,29 @@ public class PondLevelCompletionPopup : MonoBehaviour
         bodyText.alignment = TextAlignmentOptions.Center;
     }
 
+    private void RecordSessionScoreIfNeeded()
+    {
+        if (sessionScoreRecorded)
+            return;
+
+        sessionScoreRecorded = true;
+        FishingSessionHud.SessionSummary summary = FishingSessionHud.GetSessionSummary();
+        SessionTopScoresTracker.TryRecordScore(summary.SessionScore, out _);
+    }
+
     private void ShowSummaryStage()
     {
         popupStage = PopupStage.Summary;
         RefreshSummaryText();
+        if (backdropObject != null)
+            backdropObject.SetActive(true);
+        if (contentPanel != null)
+            contentPanel.SetActive(true);
         if (bodyText != null)
+        {
+            bodyText.gameObject.SetActive(true);
             bodyText.alignment = TextAlignmentOptions.TopLeft;
+        }
         if (promptText != null)
         {
             promptText.text = continuePromptLabel;
@@ -299,18 +337,44 @@ public class PondLevelCompletionPopup : MonoBehaviour
             restartButton.gameObject.SetActive(false);
         if (mainMenuButton != null)
             mainMenuButton.gameObject.SetActive(false);
+        HideNameEntryPanel();
+    }
+
+    private void ShowNameEntryStage()
+    {
+        popupStage = PopupStage.NameEntry;
+        if (backdropObject != null)
+            backdropObject.SetActive(false);
+        if (contentPanel != null)
+            contentPanel.SetActive(false);
+        if (bodyText != null)
+            bodyText.gameObject.SetActive(false);
+        if (promptText != null)
+            promptText.gameObject.SetActive(false);
+        if (restartButton != null)
+            restartButton.gameObject.SetActive(false);
+        if (mainMenuButton != null)
+            mainMenuButton.gameObject.SetActive(false);
+        ShowNameEntryPanel();
     }
 
     private void ShowScoreboardStage()
     {
         popupStage = PopupStage.Scoreboard;
         RefreshScoreboardText();
+        if (backdropObject != null)
+            backdropObject.SetActive(true);
+        if (contentPanel != null)
+            contentPanel.SetActive(true);
         if (promptText != null)
             promptText.gameObject.SetActive(false);
+        if (bodyText != null)
+            bodyText.gameObject.SetActive(true);
         if (restartButton != null)
             restartButton.gameObject.SetActive(true);
         if (mainMenuButton != null)
             mainMenuButton.gameObject.SetActive(true);
+        HideNameEntryPanel();
         SetInitialSelection();
     }
 
@@ -332,6 +396,129 @@ public class PondLevelCompletionPopup : MonoBehaviour
         }
 
         return false;
+    }
+
+    private static bool WasNameSubmitPressedThisFrame()
+    {
+        if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter))
+            return true;
+
+        if (Gamepad.current != null)
+        {
+            if (Gamepad.current.buttonSouth.wasPressedThisFrame ||
+                Gamepad.current.startButton.wasPressedThisFrame)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private void ResolveNameEntryReferences()
+    {
+        if (nameEntryPanel == null)
+        {
+            Transform panelTransform = FindSceneTransformByName("NameEntryPanel");
+            if (panelTransform != null)
+                nameEntryPanel = panelTransform.gameObject;
+        }
+
+        Transform panelRoot = nameEntryPanel != null ? nameEntryPanel.transform : null;
+        if (nameInputField == null && panelRoot != null)
+        {
+            Transform inputFieldTransform = FindChildRecursive(panelRoot, "NameInputField");
+            if (inputFieldTransform != null)
+                nameInputField = inputFieldTransform.GetComponent<TMP_InputField>();
+        }
+    }
+
+    private static Transform FindChildRecursive(Transform root, string childName)
+    {
+        if (root == null)
+            return null;
+
+        if (root.name == childName)
+            return root;
+
+        for (int i = 0; i < root.childCount; i++)
+        {
+            Transform result = FindChildRecursive(root.GetChild(i), childName);
+            if (result != null)
+                return result;
+        }
+
+        return null;
+    }
+
+    private static Transform FindSceneTransformByName(string targetName)
+    {
+        Transform[] allTransforms = Resources.FindObjectsOfTypeAll<Transform>();
+        for (int i = 0; i < allTransforms.Length; i++)
+        {
+            Transform candidate = allTransforms[i];
+            if (candidate == null)
+                continue;
+            if (candidate.name != targetName)
+                continue;
+            if (!candidate.gameObject.scene.IsValid())
+                continue;
+
+            return candidate;
+        }
+
+        return null;
+    }
+
+    private void ShowNameEntryPanel()
+    {
+        ResolveNameEntryReferences();
+
+        if (nameEntryPanel == null || nameInputField == null)
+        {
+            Debug.LogWarning("PondLevelCompletionPopup could not resolve NameEntryPanel or NameInputField. Falling back to AAA.");
+            SessionTopScoresTracker.TrySubmitPendingName("AAA");
+            ShowScoreboardStage();
+            return;
+        }
+
+        nameEntryPanel.SetActive(true);
+        nameInputField.text = string.Empty;
+        nameInputField.characterLimit = 3;
+        nameInputField.lineType = TMP_InputField.LineType.SingleLine;
+        nameInputField.contentType = TMP_InputField.ContentType.Standard;
+        nameInputField.Select();
+        nameInputField.ActivateInputField();
+    }
+
+    private void HideNameEntryPanel()
+    {
+        if (nameEntryPanel != null)
+            nameEntryPanel.SetActive(false);
+    }
+
+    private void ApplyNameInputSanitization()
+    {
+        if (nameInputField == null)
+            return;
+
+        string sanitizedName = SessionTopScoresTracker.SanitizeName(nameInputField.text);
+        if (nameInputField.text == sanitizedName)
+            return;
+
+        nameInputField.text = sanitizedName;
+        nameInputField.caretPosition = nameInputField.text.Length;
+    }
+
+    private void TrySubmitNameEntry()
+    {
+        if (nameInputField == null)
+            return;
+
+        if (!SessionTopScoresTracker.TrySubmitPendingName(nameInputField.text))
+            return;
+
+        ShowScoreboardStage();
     }
 
     private void BuildUi()
@@ -357,6 +544,7 @@ public class PondLevelCompletionPopup : MonoBehaviour
 
         GameObject backdrop = new GameObject("Backdrop", typeof(RectTransform), typeof(Image));
         backdrop.transform.SetParent(root.transform, false);
+        backdropObject = backdrop;
         RectTransform backdropRect = backdrop.GetComponent<RectTransform>();
         backdropRect.anchorMin = Vector2.zero;
         backdropRect.anchorMax = Vector2.one;
@@ -366,6 +554,7 @@ public class PondLevelCompletionPopup : MonoBehaviour
 
         GameObject panel = new GameObject("Panel", typeof(RectTransform), typeof(Image));
         panel.transform.SetParent(backdrop.transform, false);
+        contentPanel = panel;
         RectTransform panelRect = panel.GetComponent<RectTransform>();
         panelRect.anchorMin = new Vector2(0.5f, 0.5f);
         panelRect.anchorMax = new Vector2(0.5f, 0.5f);
@@ -374,7 +563,7 @@ public class PondLevelCompletionPopup : MonoBehaviour
         panelRect.anchoredPosition = Vector2.zero;
         panel.GetComponent<Image>().color = panelColor;
 
-        TextMeshProUGUI titleText = CreateText(
+        titleText = CreateText(
             "TitleText",
             panel.transform,
             new Vector2(0.5f, 1f),
