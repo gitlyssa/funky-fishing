@@ -143,9 +143,9 @@ MonoBehaviour:
   flickMaterial: {fileID: 2100000, guid: 2f0cedc9b3ff58e4a8cd52e18d709565, type: 2}
   slideMaterial: {fileID: 2100000, guid: 26c3778993039da4783074af8553f553, type: 2}
   goldenMaterial: {fileID: 2100000, guid: 8256357f3fdce7d4f8eed075c2770f9f, type: 2}
-  sapphireLeftMat: {fileID: 2100000, guid: 848c892fb35fcc84eaa7869449b9d87e, type: 2}
-  rubyRightMat: {fileID: 2100000, guid: c192f61e5fcd54e4d97360086109e780, type: 2}
-  emeraldUpMat: {fileID: 2100000, guid: 119c768fad9db7c4f80034c673a80799, type: 2}
+  LeftMat: {fileID: 2100000, guid: 848c892fb35fcc84eaa7869449b9d87e, type: 2}
+  RightMat: {fileID: 2100000, guid: c192f61e5fcd54e4d97360086109e780, type: 2}
+  UpMat: {fileID: 2100000, guid: 119c768fad9db7c4f80034c673a80799, type: 2}
   borderPadding: 0.4
   borderAnglePadding: 5
   perfectBorderColor: {r: 1, g: 0.85, b: 0, a: 1}
