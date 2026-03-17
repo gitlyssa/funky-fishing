@@ -29,6 +29,7 @@ public class RhythmJudge : MonoBehaviour
 
     public static event Action<JudgeRating> OnNoteJudged;
     public static event Action<JudgeRating, RhythmArcNote.NoteType, FlickDirection> OnDetailedNoteJudged;
+    public static event Action<bool> OnReelResolved;
 
     void Start()
     {
@@ -226,11 +227,13 @@ public class RhythmJudge : MonoBehaviour
                 }
 
                 reel.OnClear();
+                OnReelResolved?.Invoke(true);
             }
             else
             {
                 Debug.Log("<color=red>REEL FAILED!</color>");
                 reel.OnFail();
+                OnReelResolved?.Invoke(false);
             }
 
             // Clear the reference in the conductor so visuals stop
