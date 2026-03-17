@@ -124,6 +124,7 @@ public class PauseManager : MonoBehaviour
 
     public void ResumeGame()
     {
+        FunkyAudioSettings.PlayUiConfirm();
         PausePanel.SetActive(false);
         if (ControlsPanel != null)
             ControlsPanel.SetActive(false);
@@ -139,6 +140,7 @@ public class PauseManager : MonoBehaviour
 
     public void GoToMainMenu()
     {
+        FunkyAudioSettings.PlayUiConfirm();
         // Prevent the same confirm press from reaching gameplay input on this frame.
         XboxFishingInput.BlockGameplayInputForRealtimeSeconds(Mathf.Max(menuExitInputBlockSeconds, resumeInputBlockSeconds));
         Time.timeScale = 1f;
@@ -147,6 +149,7 @@ public class PauseManager : MonoBehaviour
 
     public void OpenControls()
     {
+        FunkyAudioSettings.PlayUiConfirm();
         PausePanel.SetActive(false);
         if (ControlsPanel != null)
             ControlsPanel.SetActive(true);
@@ -156,6 +159,7 @@ public class PauseManager : MonoBehaviour
 
     public void BackToPauseMenu()
     {
+        FunkyAudioSettings.PlayUiConfirm();
         if (ControlsPanel != null)
             ControlsPanel.SetActive(false);
         PausePanel.SetActive(true);

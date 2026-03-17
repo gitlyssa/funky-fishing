@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.03.00">
+	<object class="AudioFile" id="{8ba910bc-c45e-42a3-bb8a-bc6ed02ed349}">
+		<property name="assetPath">
+			<value>sfx_reel_lp.flac</value>
+		</property>
+		<property name="frequencyInKHz">
+			<value>44.0999985</value>
+		</property>
+		<property name="channelCount">
+			<value>2</value>
+		</property>
+		<property name="length">
+			<value>0.40736961451247167</value>
+		</property>
+		<relationship name="masterAssetFolder">
+			<destination>{ba2a1a69-d313-4fe5-983c-906aed850381}</destination>
+		</relationship>
+	</object>
+</objects>
