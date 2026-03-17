@@ -61,6 +61,9 @@ public class RhythmTutorialCoach : MonoBehaviour
     [SerializeField, Min(0.1f)] private float reelTutorialLeadInSeconds = 0.75f;
     [SerializeField, Min(0.5f)] private float reelTutorialDurationSeconds = 4f;
     [SerializeField] private float reelTutorialGoalDegrees = -720f;
+    [SerializeField, Min(0.25f)] private float reelTutorialRequiredClearProgress = 1f;
+    [SerializeField] private bool reelTutorialResolveOnGoalReachedEarly = true;
+    [SerializeField, Min(1f)] private float reelTutorialFailSafeTimeoutSeconds = 9f;
 
     [Header("Left Step Override")]
     [SerializeField] private string leftPracticeOverrideBeatmapAssetPath = "Assets/FMOD/FunkyFishing/TutorialMus_beatmap.csv";
@@ -129,6 +132,7 @@ public class RhythmTutorialCoach : MonoBehaviour
     private int consecutiveSuccessfulNotes;
     private int sequenceProgress;
     private PendingAdvanceAction pendingAdvanceAction;
+    private float reelPracticeStartedAtRealtime = -1f;
 
     private static readonly FlickDirection[] DirectionSteps =
     {
@@ -279,6 +283,7 @@ public class RhythmTutorialCoach : MonoBehaviour
         bool rhythmVisible = IsRhythmVisible();
 
         ProcessPendingAdvanceAction();
+        CheckReelPracticeFailSafe();
 
         if (rhythmVisible && flowState == FlowState.WaitingForRhythm)
         {
@@ -599,11 +604,17 @@ public class RhythmTutorialCoach : MonoBehaviour
         if (conductor == null)
             return;
 
+        float reelStartTimeBase = conductor.songTime;
         if (musicPlayer != null)
+        {
             musicPlayer.RestartTutorialPlayback();
+            reelStartTimeBase = musicPlayer.GetTimelineSeconds();
+            conductor.songTime = reelStartTimeBase;
+        }
 
         conductor.StopTutorialUpPracticeMode(false);
         practiceModeInitialized = false;
+        conductor.SetTutorialReelsSuppressed(false);
 
         if (conductor.activeReel != null)
         {
@@ -613,14 +624,16 @@ public class RhythmTutorialCoach : MonoBehaviour
 
         ReelData tutorialReel = new ReelData
         {
-            startTime = conductor.songTime + reelTutorialLeadInSeconds,
+            startTime = reelStartTimeBase + reelTutorialLeadInSeconds,
             duration = reelTutorialDurationSeconds,
             goalDegrees = reelTutorialGoalDegrees,
             leadInTime = reelTutorialLeadInSeconds,
-            requiredClearProgress = 2.0f
+            requiredClearProgress = reelTutorialRequiredClearProgress,
+            resolveOnGoalReachedEarly = reelTutorialResolveOnGoalReachedEarly
         };
 
         conductor.SpawnReel(tutorialReel);
+        reelPracticeStartedAtRealtime = Time.unscaledTime;
     }
 
     private void HandleDetailedNoteJudged(
@@ -1327,6 +1340,29 @@ public class RhythmTutorialCoach : MonoBehaviour
             return;
         }
 
+        QueuePendingAdvanceAction(PendingAdvanceAction.ReelRetry);
+    }
+
+    private void CheckReelPracticeFailSafe()
+    {
+        if (flowState != FlowState.ReelPracticeActive)
+            return;
+
+        if (reelTutorialFailSafeTimeoutSeconds <= 0f || reelPracticeStartedAtRealtime < 0f)
+            return;
+
+        if (Time.unscaledTime - reelPracticeStartedAtRealtime < reelTutorialFailSafeTimeoutSeconds)
+            return;
+
+        Debug.LogWarning("RhythmTutorialCoach: Reel tutorial timed out, restarting reel practice.");
+
+        if (conductor != null && conductor.activeReel != null)
+        {
+            Destroy(conductor.activeReel.gameObject);
+            conductor.activeReel = null;
+        }
+
+        reelPracticeStartedAtRealtime = Time.unscaledTime;
         QueuePendingAdvanceAction(PendingAdvanceAction.ReelRetry);
     }
 

@@ -45,7 +45,7 @@ public class TutorialStartGate : MonoBehaviour
     [SerializeField, Range(1f, 2f)] private float catchHintDelayAfterSpawnSeconds = 1.5f;
     [SerializeField, Min(0.01f)] private float targetMoveDistanceThreshold = 0.3f;
     [SerializeField, Min(1)] private int tutorialCatchFishSpawnCount = 3;
-    [SerializeField] private bool skipCatchAndReelTutorialSection = true;
+    [SerializeField] private bool skipCatchAndReelTutorialSection = false;
 
     [Header("Copy")]
     [SerializeField, TextArea(3, 8)] private string welcomeMessage =

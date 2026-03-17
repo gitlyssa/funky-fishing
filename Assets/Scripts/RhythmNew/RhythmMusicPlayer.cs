@@ -163,10 +163,8 @@ public class RhythmMusicPlayer : MonoBehaviour
         StopRhythmPlayback();
         musicInstance.setTimelinePosition(0);
         musicInstance.start();
-            if (RhythmBeatPulse.Instance != null)
+        if (RhythmBeatPulse.Instance != null)
             RhythmBeatPulse.Instance.ResetTimer();
-
-        musicInstance.start();
     }
 
     private void StopRhythmPlayback()
@@ -258,6 +256,15 @@ public class RhythmMusicPlayer : MonoBehaviour
         tutorialPlaybackSuppressed = false;
         isPausedForGame = false;
         StartRhythmPlayback();
+    }
+
+    public float GetTimelineSeconds()
+    {
+        if (!musicInstance.isValid())
+            return 0f;
+
+        musicInstance.getTimelinePosition(out int ms);
+        return ms / 1000f;
     }
 
     void OnDestroy()
