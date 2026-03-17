@@ -615,7 +615,7 @@ public class FishMovement : MonoBehaviour
         s_recentNibblePullOwner = this;
         s_recentNibblePullBobber = bobber;
 
-        FMODUnity.RuntimeManager.PlayOneShot("event:/Sfx/bite");
+        FunkyAudioSettings.PlayOneShot("event:/Sfx/bite", transform.position, FunkyAudioCategory.Sfx);
 
         s_nibblePullRestorePending = false;
         UpdateBobberNibblePull();

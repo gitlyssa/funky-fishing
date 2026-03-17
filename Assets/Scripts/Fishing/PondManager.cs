@@ -19,6 +19,8 @@ public class PondManager : MonoBehaviour
     public GameObject[] fishPrefabs;
     [Header("Spawn Plan (Preferred)")]
     public List<FishSpawnEntry> initialSpawnPlan = new List<FishSpawnEntry>();
+    [Header("Boss Spawn Plan")]
+    public List<FishSpawnEntry> bossSpawnPlan = new List<FishSpawnEntry>();
 
     // list of spawned fish
     public List<GameObject> fishList;
@@ -42,6 +44,7 @@ public class PondManager : MonoBehaviour
     public GameManager gameManager;
     Vector3 pondCenter;
     private readonly List<GameObject> hiddenFishDuringTension = new List<GameObject>();
+    private bool _bossWaveSpawned;
 
     private void IgnoreFishCollisionsFor(GameObject fish)
     {
@@ -133,6 +136,7 @@ public class PondManager : MonoBehaviour
                 SpawnFish(GetRandomSpawnPrefab(), GetRandomSpawnPosition());
         }
 
+        TrySpawnBossWaveIfNeeded();
         ApplyFishFishCollisionSetting();
     }
 
@@ -174,13 +178,18 @@ public class PondManager : MonoBehaviour
     }
     private bool SpawnInitialFishFromPlan()
     {
+        return SpawnFishFromPlan(initialSpawnPlan);
+    }
+
+    private bool SpawnFishFromPlan(List<FishSpawnEntry> spawnPlan)
+    {
         bool spawnedAny = false;
-        if (initialSpawnPlan == null || initialSpawnPlan.Count == 0)
+        if (spawnPlan == null || spawnPlan.Count == 0)
             return false;
 
-        for (int i = 0; i < initialSpawnPlan.Count; i++)
+        for (int i = 0; i < spawnPlan.Count; i++)
         {
-            FishSpawnEntry entry = initialSpawnPlan[i];
+            FishSpawnEntry entry = spawnPlan[i];
             if (entry == null || entry.prefab == null)
                 continue;
 
@@ -194,6 +203,52 @@ public class PondManager : MonoBehaviour
 
         return spawnedAny;
     }
+
+    private bool HasAnyLiveFish()
+    {
+        if (fishList == null || fishList.Count == 0)
+            return false;
+
+        for (int i = 0; i < fishList.Count; i++)
+        {
+            if (fishList[i] != null)
+                return true;
+        }
+
+        return false;
+    }
+
+    private bool HasValidBossSpawnPlan()
+    {
+        if (bossSpawnPlan == null || bossSpawnPlan.Count == 0)
+            return false;
+
+        for (int i = 0; i < bossSpawnPlan.Count; i++)
+        {
+            FishSpawnEntry entry = bossSpawnPlan[i];
+            if (entry != null && entry.prefab != null && entry.count > 0)
+                return true;
+        }
+
+        return false;
+    }
+
+    private void TrySpawnBossWaveIfNeeded()
+    {
+        if (_bossWaveSpawned || !HasValidBossSpawnPlan() || HasAnyLiveFish())
+            return;
+
+        bool spawnedAny = SpawnFishFromPlan(bossSpawnPlan);
+        if (!spawnedAny)
+            return;
+
+        _bossWaveSpawned = true;
+        ApplyFishFishCollisionSetting();
+        Debug.Log("PondManager spawned boss fish wave.");
+    }
+
+    public bool HasPendingBossWave => !_bossWaveSpawned && HasValidBossSpawnPlan();
+    public bool HasRemainingOrPendingFish => HasAnyLiveFish() || HasPendingBossWave;
 
     private Vector3 GetRandomSpawnPosition()
     {
@@ -283,6 +338,7 @@ public class PondManager : MonoBehaviour
         hiddenFishDuringTension.Remove(fishList[fishIndex]);
         Destroy(fishList[fishIndex]);
         fishList.RemoveAt(fishIndex);
+        TrySpawnBossWaveIfNeeded();
     }
 
     public bool RemoveFish(GameObject fish)
@@ -293,7 +349,20 @@ public class PondManager : MonoBehaviour
         hiddenFishDuringTension.Remove(fish);
         fishList.Remove(fish);
         Destroy(fish);
+        TrySpawnBossWaveIfNeeded();
         return true;
+    }
+
+    public bool UnregisterFish(GameObject fish)
+    {
+        if (fish == null)
+            return false;
+
+        hiddenFishDuringTension.Remove(fish);
+        bool removed = fishList.Remove(fish);
+        if (removed)
+            TrySpawnBossWaveIfNeeded();
+        return removed;
     }
 
     public void HideFishForTension(GameObject hookedFish)
@@ -381,6 +450,7 @@ public GameObject GetClosestFish(GameObject bobber)
 
 
             fishList.Remove(fish);
+            TrySpawnBossWaveIfNeeded();
             // Destroy(fish);
             
             FishCaughtText.gameObject.SetActive(true);

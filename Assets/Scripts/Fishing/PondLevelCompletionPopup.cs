@@ -144,17 +144,17 @@ public class PondLevelCompletionPopup : MonoBehaviour
         if (pondManager == null || pondManager.fishList == null)
             return false;
 
-        for (int i = 0; i < pondManager.fishList.Count; i++)
-        {
-            if (pondManager.fishList[i] != null)
-                return false;
-        }
+        if (pondManager.HasRemainingOrPendingFish)
+            return false;
 
         if (bobberArcCaster != null &&
             bobberArcCaster.CurrentState == BobberArcCaster.State.Tension)
         {
             return false;
         }
+
+        if (bobberArcCaster != null && bobberArcCaster.IsSuccessSequenceActive)
+            return false;
 
         return true;
     }
@@ -166,11 +166,26 @@ public class PondLevelCompletionPopup : MonoBehaviour
 
     private void ResolveReferences()
     {
-        if (pondManager == null)
-            pondManager = FindObjectOfType<PondManager>();
+        Scene pondScene = gameObject.scene;
 
-        if (bobberArcCaster == null)
-            bobberArcCaster = FindObjectOfType<BobberArcCaster>();
+        if (pondManager == null || pondManager.gameObject.scene != pondScene)
+            pondManager = FindSceneObject<PondManager>(pondScene);
+
+        if (bobberArcCaster == null || bobberArcCaster.gameObject.scene != pondScene)
+            bobberArcCaster = FindSceneObject<BobberArcCaster>(pondScene);
+    }
+
+    private static T FindSceneObject<T>(Scene scene) where T : Component
+    {
+        T[] objects = Object.FindObjectsByType<T>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        for (int i = 0; i < objects.Length; i++)
+        {
+            T candidate = objects[i];
+            if (candidate != null && candidate.gameObject.scene == scene)
+                return candidate;
+        }
+
+        return null;
     }
 
     private void ShowPopup()

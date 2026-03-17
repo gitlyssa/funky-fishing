@@ -168,7 +168,7 @@ public class RhythmArcNote : MonoBehaviour
     public void OnPerfectHit()
     {
         // PLAY HIT ANIMATIONS AND SOUNDS HERE
-        RuntimeManager.PlayOneShot(perfectHitSoundEvent, transform.position);
+        FunkyAudioSettings.PlayOneShot(perfectHitSoundEvent, transform.position, FunkyAudioCategory.Sfx);
         if (perfectHitParticleEffect != null)        {
             Vector3 effectPosition = transform.position + (Vector3)(GetDirectionVector(direction) * _outerRingRadius);
             GameObject effect = Instantiate(perfectHitParticleEffect, effectPosition, Quaternion.identity);
@@ -183,7 +183,7 @@ public class RhythmArcNote : MonoBehaviour
     {
         // PLAY GOOD HIT ANIMATIONS AND SOUNDS HERE
         
-        RuntimeManager.PlayOneShot(goodHitSoundEvent, transform.position);
+        FunkyAudioSettings.PlayOneShot(goodHitSoundEvent, transform.position, FunkyAudioCategory.Sfx);
         if (goodHitParticleEffect != null)        {
             Vector3 effectPosition = transform.position + (Vector3)(GetDirectionVector(direction) * _outerRingRadius);
             GameObject effect = Instantiate(goodHitParticleEffect, effectPosition, Quaternion.identity);
@@ -196,7 +196,7 @@ public class RhythmArcNote : MonoBehaviour
     public void OnMiss()
     {
         // PLAY MISS ANIMATIONS AND SOUNDS HERE
-        RuntimeManager.PlayOneShot(missSoundEvent, transform.position);
+        FunkyAudioSettings.PlayOneShot(missSoundEvent, transform.position, FunkyAudioCategory.Sfx);
         if (missParticleEffect != null)        {
             Vector3 effectPosition = transform.position + (Vector3)(GetDirectionVector(direction) * _outerRingRadius);
             GameObject effect = Instantiate(missParticleEffect, effectPosition, Quaternion.identity);
