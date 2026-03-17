@@ -312,23 +312,7 @@ public class BobberArcCaster : MonoBehaviour
 
         if (catchSucceeded)
         {
-            GameObject fishToShow = fishToResolve;
-            GameObject migratedFish = SceneLoading.MigratedFish;
-
-            // driveOverlayFromBobberTension can end rhythm as soon as we leave Tension.
-            // Clear SceneLoading's migrated reference so overlay teardown won't destroy
-            // the fish before the trophy animation consumes it.
-            if (fishToShow != null && fishToShow == migratedFish)
-                SceneLoading.MigratedFish = null;
-
-            if (SceneLoading.Instance != null)
-                SceneLoading.Instance.HideScoringCircleForCatchSequence();
-
             _isSuccessSequenceActive = true;
-            BeginRodReturnForSuccessSequence();
-
-            _hookedFish = null; // Remove reference so Consume/Restore doesn't touch it
-
             StartCoroutine(ExecuteVictorySequence(fishToResolve));
         }
         else
@@ -343,17 +327,18 @@ public class BobberArcCaster : MonoBehaviour
 
     private IEnumerator ExecuteVictorySequence(GameObject fish = null)
     {
-        // 1. Trigger the Gameplay Finale
-        RhythmConductor.Instance.StartOvertime();
-        RhythmConductor.Instance.SpawnFinalPlaytestReel();
-
-        // 2. Wait for the player to finish the Golden Reel
-        while (RhythmConductor.Instance.activeReel != null)
+        RhythmConductor conductor = RhythmConductor.Instance;
+        if (conductor != null)
         {
-            yield return null;
+            // Keep the hooked fish in tension until the victory reel is finished.
+            conductor.StartOvertime();
+            conductor.SpawnFinalPlaytestReel();
+
+            while (conductor.activeReel != null)
+                yield return null;
         }
 
-        // 3. Prepare the Scene for the Trophy Animation
+        // Prepare the scene once the finale reel is actually done.
         if (SceneLoading.Instance != null)
             SceneLoading.Instance.HideScoringCircleForCatchSequence();
 
@@ -362,26 +347,9 @@ public class BobberArcCaster : MonoBehaviour
             SceneLoading.MigratedFish = null;
 
         BeginRodReturnForSuccessSequence();
-        _hookedFish = null; // Unbind from the rod logic
+        _hookedFish = null; // Remove reference so Consume/Restore doesn't touch it
 
-        if (fish == null)
-        {
-            Debug.LogWarning("No fish available for trophy animation.");
-        }
-        else if (TryResolveCatchAnimation())
-        {
-            // This waits for the animation to finish before moving on
-            yield return StartCoroutine(catchAnimation.TrophyRoutine(fish));
-        }
-        else
-        {
-            // Fallback if animation system fails
-            if (pondManager != null) pondManager.RemoveFish(fish);
-            else Destroy(fish);
-        }
-
-
-        FinishTensionState();
+        yield return StartCoroutine(ExecuteSuccessSequence(fish));
     }
 
     private void ShowFailedCatchPopup()

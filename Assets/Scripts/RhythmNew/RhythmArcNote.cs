@@ -92,9 +92,9 @@ public class RhythmArcNote : MonoBehaviour
             else
             {
                 _renderer.sharedMaterial = direction switch {
-                    FlickDirection.Left  => sapphireLeftMat,
-                    FlickDirection.Right => rubyRightMat,
-                    FlickDirection.Up    => emeraldUpMat,
+                    FlickDirection.Left  => LeftMat,
+                    FlickDirection.Right => RightMat,
+                    FlickDirection.Up    => UpMat,
                     _ => flickMaterial
                 };
             }
@@ -110,9 +110,7 @@ public class RhythmArcNote : MonoBehaviour
 
         }
 
-    _isInitialized = true;
-
-         _isInitialized = true;
+        _isInitialized = true;
     }
 
     void Update()
