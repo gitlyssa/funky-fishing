@@ -376,6 +376,7 @@ public class RhythmConductor : MonoBehaviour
                 duration = reel.duration,
                 goalDegrees = reel.goalDegrees,
                 leadInTime = reel.leadInTime,
+                requiredClearProgress = reel.requiredClearProgress,
                 resolveOnGoalReachedEarly = reel.resolveOnGoalReachedEarly
             });
         }
@@ -466,6 +467,7 @@ public class RhythmConductor : MonoBehaviour
                 duration = reel.duration,
                 goalDegrees = reel.goalDegrees,
                 leadInTime = reel.leadInTime,
+                requiredClearProgress = reel.requiredClearProgress,
                 resolveOnGoalReachedEarly = reel.resolveOnGoalReachedEarly
             });
         }

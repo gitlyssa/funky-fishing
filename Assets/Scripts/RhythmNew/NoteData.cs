@@ -21,6 +21,7 @@ public class ReelData
     public float duration; // duration the reel note lasts
     public float goalDegrees; // total degrees the player needs to spin
     public float leadInTime = 1.0f; // how long the reel starts spinning before the player needs to start inputting. windup time
+    public float requiredClearProgress = 1.0f;
     public bool resolveOnGoalReachedEarly = false;
     public bool isClockwise => goalDegrees > 0;
 }

@@ -600,7 +600,7 @@ public class RhythmTutorialCoach : MonoBehaviour
             duration = reelTutorialDurationSeconds,
             goalDegrees = reelTutorialGoalDegrees,
             leadInTime = reelTutorialLeadInSeconds,
-            resolveOnGoalReachedEarly = true
+            requiredClearProgress = 2.0f
         };
 
         conductor.SpawnReel(tutorialReel);
