@@ -12864,6 +12864,19 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+  actionRodMotionEnabled: 1
+  castRodMotionDuration: 0.72
+  castRodWindupPortion: 0.4
+  castRodWindupPitch: -38
+  castRodReleasePitch: 62
+  castRodWindupLocalOffset: {x: 0, y: -0.16, z: 0.28}
+  castRodReleaseLocalOffset: {x: 0, y: 0.14, z: -0.32}
+  castBobberWindupLocalOffset: {x: 0, y: 0.16, z: 0.34}
+  yankRodMotionDuration: 0.42
+  yankRodJerkPitch: -58
+  yankRodJerkLocalOffset: {x: 0, y: -0.22, z: -0.05}
+  rodActionPoseSpeed: 14
+  rodActionReturnSpeed: 10
   useNibbleBasedHooking: 1
   allowRadiusHookFallback: 0
   allowManualTensionEntry: 0

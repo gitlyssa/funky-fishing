@@ -433,6 +433,7 @@ public class TutorialStartGate : MonoBehaviour
     {
         if (gateStepIndex == 0)
         {
+            FunkyAudioSettings.PlayUiConfirm();
             gateStepIndex = 1;
             BeginAwaitCastingTargetMove();
             Time.timeScale = 1f;
@@ -455,6 +456,7 @@ public class TutorialStartGate : MonoBehaviour
             return;
         }
 
+        FunkyAudioSettings.PlayUiConfirm();
         DismissGate();
         flowState = TutorialFlowState.Complete;
     }
@@ -607,12 +609,14 @@ public class TutorialStartGate : MonoBehaviour
 
     private void SelectSwitchController()
     {
+        FunkyAudioSettings.PlayUiConfirm();
         selectedControllerScheme = ControllerScheme.Switch;
         FinishControllerSelection();
     }
 
     private void SelectXBoxController()
     {
+        FunkyAudioSettings.PlayUiConfirm();
         selectedControllerScheme = ControllerScheme.XBox;
         FinishControllerSelection();
     }
