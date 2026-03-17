@@ -229,12 +229,16 @@ public class TutorialStartGate : MonoBehaviour
 
         if (!gateActive)
         {
+            EnsurePauseManagersEnabled();
             UpdatePostGateFlow();
             return;
         }
 
         Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
+
+        if (IsInteractiveGameplayGate(gateStepIndex))
+            EnsurePauseManagersEnabled();
 
         if (gateStepIndex == 1)
         {
@@ -286,6 +290,17 @@ public class TutorialStartGate : MonoBehaviour
 
         if (WasConfirmPressedThisFrame())
             AdvanceGateOrDismiss();
+    }
+
+    private void EnsurePauseManagersEnabled()
+    {
+        PauseManager[] pauseManagers = FindObjectsOfType<PauseManager>(true);
+        for (int i = 0; i < pauseManagers.Length; i++)
+        {
+            PauseManager manager = pauseManagers[i];
+            if (manager != null && !manager.enabled)
+                manager.enabled = true;
+        }
     }
 
     private void OnDestroy()

@@ -291,13 +291,27 @@ public class RhythmTutorialCoach : MonoBehaviour
         wasRhythmVisible = rhythmVisible;
 
         if (!gateActive)
+        {
+            EnsurePauseManagersEnabled();
             return;
+        }
 
         Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
 
         if (WasConfirmPressedThisFrame())
             AdvanceGate();
+    }
+
+    private void EnsurePauseManagersEnabled()
+    {
+        PauseManager[] pauseManagers = FindObjectsOfType<PauseManager>(true);
+        for (int i = 0; i < pauseManagers.Length; i++)
+        {
+            PauseManager manager = pauseManagers[i];
+            if (manager != null && !manager.enabled)
+                manager.enabled = true;
+        }
     }
 
     private void BeginIntro()
