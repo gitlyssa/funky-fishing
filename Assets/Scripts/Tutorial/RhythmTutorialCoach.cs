@@ -23,6 +23,8 @@ public class RhythmTutorialCoach : MonoBehaviour
         DirectionPracticeActive,
         SequenceInfoGate,
         SequencePracticeActive,
+        ReelInfoGate,
+        ReelPracticeActive,
         SuccessGate,
         Complete
     }
@@ -32,6 +34,8 @@ public class RhythmTutorialCoach : MonoBehaviour
         None,
         NextDirection,
         SequenceInfo,
+        ReelInfo,
+        ReelRetry,
         SuccessGate
     }
 
@@ -48,6 +52,15 @@ public class RhythmTutorialCoach : MonoBehaviour
     [SerializeField, Min(1)] private int tutorialNoteSpacingBeats = 2;
     [SerializeField, Min(1)] private int tutorialSequenceNoteSpacingBeats = 1;
     [SerializeField, Min(0f)] private float resumeInputBlockSeconds = 0.3f;
+
+    [Header("Reel Tutorial")]
+    [SerializeField, TextArea(3, 8)] private string reelTutorialMessage =
+        "Last step:\n\n" +
+        "When a reel note appears, rotate the reel input in the shown direction until the meter is filled.\n\n" +
+        "Press confirm to start.";
+    [SerializeField, Min(0.1f)] private float reelTutorialLeadInSeconds = 0.75f;
+    [SerializeField, Min(0.5f)] private float reelTutorialDurationSeconds = 4f;
+    [SerializeField] private float reelTutorialGoalDegrees = -720f;
 
     [Header("Left Step Override")]
     [SerializeField] private string leftPracticeOverrideBeatmapAssetPath = "Assets/FMOD/FunkyFishing/TutorialMus_beatmap.csv";
@@ -152,6 +165,7 @@ public class RhythmTutorialCoach : MonoBehaviour
     private GameObject leftPracticeTutorialUi;
     private GameObject rightPracticeTutorialUi;
     private GameObject sequenceTutorialUi;
+    private GameObject reelTutorialUi;
     private GameObject endTutorialUi;
 
     private bool cursorStateCached;
@@ -224,11 +238,13 @@ public class RhythmTutorialCoach : MonoBehaviour
     private void OnEnable()
     {
         RhythmJudge.OnDetailedNoteJudged += HandleDetailedNoteJudged;
+        RhythmJudge.OnReelResolved += HandleReelResolved;
     }
 
     private void OnDisable()
     {
         RhythmJudge.OnDetailedNoteJudged -= HandleDetailedNoteJudged;
+        RhythmJudge.OnReelResolved -= HandleReelResolved;
     }
 
     private void OnDestroy()
@@ -336,6 +352,14 @@ public class RhythmTutorialCoach : MonoBehaviour
             SetGateVisible(false);
             CloseOverlayGateWithoutPause();
             BeginSequencePractice();
+            return;
+        }
+
+        if (flowState == FlowState.ReelInfoGate)
+        {
+            SetGateVisible(false);
+            CloseOverlayGateWithoutPause();
+            BeginReelPractice();
             return;
         }
 
@@ -470,7 +494,8 @@ public class RhythmTutorialCoach : MonoBehaviour
     private void EnterSuccessGate()
     {
         if (flowState != FlowState.DirectionPracticeActive &&
-            flowState != FlowState.SequencePracticeActive)
+            flowState != FlowState.SequencePracticeActive &&
+            flowState != FlowState.ReelPracticeActive)
             return;
 
         if (conductor != null)
@@ -531,6 +556,50 @@ public class RhythmTutorialCoach : MonoBehaviour
         SetProgressVisible(true);
         SetGateVisible(true);
         RefreshProgress();
+    }
+
+    private void EnterReelInfoGate()
+    {
+        if (conductor != null)
+            conductor.SetTutorialUpPracticeSpawnPaused(true);
+
+        flowState = FlowState.ReelInfoGate;
+        OpenOverlayGateWithoutPause();
+        SetGateMessage(reelTutorialMessage);
+        SetProgressVisible(false);
+        SetGateVisible(true);
+    }
+
+    private void BeginReelPractice()
+    {
+        if (flowState == FlowState.Complete)
+            return;
+
+        pendingAdvanceAction = PendingAdvanceAction.None;
+        flowState = FlowState.ReelPracticeActive;
+        SetProgressVisible(false);
+
+        if (conductor == null)
+            return;
+
+        conductor.StopTutorialUpPracticeMode(false);
+        practiceModeInitialized = false;
+
+        if (conductor.activeReel != null)
+        {
+            Destroy(conductor.activeReel.gameObject);
+            conductor.activeReel = null;
+        }
+
+        ReelData tutorialReel = new ReelData
+        {
+            startTime = conductor.songTime + reelTutorialLeadInSeconds,
+            duration = reelTutorialDurationSeconds,
+            goalDegrees = reelTutorialGoalDegrees,
+            leadInTime = reelTutorialLeadInSeconds
+        };
+
+        conductor.SpawnReel(tutorialReel);
     }
 
     private void HandleDetailedNoteJudged(
@@ -1060,6 +1129,7 @@ public class RhythmTutorialCoach : MonoBehaviour
             canvasObject.transform,
             useXBoxTutorialUi ? FindTutorialUiAny(canvasObject.transform, "SequenceTutorialXbox", "SequenceTutorialXBox") : FindTutorialUi(canvasObject.transform, "SequenceTutorial"),
             "SequenceTutorial");
+        reelTutorialUi = FindTutorialUi(canvasObject.transform, "ReelTutorial");
         endTutorialUi = FindTutorialUi(canvasObject.transform, "EndTutorial");
 
         HideAllSceneTutorialUi();
@@ -1129,6 +1199,7 @@ public class RhythmTutorialCoach : MonoBehaviour
         SetTutorialUiActive(leftPracticeTutorialUi, false);
         SetTutorialUiActive(rightPracticeTutorialUi, false);
         SetTutorialUiActive(sequenceTutorialUi, false);
+        SetTutorialUiActive(reelTutorialUi, false);
         SetTutorialUiActive(endTutorialUi, false);
     }
 
@@ -1163,6 +1234,10 @@ public class RhythmTutorialCoach : MonoBehaviour
 
             case FlowState.SequenceInfoGate:
                 tutorialUiToShow = sequenceTutorialUi;
+                break;
+
+            case FlowState.ReelInfoGate:
+                tutorialUiToShow = reelTutorialUi;
                 break;
 
             case FlowState.SuccessGate:
@@ -1213,7 +1288,21 @@ public class RhythmTutorialCoach : MonoBehaviour
 
         RefreshProgress();
         if (sequenceProgress >= FinalSequenceStep.Length)
+            QueuePendingAdvanceAction(PendingAdvanceAction.ReelInfo);
+    }
+
+    private void HandleReelResolved(bool cleared)
+    {
+        if (flowState != FlowState.ReelPracticeActive)
+            return;
+
+        if (cleared)
+        {
             QueuePendingAdvanceAction(PendingAdvanceAction.SuccessGate);
+            return;
+        }
+
+        QueuePendingAdvanceAction(PendingAdvanceAction.ReelRetry);
     }
 
     private void QueuePendingAdvanceAction(PendingAdvanceAction action)
@@ -1223,6 +1312,10 @@ public class RhythmTutorialCoach : MonoBehaviour
 
         if (pendingAdvanceAction == PendingAdvanceAction.SequenceInfo &&
             action == PendingAdvanceAction.NextDirection)
+            return;
+
+        if (pendingAdvanceAction == PendingAdvanceAction.ReelRetry &&
+            action != PendingAdvanceAction.SuccessGate)
             return;
 
         pendingAdvanceAction = action;
@@ -1243,6 +1336,12 @@ public class RhythmTutorialCoach : MonoBehaviour
                 break;
             case PendingAdvanceAction.SequenceInfo:
                 EnterSequenceInfoGate();
+                break;
+            case PendingAdvanceAction.ReelInfo:
+                EnterReelInfoGate();
+                break;
+            case PendingAdvanceAction.ReelRetry:
+                BeginReelPractice();
                 break;
             case PendingAdvanceAction.SuccessGate:
                 EnterSuccessGate();
