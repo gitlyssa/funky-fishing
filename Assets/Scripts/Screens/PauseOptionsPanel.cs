@@ -299,7 +299,11 @@ public class PauseOptionsPanel : MonoBehaviour
 
         _openButton = go.GetComponent<Button>();
         _openButton.targetGraphic = image;
-        _openButton.onClick.AddListener(OpenOptionsPanel);
+        _openButton.onClick.AddListener(() =>
+        {
+            FunkyAudioSettings.PlayUiConfirm();
+            OpenOptionsPanel();
+        });
 
         TextMeshProUGUI label = CreateText(go.transform, "Label", "Options", 13f, FontStyles.Bold, TextAlignmentOptions.Center);
         Stretch(label.rectTransform);
@@ -763,6 +767,7 @@ public class PauseOptionsPanel : MonoBehaviour
             page.ResetButton.onClick.RemoveAllListeners();
             page.ResetButton.onClick.AddListener(() =>
             {
+                FunkyAudioSettings.PlayUiConfirm();
                 if (name.Contains("Rhythm"))
                     SetRhythmAdvancedEnabled(false);
                 else if (name.Contains("Fishing"))
@@ -1133,7 +1138,11 @@ public class PauseOptionsPanel : MonoBehaviour
 
         Button button = go.GetComponent<Button>();
         button.targetGraphic = image;
-        button.onClick.AddListener(onClick);
+        button.onClick.AddListener(() =>
+        {
+            FunkyAudioSettings.PlayUiConfirm();
+            onClick?.Invoke();
+        });
 
         TextMeshProUGUI label = CreateText(go.transform, "Label", text, fontSize, FontStyles.Bold, TextAlignmentOptions.Center);
         Stretch(label.rectTransform);
