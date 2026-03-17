@@ -38,6 +38,7 @@ public class TutorialStartGate : MonoBehaviour
     [SerializeField, Range(1f, 2f)] private float catchHintDelayAfterSpawnSeconds = 1.5f;
     [SerializeField, Min(0.01f)] private float targetMoveDistanceThreshold = 0.3f;
     [SerializeField, Min(1)] private int tutorialCatchFishSpawnCount = 3;
+    [SerializeField] private bool skipCatchAndReelTutorialSection = true;
 
     [Header("Copy")]
     [SerializeField, TextArea(3, 8)] private string welcomeMessage =
@@ -516,6 +517,15 @@ public class TutorialStartGate : MonoBehaviour
 
     private void UpdatePostGateFlow()
     {
+        if (skipCatchAndReelTutorialSection &&
+            (flowState == TutorialFlowState.AwaitCatchHintDelay ||
+             flowState == TutorialFlowState.CatchHintGate))
+        {
+            flowState = TutorialFlowState.Complete;
+            showCatchHintAtUnscaledTime = -1f;
+            return;
+        }
+
         if (flowState == TutorialFlowState.AwaitCastingTargetMove)
         {
             if (HasMovedCastingTarget())
@@ -560,6 +570,13 @@ public class TutorialStartGate : MonoBehaviour
         {
             if (HasSuccessfullyYanked())
             {
+                if (skipCatchAndReelTutorialSection)
+                {
+                    flowState = TutorialFlowState.Complete;
+                    showCatchHintAtUnscaledTime = -1f;
+                    return;
+                }
+
                 if (SpawnSingleTutorialFish())
                 {
                     flowState = TutorialFlowState.AwaitCatchHintDelay;
