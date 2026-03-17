@@ -410,7 +410,7 @@ public class PondLevelCompletionPopup : MonoBehaviour
             }
         }
 
-        return false;
+        return JoyConMenuInput.SubmitPressedThisFrame;
     }
 
     private static bool WasNameSubmitPressedThisFrame()
@@ -427,7 +427,7 @@ public class PondLevelCompletionPopup : MonoBehaviour
             }
         }
 
-        return false;
+        return JoyConMenuInput.SubmitPressedThisFrame;
     }
 
     private void ResolveNameEntryReferences()

@@ -1525,12 +1525,6 @@ MonoBehaviour:
   judgementText: {fileID: 128711327}
   fishNameText: {fileID: 795617615}
   clickText: {fileID: 1901057087}
-  scoreboardPanel: {fileID: 0}
-  rank1Text: {fileID: 0}
-  rank2Text: {fileID: 0}
-  rank3Text: {fileID: 0}
-  rank4Text: {fileID: 0}
-  rank5Text: {fileID: 0}
   perfectJudgementImage: {fileID: 1049730857}
   greatJudgementImage: {fileID: 1828602081}
   goodJudgementImage: {fileID: 354371062}
@@ -2567,7 +2561,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 6.8051147, y: -9.420685}
+  m_AnchoredPosition: {x: 6.805176, y: -9.420654}
   m_SizeDelta: {x: -414.079, y: -140.7615}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &399801840
@@ -2993,7 +2987,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 6.8051147, y: -9.420685}
+  m_AnchoredPosition: {x: 6.805176, y: -9.420654}
   m_SizeDelta: {x: -414.079, y: -140.7615}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &514799891
@@ -5721,9 +5715,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FishingSessionHud
   hudEnabled: 1
-  perfectPoints: 100
-  goodPoints: 70
-  missPoints: 0
   hideDuringRhythmMode: 1
   hideWhenPausedInPondLevel1: 1
   pondLevelSceneName: Pond_Level_1

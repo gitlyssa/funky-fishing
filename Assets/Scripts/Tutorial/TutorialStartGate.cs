@@ -363,7 +363,10 @@ public class TutorialStartGate : MonoBehaviour
         Time.timeScale = IsInteractiveGameplayGate(stepIndex) ? 1f : 0f;
         gateActive = true;
         gateStepIndex = stepIndex;
-        DisablePauseManagers();
+        if (IsInteractiveGameplayGate(stepIndex))
+            RestorePauseManagers();
+        else
+            DisablePauseManagers();
         RefreshGateText();
 
         if (gateCanvas != null)

@@ -232,11 +232,22 @@ public class RhythmJudge : MonoBehaviour
             float spinVelocity = processor.GetSmoothedSpinVelocity(); // Get the current smoothed spin velocity
             float delta = spinVelocity * Time.deltaTime; // Convert velocity to delta for this frame
             reel.AddSpin(delta);
+
+            if (reel.Data.resolveOnGoalReachedEarly && reel.Progress >= 1.0f)
+            {
+                if (logReelOutcome)
+                    Debug.Log("<color=green>REEL CLEARED!</color>");
+
+                reel.OnClear();
+                OnReelResolved?.Invoke(true);
+                conductor.activeReel = null;
+                StopReelLoopImmediately();
+                return;
+            }
         }
 
         if (songTime >= endTime)
         {
-            
             float finalProgress = reel.Progress;
 
             if (finalProgress >= 1.0f)
@@ -245,7 +256,7 @@ public class RhythmJudge : MonoBehaviour
                     Debug.Log("<color=green>REEL CLEARED!</color>");
                 if (finalProgress > 1.0f)
                 {
-                    float bonus = Mathf.Min(finalProgress - 1.0f, 1.0f); 
+                    float bonus = Mathf.Min(finalProgress - 1.0f, 1.0f);
 
                     if (logReelOutcome)
                         Debug.Log($"<color=gold>BONUS REACHED: {bonus * 100:F0}%</color>");

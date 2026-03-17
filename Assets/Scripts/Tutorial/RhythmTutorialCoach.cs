@@ -403,6 +403,7 @@ public class RhythmTutorialCoach : MonoBehaviour
 
         InitializePracticeModeIfNeeded();
         flowState = FlowState.DirectionPracticeActive;
+        RestorePauseManagers();
         if (conductor != null)
             conductor.SetTutorialUpPracticeSpawnPaused(false);
         RefreshProgress();
@@ -416,6 +417,7 @@ public class RhythmTutorialCoach : MonoBehaviour
 
         sequenceProgress = 0;
         flowState = FlowState.SequencePracticeActive;
+        RestorePauseManagers();
 
         if (conductor != null)
             conductor.StartTutorialSequencePracticeMode(
@@ -578,6 +580,7 @@ public class RhythmTutorialCoach : MonoBehaviour
         pendingAdvanceAction = PendingAdvanceAction.None;
         flowState = FlowState.ReelPracticeActive;
         SetProgressVisible(false);
+        RestorePauseManagers();
 
         if (conductor == null)
             return;
@@ -596,7 +599,8 @@ public class RhythmTutorialCoach : MonoBehaviour
             startTime = conductor.songTime + reelTutorialLeadInSeconds,
             duration = reelTutorialDurationSeconds,
             goalDegrees = reelTutorialGoalDegrees,
-            leadInTime = reelTutorialLeadInSeconds
+            leadInTime = reelTutorialLeadInSeconds,
+            resolveOnGoalReachedEarly = true
         };
 
         conductor.SpawnReel(tutorialReel);
@@ -632,10 +636,14 @@ public class RhythmTutorialCoach : MonoBehaviour
 
     private void HandleRhythmEncounterEnded()
     {
+        if (flowState == FlowState.SuccessGate || pendingAdvanceAction == PendingAdvanceAction.SuccessGate)
+            return;
+
         StopPracticeMode();
         HideAllSceneTutorialUi();
         RestoreConflictingHud();
         SetProgressVisible(false);
+        RestorePauseManagers();
 
         if (gateActive)
         {
