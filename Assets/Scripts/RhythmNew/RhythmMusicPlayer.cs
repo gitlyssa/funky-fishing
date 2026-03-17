@@ -39,6 +39,8 @@ public class RhythmMusicPlayer : MonoBehaviour
         if (!musicInstance.isValid())
             return;
 
+        FunkyAudioSettings.ApplyCategoryVolume(musicInstance, FunkyAudioCategory.Music);
+
         if (isPausedForGame)
             return;
 
@@ -102,15 +104,15 @@ public class RhythmMusicPlayer : MonoBehaviour
                 playbackState == PLAYBACK_STATE.STOPPED &&
                 !RhythmConductor.Instance.AreTutorialReelsSuppressed())
             {
-                // If there's no active reel and no notes left, spawn the final one
-                if (RhythmConductor.Instance.activeReel == null && RhythmConductor.Instance.activeNotes.Count == 0)
-                {
-                    RhythmConductor.Instance.StartOvertime();
-                    RhythmConductor.Instance.SpawnFinalPlaytestReel();
+                // // If there's no active reel and no notes left, spawn the final one
+                // if (RhythmConductor.Instance.activeReel == null && RhythmConductor.Instance.activeNotes.Count == 0)
+                // {
+                //     RhythmConductor.Instance.StartOvertime();
+                //     RhythmConductor.Instance.SpawnFinalPlaytestReel();
                     
-                    // sawPlaybackActiveInCurrentTension = false; 
-                    return;
-                }
+                //     // sawPlaybackActiveInCurrentTension = false; 
+                //     return;
+                // }
             }
 
             if (RhythmConductor.Instance.activeReel != null)
@@ -234,6 +236,7 @@ public class RhythmMusicPlayer : MonoBehaviour
         }
 
         musicInstance = RuntimeManager.CreateInstance(musicEvent);
+        FunkyAudioSettings.ApplyCategoryVolume(musicInstance, FunkyAudioCategory.Music);
     }
     
     public void SetTutorialLoopMode(bool enabled)

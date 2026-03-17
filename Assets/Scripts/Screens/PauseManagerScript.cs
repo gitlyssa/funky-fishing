@@ -23,6 +23,7 @@ public class PauseManager : MonoBehaviour
     [SerializeField] private string controlsDefaultSelectedName = "BackButtton";
 
     private bool isPaused = false;
+    private bool isStandaloneMenuMode = false;
     private Coroutine selectRoutine;
     private RhythmMusicPlayer rhythmMusicPlayer;
 
@@ -44,6 +45,23 @@ public class PauseManager : MonoBehaviour
 
     void Update()
     {
+        if (isStandaloneMenuMode)
+        {
+            if (WasCancelBackPressed())
+            {
+                if (TryCloseTuningPanel())
+                    return;
+
+                GoToMainMenu();
+                return;
+            }
+
+            if (!TryEnsureTuningSelection())
+                EnsurePausedSelection();
+
+            return;
+        }
+
         if (WasPauseTogglePressed())
         {
             if (isPaused)
@@ -72,6 +90,24 @@ public class PauseManager : MonoBehaviour
         }
     }
 
+    public void EnterStandaloneMenuMode()
+    {
+        isStandaloneMenuMode = true;
+        allowControllerPauseToggle = false;
+        allowControllerCancelBack = true;
+        isPaused = true;
+
+        if (PausePanel != null)
+            PausePanel.SetActive(true);
+
+        if (ControlsPanel != null)
+            ControlsPanel.SetActive(false);
+
+        Time.timeScale = 1f;
+        ResolveSelectionReferences();
+        ClearSelectedObject();
+    }
+
     public void PauseGame()
     {
         PausePanel.SetActive(true);
@@ -88,6 +124,7 @@ public class PauseManager : MonoBehaviour
 
     public void ResumeGame()
     {
+        FunkyAudioSettings.PlayUiConfirm();
         PausePanel.SetActive(false);
         if (ControlsPanel != null)
             ControlsPanel.SetActive(false);
@@ -103,6 +140,7 @@ public class PauseManager : MonoBehaviour
 
     public void GoToMainMenu()
     {
+        FunkyAudioSettings.PlayUiConfirm();
         // Prevent the same confirm press from reaching gameplay input on this frame.
         XboxFishingInput.BlockGameplayInputForRealtimeSeconds(Mathf.Max(menuExitInputBlockSeconds, resumeInputBlockSeconds));
         Time.timeScale = 1f;
@@ -111,6 +149,7 @@ public class PauseManager : MonoBehaviour
 
     public void OpenControls()
     {
+        FunkyAudioSettings.PlayUiConfirm();
         PausePanel.SetActive(false);
         if (ControlsPanel != null)
             ControlsPanel.SetActive(true);
@@ -120,6 +159,7 @@ public class PauseManager : MonoBehaviour
 
     public void BackToPauseMenu()
     {
+        FunkyAudioSettings.PlayUiConfirm();
         if (ControlsPanel != null)
             ControlsPanel.SetActive(false);
         PausePanel.SetActive(true);
@@ -158,6 +198,13 @@ public class PauseManager : MonoBehaviour
 
     private bool TryCloseTuningPanel()
     {
+        PauseOptionsPanel optionsPanel = GetComponent<PauseOptionsPanel>();
+        if (optionsPanel != null && optionsPanel.IsOptionsPanelOpen())
+        {
+            optionsPanel.CloseOptionsPanel();
+            return true;
+        }
+
         FishingPauseTuningPanel fishing = GetComponent<FishingPauseTuningPanel>();
         if (fishing != null && fishing.IsTuningPanelOpen())
         {
@@ -175,6 +222,13 @@ public class PauseManager : MonoBehaviour
 
     private bool TryEnsureTuningSelection()
     {
+        PauseOptionsPanel optionsPanel = GetComponent<PauseOptionsPanel>();
+        if (optionsPanel != null && optionsPanel.IsOptionsPanelOpen())
+        {
+            optionsPanel.EnsureSelection();
+            return true;
+        }
+
         FishingPauseTuningPanel fishing = GetComponent<FishingPauseTuningPanel>();
         if (fishing != null && fishing.IsTuningPanelOpen())
         {
