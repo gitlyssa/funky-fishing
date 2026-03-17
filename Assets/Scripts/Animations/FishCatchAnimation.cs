@@ -1,7 +1,8 @@
 using UnityEngine;
-using TMPro;
 using System.Collections;
+using TMPro;
 using UnityEngine.UI;
+
 public class FishCatchAnimation : MonoBehaviour
 {
     [Header("UI & Effects")]
@@ -9,11 +10,11 @@ public class FishCatchAnimation : MonoBehaviour
     public TextMeshProUGUI judgementText; // "Perfect Catch!"
     public TextMeshProUGUI fishNameText;  // "Redbelly caught!"
     public TextMeshProUGUI clickText;        // press any key to continue
-
     public Image perfectJudgementImage;
     public Image greatJudgementImage;
     public Image goodJudgementImage;
     private Image _activeJudgementImage;
+    private string _defaultClickText;
 
     private float _imageSize = 3.1f; // Base size for judgement images
 
@@ -24,38 +25,31 @@ public class FishCatchAnimation : MonoBehaviour
     public float verticalOffset = -0.1f;
     public float spinSpeed = 150f;
     private bool _continuePressed = false;
+    private bool _continueInputReady = true;
 
     private void Awake()
     {
         // Ensure everything is hidden at start
         if (overlayPanel != null) overlayPanel.SetActive(false);
         if (clickText != null) clickText.gameObject.SetActive(false);
+        if (clickText != null) _defaultClickText = clickText.text;
         if (judgementText != null) judgementText.gameObject.SetActive(false);
         if (fishNameText != null) fishNameText.gameObject.SetActive(false);
         HideAllJudgements();
     }
     private void Update()
     {
-
-        if (Input.anyKeyDown)
+        bool continueInputHeld = IsContinueInputHeld();
+        if (!continueInputHeld)
         {
-            SetContinue();
+            _continueInputReady = true;
             return;
         }
 
-        for (int i = 0; i < 4; i++)
+        if (_continueInputReady)
         {
-            if (JSL.JslStillConnected(i))
-            {
-                JSL.JOY_SHOCK_STATE state = JSL.JslGetSimpleState(i);
-                
-                // If the 'buttons' integer is not 0, at least one bit (button) is active!
-                if (state.buttons != 0)
-                {
-                    SetContinue();
-                    return;
-                }
-            }
+            SetContinue();
+            _continueInputReady = false;
         }
     }
     private void HideAllJudgements()
@@ -69,11 +63,39 @@ public class FishCatchAnimation : MonoBehaviour
     {
         _continuePressed = true;
     }
+
+    private bool IsContinueInputHeld()
+    {
+        if (Input.anyKey)
+            return true;
+
+        for (int i = 0; i < 4; i++)
+        {
+            if (!JSL.JslStillConnected(i))
+                continue;
+
+            JSL.JOY_SHOCK_STATE state = JSL.JslGetSimpleState(i);
+            if (state.buttons != 0)
+                return true;
+        }
+
+        return false;
+    }
+
+    private IEnumerator WaitForContinuePressed()
+    {
+        _continuePressed = false;
+        while (!_continuePressed)
+            yield return null;
+    }
     public IEnumerator TrophyRoutine(GameObject fish)
     {
         Camera cam = Camera.main;
         Transform fishXform = fish.transform;
         _continuePressed = false;
+        _continueInputReady = !IsContinueInputHeld();
+        if (clickText != null)
+            clickText.text = _defaultClickText;
 
         // disable all scripts on fish
         MonoBehaviour[] scripts = fish.GetComponents<MonoBehaviour>();
@@ -162,11 +184,11 @@ public class FishCatchAnimation : MonoBehaviour
             yield return null;
         }
 
-        if (overlayPanel != null) overlayPanel.SetActive(false);
         if (judgementText != null) judgementText.gameObject.SetActive(false);
         if (fishNameText != null) fishNameText.gameObject.SetActive(false);
-        if (clickText != null) clickText.gameObject.SetActive(false);
         HideAllJudgements();
+        if (overlayPanel != null) overlayPanel.SetActive(false);
+        if (clickText != null) clickText.gameObject.SetActive(false);
         
         Destroy(fish);
     }

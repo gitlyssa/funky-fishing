@@ -50,6 +50,7 @@ public class RhythmConductor : MonoBehaviour
 
     [Header("Tutorial Practice (Runtime)")]
     [SerializeField] private bool tutorialUpPracticeActive;
+    [SerializeField] private bool tutorialReelsSuppressed;
     [SerializeField] private FlickDirection tutorialPracticeDirection = FlickDirection.Up;
     [SerializeField] private bool tutorialPracticeUseSequence;
     [SerializeField] private float tutorialPracticeBpm = 99f;
@@ -137,7 +138,10 @@ public class RhythmConductor : MonoBehaviour
             _chart.RemoveAt(0);
         }
 
-        if (activeReel == null && _reelQueue.Count > 0 && songTime >= _reelQueue[0].startTime - _reelQueue[0].leadInTime)
+        if (!tutorialReelsSuppressed &&
+            activeReel == null &&
+            _reelQueue.Count > 0 &&
+            songTime >= _reelQueue[0].startTime - _reelQueue[0].leadInTime)
         {
             SpawnReel(_reelQueue[0]);
             _reelQueue.RemoveAt(0);
@@ -213,6 +217,9 @@ public class RhythmConductor : MonoBehaviour
 
     public void SpawnFinalPlaytestReel()
     {
+        if (tutorialReelsSuppressed)
+            return;
+
         // We spawn it at the current songTime (which is the end of the song)
         ReelData finalReel = new ReelData
         {
@@ -224,6 +231,27 @@ public class RhythmConductor : MonoBehaviour
         
         SpawnReel(finalReel);
         Debug.Log("Final Playtest Reel Spawned!");
+    }
+
+    public void SetTutorialReelsSuppressed(bool suppressed)
+    {
+        tutorialReelsSuppressed = suppressed;
+
+        if (!suppressed)
+            return;
+
+        if (activeReel != null)
+        {
+            Destroy(activeReel.gameObject);
+            activeReel = null;
+        }
+
+        _reelQueue.Clear();
+    }
+
+    public bool AreTutorialReelsSuppressed()
+    {
+        return tutorialReelsSuppressed;
     }
 
     public void StartTutorialDirectionalPracticeMode(
@@ -347,7 +375,9 @@ public class RhythmConductor : MonoBehaviour
                 startTime = reel.startTime,
                 duration = reel.duration,
                 goalDegrees = reel.goalDegrees,
-                leadInTime = reel.leadInTime
+                leadInTime = reel.leadInTime,
+                requiredClearProgress = reel.requiredClearProgress,
+                resolveOnGoalReachedEarly = reel.resolveOnGoalReachedEarly
             });
         }
 
@@ -436,7 +466,9 @@ public class RhythmConductor : MonoBehaviour
                 startTime = reel.startTime,
                 duration = reel.duration,
                 goalDegrees = reel.goalDegrees,
-                leadInTime = reel.leadInTime
+                leadInTime = reel.leadInTime,
+                requiredClearProgress = reel.requiredClearProgress,
+                resolveOnGoalReachedEarly = reel.resolveOnGoalReachedEarly
             });
         }
     }
@@ -543,10 +575,10 @@ public class RhythmConductor : MonoBehaviour
     SpawnStaticRing(rStartPerf, new Color(1f, 0.9f, 0.5f, 0.8f), 0.02f, "Ring_Perfect_Border");
 
         
-        float goodTimeOffset = RhythmJudge.Instance.GoodWindow;
-        float goodT = 1f - (goodTimeOffset / noteTravelTime);
-        float goodRadius = Mathf.Lerp(spawnRadius, hitRingRadius, noteScaleCurve.Evaluate(goodT));
-        SpawnStaticRing(goodRadius, goodGuidelineColor, ringThickness, "Ring_Good_Entry");
+        // float goodTimeOffset = RhythmJudge.Instance.GoodWindow;
+        // float goodT = 1f - (goodTimeOffset / noteTravelTime);
+        // float goodRadius = Mathf.Lerp(spawnRadius, hitRingRadius, noteScaleCurve.Evaluate(goodT));
+        // SpawnStaticRing(goodRadius, goodGuidelineColor, ringThickness, "Ring_Good_Entry");
 
     }
 

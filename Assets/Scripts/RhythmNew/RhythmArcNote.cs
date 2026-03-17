@@ -50,6 +50,12 @@ public class RhythmArcNote : MonoBehaviour
         [SerializeField] private MeshRenderer _borderRenderer;
         [SerializeField] private Material flickMaterial;
         [SerializeField] private Material slideMaterial;
+        [SerializeField] private Material goldenMaterial;
+
+        [Header("Directional Colors")]
+    [SerializeField] private Material LeftMat;
+    [SerializeField] private Material RightMat;
+    [SerializeField] private Material UpMat;
 
     [Header("Border Config")]
     [SerializeField] private float borderPadding = 0.3f; // How much thicker the border is
@@ -79,12 +85,24 @@ public class RhythmArcNote : MonoBehaviour
         _renderer = GetComponent<MeshRenderer>();
         if (_renderer != null)
         {
-            _renderer.sharedMaterial = (type == NoteType.Flick) ? flickMaterial : slideMaterial;
+            if (data.isGolden)
+            {
+                _renderer.material = goldenMaterial;
+            }
+            else
+            {
+                _renderer.sharedMaterial = direction switch {
+                    FlickDirection.Left  => LeftMat,
+                    FlickDirection.Right => RightMat,
+                    FlickDirection.Up    => UpMat,
+                    _ => flickMaterial
+                };
+            }
         }
 
         _visuals = GetComponent<DynamicArc>();
         _visuals.Setup(meshSegments);
-        _visuals.SetMaterial(_renderer.sharedMaterial);
+        _visuals.SetMaterial(_renderer.material);
 
         if (_borderVisuals != null)
         {
@@ -92,9 +110,7 @@ public class RhythmArcNote : MonoBehaviour
 
         }
 
-    _isInitialized = true;
-
-         _isInitialized = true;
+        _isInitialized = true;
     }
 
     void Update()

@@ -8,6 +8,10 @@ public class NoteData
     public float hitTime;               // time the note needs to be hit
     public RhythmArcNote.NoteType type; // flick or slide
     public FlickDirection direction;    // left right up down ( i guess diagonals are okay too technically)
+    public bool isGolden = false;                // whether the note is a golden note, which gives bonus points and has a stricter timing window
+    public bool isGhost = false;                 // whether the note is a ghost note which has trailing afterimage notes that are auto hit
+    public int ghostRepeats = 0;              // how many times the ghost note repeats, if it's a ghost note. 
+    public float ghostRepeatInterval = 1f;    // the interval between ghost note repeats, if it's a ghost note
 }
 
 [System.Serializable]
@@ -17,6 +21,8 @@ public class ReelData
     public float duration; // duration the reel note lasts
     public float goalDegrees; // total degrees the player needs to spin
     public float leadInTime = 1.0f; // how long the reel starts spinning before the player needs to start inputting. windup time
+    public float requiredClearProgress = 1.0f;
+    public bool resolveOnGoalReachedEarly = false;
     public bool isClockwise => goalDegrees > 0;
 }
 

@@ -258,6 +258,7 @@ public class ControllerManagerScript : MonoBehaviour
 
     public void BackToMenu()
     {
+        FunkyAudioSettings.PlayUiConfirm();
         SceneManager.LoadScene("MainMenu");
     }
 }

@@ -271,7 +271,11 @@ public class RhythmPauseTuningPanel : MonoBehaviour
         if (_backButton != null)
         {
             _backButton.onClick.RemoveAllListeners();
-            _backButton.onClick.AddListener(() => onBack?.Invoke());
+            _backButton.onClick.AddListener(() =>
+            {
+                FunkyAudioSettings.PlayUiConfirm();
+                onBack?.Invoke();
+            });
         }
 
         CloseTuningPanelInternal(selectOpenButton: false);
@@ -513,7 +517,11 @@ public class RhythmPauseTuningPanel : MonoBehaviour
 
         _openButton = go.GetComponent<Button>();
         _openButton.targetGraphic = image;
-        _openButton.onClick.AddListener(OpenTuningPanel);
+        _openButton.onClick.AddListener(() =>
+        {
+            FunkyAudioSettings.PlayUiConfirm();
+            OpenTuningPanel();
+        });
 
         TextMeshProUGUI label = CreateText(go.transform, "Label", "Rhythm Tuning", 13f, FontStyles.Bold, TextAlignmentOptions.Center);
         Stretch(label.rectTransform);
@@ -758,7 +766,11 @@ public class RhythmPauseTuningPanel : MonoBehaviour
 
         Button button = go.GetComponent<Button>();
         button.targetGraphic = image;
-        button.onClick.AddListener(() => ShowInfoPopup(spec.Label, spec.Description));
+        button.onClick.AddListener(() =>
+        {
+            FunkyAudioSettings.PlayUiConfirm();
+            ShowInfoPopup(spec.Label, spec.Description);
+        });
 
         RectTransform rect = go.GetComponent<RectTransform>();
         rect.sizeDelta = new Vector2(12f, 12f);
@@ -776,7 +788,11 @@ public class RhythmPauseTuningPanel : MonoBehaviour
 
         Button overlayButton = _infoPopupOverlay.gameObject.AddComponent<Button>();
         overlayButton.targetGraphic = overlayImage;
-        overlayButton.onClick.AddListener(HideInfoPopup);
+        overlayButton.onClick.AddListener(() =>
+        {
+            FunkyAudioSettings.PlayUiConfirm();
+            HideInfoPopup();
+        });
 
         RectTransform card = CreateRect(_infoPopupOverlay, "InfoPopupCard", new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(-170f, -96f), new Vector2(170f, 96f));
         Image cardImage = card.gameObject.AddComponent<Image>();
@@ -944,7 +960,11 @@ public class RhythmPauseTuningPanel : MonoBehaviour
 
         Button button = go.GetComponent<Button>();
         button.targetGraphic = image;
-        button.onClick.AddListener(onClick);
+        button.onClick.AddListener(() =>
+        {
+            FunkyAudioSettings.PlayUiConfirm();
+            onClick?.Invoke();
+        });
 
         TextMeshProUGUI label = CreateText(go.transform, "Label", text, fontSize, FontStyles.Bold, TextAlignmentOptions.Center);
         Stretch(label.rectTransform);

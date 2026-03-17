@@ -14,6 +14,7 @@ public enum FunkyAudioCategory
 [DisallowMultipleComponent]
 public sealed class FunkyAudioSettings : MonoBehaviour
 {
+    private const string UiConfirmEventPath = "event:/Sfx/ui1";
     private const string MasterVolumePrefKey = "FunkyFishing.Options.MasterVolume";
     private const string MusicVolumePrefKey = "FunkyFishing.Options.MusicVolume";
     private const string AmbientVolumePrefKey = "FunkyFishing.Options.AmbientVolume";
@@ -161,6 +162,12 @@ public sealed class FunkyAudioSettings : MonoBehaviour
 
         EventInstance instance = RuntimeManager.CreateInstance(eventReference);
         PlayManagedOneShot(instance, position, category);
+    }
+
+    public static void PlayUiConfirm(Vector3? positionOverride = null)
+    {
+        Vector3 position = positionOverride ?? Camera.main?.transform.position ?? Vector3.zero;
+        PlayOneShot(UiConfirmEventPath, position, FunkyAudioCategory.Sfx);
     }
 
     private static void PlayManagedOneShot(EventInstance instance, Vector3 position, FunkyAudioCategory category)
