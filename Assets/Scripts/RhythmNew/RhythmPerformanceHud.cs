@@ -8,6 +8,7 @@ public class RhythmPerformanceHud : MonoBehaviour
 {
     [Header("HUD Toggle")]
     [SerializeField] private bool hudEnabled = true;
+    [SerializeField] private bool judgementFeedbackOnlyEnabled = false;
 
     [Header("Points")]
     [SerializeField] private int perfectPoints = 100;
@@ -145,6 +146,16 @@ public class RhythmPerformanceHud : MonoBehaviour
         ApplyHudVisibility();
     }
 
+    private void OnEnable()
+    {
+        RhythmJudge.OnDetailedNoteJudged += HandleDetailedNoteJudged;
+    }
+
+    private void OnDisable()
+    {
+        RhythmJudge.OnDetailedNoteJudged -= HandleDetailedNoteJudged;
+    }
+
     private void OnValidate()
     {
         ApplyHudVisibility();
@@ -155,7 +166,7 @@ public class RhythmPerformanceHud : MonoBehaviour
         EnsureReferences();
         EnsureUi();
 
-        if (!hudEnabled)
+        if (!hudEnabled && !judgementFeedbackOnlyEnabled)
         {
             _wasPlaybackActive = false;
             _trackedNotes.Clear();
@@ -173,8 +184,10 @@ public class RhythmPerformanceHud : MonoBehaviour
         if (playbackActive && !_wasPlaybackActive)
         {
             ResetRunStats();
-            SyncTrackedNotesToCurrent();
-            ShowReadyJudgement();
+            if (hudEnabled)
+                ShowReadyJudgement();
+            else
+                HideJudgementImmediate();
             RefreshDetailText();
         }
 
@@ -189,8 +202,6 @@ public class RhythmPerformanceHud : MonoBehaviour
         if (!playbackActive && !isReeling)
             return;
 
-        CollectNewNotes();
-        ResolveRemovedNotes();
         TickJudgementAnimation();
         TickComboPulseAnimation();
         TickReelVisuals();
@@ -539,6 +550,31 @@ public class RhythmPerformanceHud : MonoBehaviour
         ApplyResult(result);
     }
 
+    private void HandleDetailedNoteJudged(
+        RhythmJudge.JudgeRating rating,
+        RhythmArcNote.NoteType noteType,
+        FlickDirection direction)
+    {
+        if (!hudEnabled && !judgementFeedbackOnlyEnabled)
+            return;
+
+        ResultType result;
+        switch (rating)
+        {
+            case RhythmJudge.JudgeRating.Perfect:
+                result = ResultType.Perfect;
+                break;
+            case RhythmJudge.JudgeRating.Good:
+                result = ResultType.Good;
+                break;
+            default:
+                result = ResultType.Miss;
+                break;
+        }
+
+        ApplyResult(result);
+    }
+
     private void ApplyResult(ResultType result)
     {
         switch (result)
@@ -776,6 +812,12 @@ public class RhythmPerformanceHud : MonoBehaviour
         if (_comboText == null || _comboRect == null)
             return;
 
+        if (!hudEnabled)
+        {
+            HideComboImmediate();
+            return;
+        }
+
         if (_combo < Mathf.Max(1, comboShowThreshold))
         {
             HideComboImmediate();
@@ -803,6 +845,12 @@ public class RhythmPerformanceHud : MonoBehaviour
     {
         if (_detailText == null)
             return;
+
+        if (!hudEnabled)
+        {
+            _detailText.text = string.Empty;
+            return;
+        }
 
         int totalJudged = _perfectCount + _goodCount + _missCount;
         float accuracy = totalJudged > 0
@@ -838,10 +886,22 @@ public class RhythmPerformanceHud : MonoBehaviour
         ApplyHudVisibility();
     }
 
+    public void SetJudgementFeedbackOnlyEnabled(bool enabled)
+    {
+        judgementFeedbackOnlyEnabled = enabled;
+        ApplyHudVisibility();
+    }
+
     private void ApplyHudVisibility()
     {
         if (_canvas != null)
-            _canvas.enabled = hudEnabled;
+            _canvas.enabled = hudEnabled || judgementFeedbackOnlyEnabled;
+
+        if (_comboText != null)
+            _comboText.enabled = hudEnabled;
+
+        if (_detailText != null)
+            _detailText.enabled = hudEnabled;
     }
 
     private void TickJudgementAnimation()
