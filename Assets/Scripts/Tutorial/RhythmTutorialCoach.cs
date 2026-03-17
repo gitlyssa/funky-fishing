@@ -599,6 +599,9 @@ public class RhythmTutorialCoach : MonoBehaviour
         if (conductor == null)
             return;
 
+        if (musicPlayer != null)
+            musicPlayer.RestartTutorialPlayback();
+
         conductor.StopTutorialUpPracticeMode(false);
         practiceModeInitialized = false;
 
