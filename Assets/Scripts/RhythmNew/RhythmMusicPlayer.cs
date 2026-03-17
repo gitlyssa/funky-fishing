@@ -93,15 +93,15 @@ public class RhythmMusicPlayer : MonoBehaviour
             // spawn the final reel note and enter overtime
             if (!RhythmConductor.Instance.isOvertime && sawPlaybackActiveInCurrentTension && playbackState == PLAYBACK_STATE.STOPPED)
             {
-                // If there's no active reel and no notes left, spawn the final one
-                if (RhythmConductor.Instance.activeReel == null && RhythmConductor.Instance.activeNotes.Count == 0)
-                {
-                    RhythmConductor.Instance.StartOvertime();
-                    RhythmConductor.Instance.SpawnFinalPlaytestReel();
+                // // If there's no active reel and no notes left, spawn the final one
+                // if (RhythmConductor.Instance.activeReel == null && RhythmConductor.Instance.activeNotes.Count == 0)
+                // {
+                //     RhythmConductor.Instance.StartOvertime();
+                //     RhythmConductor.Instance.SpawnFinalPlaytestReel();
                     
-                    // sawPlaybackActiveInCurrentTension = false; 
-                    return;
-                }
+                //     // sawPlaybackActiveInCurrentTension = false; 
+                //     return;
+                // }
             }
 
             if (RhythmConductor.Instance.activeReel != null)

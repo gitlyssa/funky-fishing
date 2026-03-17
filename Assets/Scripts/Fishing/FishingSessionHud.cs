@@ -35,11 +35,6 @@ public class FishingSessionHud : MonoBehaviour
     [Header("Toggle")]
     [SerializeField] private bool hudEnabled = true;
 
-    [Header("Scoring")]
-    [SerializeField] private int perfectPoints = 100;
-    [SerializeField] private int goodPoints = 70;
-    [SerializeField] private int missPoints = 0;
-
     [Header("Display")]
     [SerializeField] private bool hideDuringRhythmMode = true;
     [SerializeField] private bool hideWhenPausedInPondLevel1 = true;
@@ -58,13 +53,6 @@ public class FishingSessionHud : MonoBehaviour
 
     private bool runActive;
     private bool wasRhythmVisible;
-    private int runScore;
-    private int runPerfect;
-    private int runGood;
-    private int runMiss;
-    private int runCombo;
-    private int runBestCombo;
-
     private static int sessionFishCaught;
     private static int sessionHighScore;
     private static int sessionTotalScore;
@@ -136,16 +124,6 @@ public class FishingSessionHud : MonoBehaviour
         RefreshHudText();
     }
 
-    private void OnEnable()
-    {
-        RhythmJudge.OnNoteJudged += HandleNoteJudged;
-    }
-
-    private void OnDisable()
-    {
-        RhythmJudge.OnNoteJudged -= HandleNoteJudged;
-    }
-
     private void OnDestroy()
     {
         if (activeInstance == this)
@@ -171,45 +149,9 @@ public class FishingSessionHud : MonoBehaviour
         wasRhythmVisible = rhythmVisible;
     }
 
-    private void HandleNoteJudged(RhythmJudge.JudgeRating rating)
-    {
-        if (!runActive)
-            BeginCatchRun();
-
-        switch (rating)
-        {
-            case RhythmJudge.JudgeRating.Perfect:
-                runPerfect++;
-                runCombo++;
-                runScore += perfectPoints;
-                break;
-
-            case RhythmJudge.JudgeRating.Good:
-                runGood++;
-                runCombo++;
-                runScore += goodPoints;
-                break;
-
-            default:
-                runMiss++;
-                runCombo = 0;
-                runScore += missPoints;
-                break;
-        }
-
-        if (runCombo > runBestCombo)
-            runBestCombo = runCombo;
-    }
-
     private void BeginCatchRun()
     {
         runActive = true;
-        runScore = 0;
-        runPerfect = 0;
-        runGood = 0;
-        runMiss = 0;
-        runCombo = 0;
-        runBestCombo = 0;
         pendingCatchOutcomeRegistered = false;
     }
 
@@ -218,36 +160,42 @@ public class FishingSessionHud : MonoBehaviour
         if (!runActive)
             return;
 
-        float accuracy = CalculateAccuracy(runPerfect, runGood, runMiss);
+        RhythmPerformanceHud performanceHud = FindFirstObjectByType<RhythmPerformanceHud>(FindObjectsInactive.Include);
+        if (performanceHud != null)
+        {
+
+            lastCatchScore = performanceHud.CurrentScore;
+            lastCatchAccuracy = performanceHud.CurrentAccuracy;
+            
+            lastCatchPerfect = performanceHud.PerfectCount;
+            lastCatchGood = performanceHud.GoodCount;
+            lastCatchMiss = performanceHud.MissCount;
+            lastCatchBestCombo = performanceHud.MaxCombo;
+        }
+
         bool catchSucceeded = pendingCatchOutcomeRegistered
             ? pendingCatchSucceeded
-            : IsSuccessfulCatchAccuracy(accuracy);
+            : IsSuccessfulCatchAccuracy(lastCatchAccuracy);
         pendingCatchOutcomeRegistered = false;
 
-        lastCatchScore = runScore;
-        lastCatchPerfect = runPerfect;
-        lastCatchGood = runGood;
-        lastCatchMiss = runMiss;
-        lastCatchBestCombo = runBestCombo;
-        lastCatchAccuracy = accuracy;
         lastCatchSucceeded = catchSucceeded;
 
         sessionRunsCompleted++;
-        sessionTotalPerfect += runPerfect;
-        sessionTotalGood += runGood;
-        sessionTotalMiss += runMiss;
+        sessionTotalPerfect += performanceHud.PerfectCount;
+        sessionTotalGood += performanceHud.GoodCount;
+        sessionTotalMiss += performanceHud.MissCount;
 
         if (catchSucceeded)
         {
             sessionFishCaught++;
-            sessionTotalScore += runScore;
+            sessionTotalScore += lastCatchScore;
 
-            if (runScore > sessionHighScore)
-                sessionHighScore = runScore;
+            if (lastCatchScore > sessionHighScore)
+                sessionHighScore = lastCatchScore;
         }
 
-        if (runBestCombo > sessionBestCombo)
-            sessionBestCombo = runBestCombo;
+        if (lastCatchBestCombo > sessionBestCombo)
+            sessionBestCombo = lastCatchBestCombo;
 
         runActive = false;
         RefreshHudText();
@@ -328,9 +276,12 @@ public class FishingSessionHud : MonoBehaviour
     }
 
     public static float GetCurrentRunAccuracyOrLast()
-    {
+    {        
         if (activeInstance != null && activeInstance.runActive)
-            return CalculateAccuracy(activeInstance.runPerfect, activeInstance.runGood, activeInstance.runMiss);
+        {
+            RhythmPerformanceHud performanceHud = FindObjectOfType<RhythmPerformanceHud>();
+            return performanceHud != null ? performanceHud.CurrentAccuracy : 0f;
+        }
 
         return lastCatchAccuracy;
     }
@@ -365,16 +316,6 @@ public class FishingSessionHud : MonoBehaviour
             default: return "D";
         }
     }
-
-    private static float CalculateAccuracy(int perfect, int good, int miss)
-    {
-        int judgedNotes = perfect + good + miss;
-        if (judgedNotes <= 0)
-            return 0f;
-
-        return ((perfect + (good * 0.7f)) / judgedNotes) * 100f;
-    }
-
     private void EnsureUi()
     {
         if (canvas != null && hudText != null)

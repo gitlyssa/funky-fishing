@@ -36,7 +36,6 @@ public class FishCatchAnimation : MonoBehaviour
     }
     private void Update()
     {
-
         if (Input.anyKeyDown)
         {
             SetContinue();

@@ -238,6 +238,12 @@ public class BobberArcCaster : MonoBehaviour
         if (!bobberInWater)
             return;
 
+        // don't allow yanking if rhythm encounter is still active in overtine
+        if (RhythmConductor.Instance != null && 
+        (RhythmConductor.Instance.activeReel != null || RhythmConductor.Instance.activeNotes.Count > 0))
+        {
+            return; 
+        }
         // If rod is displaced by tension feedback, let it settle before retracting bobber.
         if (CurrentState == State.Tension && IsBeatmapPlaying())
         {
@@ -300,7 +306,6 @@ public class BobberArcCaster : MonoBehaviour
     public void CompleteRhythmEncounter()
     {
         float accuracy = FishingSessionHud.GetCurrentRunAccuracyOrLast();
-        string grade = FishingSessionHud.GetLetterGradeForAccuracy(accuracy);
         GameObject fishToResolve = ResolveFishForEncounter();
         bool catchSucceeded = FishingSessionHud.IsSuccessfulCatchAccuracy(accuracy) && fishToResolve != null;
         FishingSessionHud.RegisterCatchOutcome(catchSucceeded);
@@ -324,15 +329,59 @@ public class BobberArcCaster : MonoBehaviour
 
             _hookedFish = null; // Remove reference so Consume/Restore doesn't touch it
 
-            StartCoroutine(ExecuteSuccessSequence(fishToShow));
+            StartCoroutine(ExecuteVictorySequence(fishToResolve));
         }
         else
         {
+            string grade = FishingSessionHud.GetLetterGradeForAccuracy(accuracy);
             Debug.Log($"Catch failed ({grade}, {accuracy:F1}%). The fish got away.");
             ShowFailedCatchPopup();
             HandleFailedCatch(fishToResolve);
             FinishTensionState();
         }
+    }   
+
+    private IEnumerator ExecuteVictorySequence(GameObject fish = null)
+    {
+        // 1. Trigger the Gameplay Finale
+        RhythmConductor.Instance.StartOvertime();
+        RhythmConductor.Instance.SpawnFinalPlaytestReel();
+
+        // 2. Wait for the player to finish the Golden Reel
+        while (RhythmConductor.Instance.activeReel != null)
+        {
+            yield return null;
+        }
+
+        // 3. Prepare the Scene for the Trophy Animation
+        if (SceneLoading.Instance != null)
+            SceneLoading.Instance.HideScoringCircleForCatchSequence();
+
+        // Clear migration refs so the teardown doesn't destroy our fish early
+        if (fish != null && fish == SceneLoading.MigratedFish)
+            SceneLoading.MigratedFish = null;
+
+        BeginRodReturnForSuccessSequence();
+        _hookedFish = null; // Unbind from the rod logic
+
+        if (fish == null)
+        {
+            Debug.LogWarning("No fish available for trophy animation.");
+        }
+        else if (TryResolveCatchAnimation())
+        {
+            // This waits for the animation to finish before moving on
+            yield return StartCoroutine(catchAnimation.TrophyRoutine(fish));
+        }
+        else
+        {
+            // Fallback if animation system fails
+            if (pondManager != null) pondManager.RemoveFish(fish);
+            else Destroy(fish);
+        }
+
+
+        FinishTensionState();
     }
 
     private void ShowFailedCatchPopup()
