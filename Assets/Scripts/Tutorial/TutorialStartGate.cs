@@ -139,7 +139,6 @@ public class TutorialStartGate : MonoBehaviour
     private bool loggedMissingCastTargetTutorialImage;
     private bool loggedMissingCastTutorialImage;
     private bool loggedMissingYankTutorialImage;
-    private bool cachedCursorVisible;
     private CursorLockMode cachedCursorLockMode;
     private bool cursorStateCached;
     private readonly List<PauseManager> disabledPauseManagers = new List<PauseManager>();
@@ -222,7 +221,6 @@ public class TutorialStartGate : MonoBehaviour
 
         if (controllerSelectActive)
         {
-            Cursor.visible = true;
             Cursor.lockState = CursorLockMode.None;
             return;
         }
@@ -234,7 +232,6 @@ public class TutorialStartGate : MonoBehaviour
             return;
         }
 
-        Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
 
         if (IsInteractiveGameplayGate(gateStepIndex))
@@ -328,7 +325,6 @@ public class TutorialStartGate : MonoBehaviour
 
         if (cursorStateCached)
         {
-            Cursor.visible = cachedCursorVisible;
             Cursor.lockState = cachedCursorLockMode;
             cursorStateCached = false;
         }
@@ -373,7 +369,6 @@ public class TutorialStartGate : MonoBehaviour
     private void ActivateGate(int stepIndex)
     {
         CacheCursorState();
-        Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
 
         Time.timeScale = IsInteractiveGameplayGate(stepIndex) ? 1f : 0f;
@@ -414,7 +409,6 @@ public class TutorialStartGate : MonoBehaviour
 
         if (cursorStateCached)
         {
-            Cursor.visible = cachedCursorVisible;
             Cursor.lockState = cachedCursorLockMode;
             cursorStateCached = false;
         }
@@ -438,7 +432,6 @@ public class TutorialStartGate : MonoBehaviour
 
     private void CacheCursorState()
     {
-        cachedCursorVisible = Cursor.visible;
         cachedCursorLockMode = Cursor.lockState;
         cursorStateCached = true;
     }
@@ -600,7 +593,6 @@ public class TutorialStartGate : MonoBehaviour
         }
 
         CacheCursorState();
-        Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
         Time.timeScale = 0f;
         controllerSelectActive = true;
@@ -620,7 +612,6 @@ public class TutorialStartGate : MonoBehaviour
 
         if (cursorStateCached)
         {
-            Cursor.visible = cachedCursorVisible;
             Cursor.lockState = cachedCursorLockMode;
             cursorStateCached = false;
         }

@@ -143,6 +143,7 @@ public class PauseOptionsPanel : MonoBehaviour
         BuildUiIfNeeded();
         PrepareHostedPanels();
         ApplyGeneralRhythmSensitivityIfNeeded(persist: true);
+        ApplyFishingDefaultsIfNeeded(persist: true);
         AdjustOpenButtonPlacement();
         AdjustPanelToViewport();
 
@@ -1376,6 +1377,9 @@ public class PauseOptionsPanel : MonoBehaviour
         PlayerPrefs.SetInt(FishingAdvancedPrefKey, enabled ? 1 : 0);
         PlayerPrefs.Save();
 
+        if (!enabled)
+            ApplyFishingDefaultsIfNeeded(persist: true);
+
         RefreshGeneralSettingsUi();
         UpdateTabVisuals();
 
@@ -1393,6 +1397,14 @@ public class PauseOptionsPanel : MonoBehaviour
         SetRhythmAdvancedEnabled(false);
         SetFishingAdvancedEnabled(false);
         RefreshGeneralSettingsUi();
+    }
+
+    private void ApplyFishingDefaultsIfNeeded(bool persist)
+    {
+        if (_fishingAdvancedEnabled || _fishingPanel == null)
+            return;
+
+        _fishingPanel.ApplyDefaultPreset(persist);
     }
 
     private void RefreshGeneralSettingsUi()

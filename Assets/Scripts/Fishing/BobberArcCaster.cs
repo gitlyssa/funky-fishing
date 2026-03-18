@@ -193,6 +193,9 @@ public class BobberArcCaster : MonoBehaviour
     {
         if (!rodTip || !bobber || !targetMarker) return;
 
+        if (FishCatchAnimation.IsAnyCatchScreenActive)
+            return;
+
         if (!TutorialStartGate.IsCastAllowedByTutorial())
             return;
 

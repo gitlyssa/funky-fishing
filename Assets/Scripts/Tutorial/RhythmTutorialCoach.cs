@@ -169,7 +169,6 @@ public class RhythmTutorialCoach : MonoBehaviour
     private GameObject endTutorialUi;
 
     private bool cursorStateCached;
-    private bool cachedCursorVisible;
     private CursorLockMode cachedCursorLockMode;
     private readonly List<PauseManager> disabledPauseManagers = new List<PauseManager>();
     private bool conflictingHudSuppressed;
@@ -296,7 +295,6 @@ public class RhythmTutorialCoach : MonoBehaviour
             return;
         }
 
-        Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
 
         if (WasConfirmPressedThisFrame())
@@ -675,7 +673,6 @@ public class RhythmTutorialCoach : MonoBehaviour
     private void PauseForGate()
     {
         CacheCursorState();
-        Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
 
         DisablePauseManagers();
@@ -700,7 +697,6 @@ public class RhythmTutorialCoach : MonoBehaviour
     private void OpenOverlayGateWithoutPause()
     {
         CacheCursorState();
-        Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
         DisablePauseManagers();
         gateActive = true;
@@ -1472,7 +1468,6 @@ public class RhythmTutorialCoach : MonoBehaviour
         if (cursorStateCached)
             return;
 
-        cachedCursorVisible = Cursor.visible;
         cachedCursorLockMode = Cursor.lockState;
         cursorStateCached = true;
     }
@@ -1482,7 +1477,6 @@ public class RhythmTutorialCoach : MonoBehaviour
         if (!cursorStateCached)
             return;
 
-        Cursor.visible = cachedCursorVisible;
         Cursor.lockState = cachedCursorLockMode;
         cursorStateCached = false;
     }

@@ -61,7 +61,6 @@ public class PondLevelCompletionPopup : MonoBehaviour
     private PopupStage popupStage = PopupStage.Hidden;
     private bool sessionScoreRecorded;
     private bool cursorStateCached;
-    private bool cachedCursorVisible;
     private CursorLockMode cachedCursorLockMode;
     private readonly List<PauseManager> disabledPauseManagers = new List<PauseManager>();
 
@@ -151,7 +150,6 @@ public class PondLevelCompletionPopup : MonoBehaviour
         }
 
         EnsureSelection();
-        Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
     }
 
@@ -793,7 +791,6 @@ public class PondLevelCompletionPopup : MonoBehaviour
         if (cursorStateCached)
             return;
 
-        cachedCursorVisible = Cursor.visible;
         cachedCursorLockMode = Cursor.lockState;
         cursorStateCached = true;
     }
@@ -803,7 +800,6 @@ public class PondLevelCompletionPopup : MonoBehaviour
         if (!cursorStateCached)
             return;
 
-        Cursor.visible = cachedCursorVisible;
         Cursor.lockState = cachedCursorLockMode;
         cursorStateCached = false;
     }

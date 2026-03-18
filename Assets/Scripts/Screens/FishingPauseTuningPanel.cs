@@ -180,6 +180,22 @@ public class FishingPauseTuningPanel : MonoBehaviour
 
     public bool IsTuningPanelOpen() => _isTuningOpen;
 
+    public void ApplyDefaultPreset(bool persist = true)
+    {
+        ResolveTarget();
+
+        _cachedSaveData = BuildDefaultSaveData();
+        _cachedSaveData.savedUtc = DateTime.UtcNow.ToString("o");
+        _cachedValuesAreAuthoritative = true;
+
+        if (_hasTarget)
+            ApplySaveData(_cachedSaveData);
+
+        RefreshUiFromTarget();
+        if (persist)
+            SaveCurrentToPersistentFile();
+    }
+
     public void PrepareForUnifiedOptions(Transform hostParent, Action onBack)
     {
         BuildUiIfNeeded();
@@ -931,15 +947,7 @@ public class FishingPauseTuningPanel : MonoBehaviour
 
     private void ResetToDefaults()
     {
-        _cachedSaveData = BuildDefaultSaveData();
-        _cachedValuesAreAuthoritative = true;
-
-        if (_hasTarget)
-            ApplySaveData(_cachedSaveData);
-
-        RefreshUiFromTarget();
-        if (autoSaveOnChange)
-            SaveCurrentToPersistentFile();
+        ApplyDefaultPreset(autoSaveOnChange);
     }
 
     private void SaveCurrentToPersistentFile()

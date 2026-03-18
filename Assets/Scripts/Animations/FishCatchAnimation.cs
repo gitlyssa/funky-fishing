@@ -5,6 +5,8 @@ using UnityEngine.UI;
 
 public class FishCatchAnimation : MonoBehaviour
 {
+    private static int _activeCatchScreenCount;
+
     [Header("UI & Effects")]
     public GameObject overlayPanel; //black image modify transparency
     public TextMeshProUGUI judgementText; // "Perfect Catch!"
@@ -26,6 +28,9 @@ public class FishCatchAnimation : MonoBehaviour
     public float spinSpeed = 150f;
     private bool _continuePressed = false;
     private bool _continueInputReady = true;
+    private bool _isCatchScreenActive = false;
+
+    public static bool IsAnyCatchScreenActive => _activeCatchScreenCount > 0;
 
     private void Awake()
     {
@@ -37,6 +42,17 @@ public class FishCatchAnimation : MonoBehaviour
         if (fishNameText != null) fishNameText.gameObject.SetActive(false);
         HideAllJudgements();
     }
+
+    private void OnDisable()
+    {
+        SetCatchScreenActive(false);
+    }
+
+    private void OnDestroy()
+    {
+        SetCatchScreenActive(false);
+    }
+
     private void Update()
     {
         bool continueInputHeld = IsContinueInputHeld();
@@ -94,6 +110,7 @@ public class FishCatchAnimation : MonoBehaviour
         Transform fishXform = fish.transform;
         _continuePressed = false;
         _continueInputReady = !IsContinueInputHeld();
+        SetCatchScreenActive(true);
         if (clickText != null)
             clickText.text = _defaultClickText;
 
@@ -189,8 +206,20 @@ public class FishCatchAnimation : MonoBehaviour
         HideAllJudgements();
         if (overlayPanel != null) overlayPanel.SetActive(false);
         if (clickText != null) clickText.gameObject.SetActive(false);
+        SetCatchScreenActive(false);
         
         Destroy(fish);
+    }
+
+    private void SetCatchScreenActive(bool active)
+    {
+        if (_isCatchScreenActive == active)
+            return;
+
+        _isCatchScreenActive = active;
+        _activeCatchScreenCount += active ? 1 : -1;
+        if (_activeCatchScreenCount < 0)
+            _activeCatchScreenCount = 0;
     }
 
     private string GetJudgementString(float acc)
