@@ -250,23 +250,6 @@ public class RhythmMusicPlayer : MonoBehaviour
             StopRhythmPlayback();
     }
 
-    // Used by tutorial reel practice to guarantee timeline time advances on repeat runs.
-    public void RestartTutorialPlayback()
-    {
-        tutorialPlaybackSuppressed = false;
-        isPausedForGame = false;
-        StartRhythmPlayback();
-    }
-
-    public float GetTimelineSeconds()
-    {
-        if (!musicInstance.isValid())
-            return 0f;
-
-        musicInstance.getTimelinePosition(out int ms);
-        return ms / 1000f;
-    }
-
     void OnDestroy()
     {
         if (RhythmConductor.rhythmMusicPlayer == this)

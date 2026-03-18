@@ -58,6 +58,7 @@ public class RhythmConductor : MonoBehaviour
     [SerializeField] private int tutorialPracticeGroupRestBeats = 2;
     [SerializeField] private int tutorialPracticeNoteBeatSpacing = 1;
     [SerializeField] private bool tutorialPracticeSpawnPaused;
+    [SerializeField] private bool tutorialPracticeClockAdvancesWhilePaused;
 
     private float tutorialBeatInterval = 60f / 99f;
     private float tutorialNextHitTime = -1f;
@@ -113,12 +114,15 @@ public class RhythmConductor : MonoBehaviour
 
         if (tutorialUpPracticeActive)
         {
-            if (tutorialPracticeSpawnPaused)
-                return;
+            if (!tutorialPracticeSpawnPaused || tutorialPracticeClockAdvancesWhilePaused)
+            {
+                tutorialPracticeClock += Time.deltaTime;
+                songTime = tutorialPracticeClock;
+            }
 
-            tutorialPracticeClock += Time.deltaTime;
-            songTime = tutorialPracticeClock;
-            UpdateTutorialPracticeSpawning();
+            if (!tutorialPracticeSpawnPaused)
+                UpdateTutorialPracticeSpawning();
+
             return;
         }
         else if (_isUsingOvertime) 
@@ -274,6 +278,7 @@ public class RhythmConductor : MonoBehaviour
         tutorialPracticeClock = 0f;
         tutorialUpPracticeActive = true;
         tutorialPracticeSpawnPaused = false;
+        tutorialPracticeClockAdvancesWhilePaused = false;
 
         ClearActiveRhythmObjects();
         _chart.Clear();
@@ -324,6 +329,7 @@ public class RhythmConductor : MonoBehaviour
         tutorialPracticeClock = 0f;
         tutorialUpPracticeActive = true;
         tutorialPracticeSpawnPaused = false;
+        tutorialPracticeClockAdvancesWhilePaused = false;
 
         ClearActiveRhythmObjects();
         _chart.Clear();
@@ -334,6 +340,18 @@ public class RhythmConductor : MonoBehaviour
         songTime = tutorialPracticeClock;
     }
 
+    public void PrepareTutorialReelPracticeClock()
+    {
+        tutorialUpPracticeActive = true;
+        tutorialPracticeSpawnPaused = true;
+        tutorialPracticeClockAdvancesWhilePaused = true;
+        tutorialSpawnedInCurrentGroup = 0;
+        tutorialNextHitTime = -1f;
+        tutorialPracticeClock = 0f;
+        songTime = 0f;
+        ClearActiveRhythmObjects();
+    }
+
     public void StopTutorialUpPracticeMode(bool restoreBeatmapForReplay)
     {
         tutorialUpPracticeActive = false;
@@ -341,6 +359,7 @@ public class RhythmConductor : MonoBehaviour
         tutorialPracticeSequence = new FlickDirection[0];
         tutorialPracticeSequenceIndex = 0;
         tutorialPracticeSpawnPaused = false;
+        tutorialPracticeClockAdvancesWhilePaused = false;
         tutorialSpawnedInCurrentGroup = 0;
         tutorialNextHitTime = -1f;
         tutorialPracticeClock = 0f;
@@ -357,6 +376,7 @@ public class RhythmConductor : MonoBehaviour
         _reelQueue.Clear();
         _isUsingOvertime = false;
         _overtimeClock = 0f;    
+        tutorialPracticeClockAdvancesWhilePaused = false;
 
         foreach (NoteData note in _chartTemplate)
         {
@@ -375,9 +395,7 @@ public class RhythmConductor : MonoBehaviour
                 startTime = reel.startTime,
                 duration = reel.duration,
                 goalDegrees = reel.goalDegrees,
-                leadInTime = reel.leadInTime,
-                requiredClearProgress = reel.requiredClearProgress,
-                resolveOnGoalReachedEarly = reel.resolveOnGoalReachedEarly
+                leadInTime = reel.leadInTime
             });
         }
 
@@ -466,9 +484,7 @@ public class RhythmConductor : MonoBehaviour
                 startTime = reel.startTime,
                 duration = reel.duration,
                 goalDegrees = reel.goalDegrees,
-                leadInTime = reel.leadInTime,
-                requiredClearProgress = reel.requiredClearProgress,
-                resolveOnGoalReachedEarly = reel.resolveOnGoalReachedEarly
+                leadInTime = reel.leadInTime
             });
         }
     }
@@ -525,6 +541,9 @@ public class RhythmConductor : MonoBehaviour
     public void SetTutorialUpPracticeSpawnPaused(bool paused)
     {
         tutorialPracticeSpawnPaused = paused;
+        if (!paused)
+            tutorialPracticeClockAdvancesWhilePaused = false;
+
         if (paused)
             ClearActiveRhythmObjects();
     }

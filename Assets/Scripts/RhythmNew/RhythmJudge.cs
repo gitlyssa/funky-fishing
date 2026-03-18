@@ -232,27 +232,13 @@ public class RhythmJudge : MonoBehaviour
             float spinVelocity = processor.GetSmoothedSpinVelocity(); // Get the current smoothed spin velocity
             float delta = spinVelocity * Time.deltaTime; // Convert velocity to delta for this frame
             reel.AddSpin(delta);
-
-            float clearThreshold = Mathf.Max(0.01f, reel.Data.requiredClearProgress);
-            if (reel.Data.resolveOnGoalReachedEarly && reel.Progress >= clearThreshold)
-            {
-                if (logReelOutcome)
-                    Debug.Log("<color=green>REEL CLEARED!</color>");
-
-                reel.OnClear();
-                OnReelResolved?.Invoke(true);
-                conductor.activeReel = null;
-                StopReelLoopImmediately();
-                return;
-            }
         }
 
         if (songTime >= endTime)
         {
             float finalProgress = reel.Progress;
-            float clearThreshold = Mathf.Max(0.01f, reel.Data.requiredClearProgress);
 
-            if (finalProgress >= clearThreshold)
+            if (finalProgress >= 1.0f)
             {
                 if (logReelOutcome)
                     Debug.Log("<color=green>REEL CLEARED!</color>");
