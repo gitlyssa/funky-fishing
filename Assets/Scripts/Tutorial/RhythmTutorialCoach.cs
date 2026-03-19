@@ -297,6 +297,9 @@ public class RhythmTutorialCoach : MonoBehaviour
 
         Cursor.lockState = CursorLockMode.None;
 
+        if (PauseManager.IsAnyPauseUiOpen())
+            return;
+
         if (WasConfirmPressedThisFrame())
             AdvanceGate();
     }

@@ -15,6 +15,8 @@ public class RhythmMusicPlayer : MonoBehaviour
     private bool tutorialLoopMode = false;
     private bool tutorialPlaybackSuppressed = false;
 
+    public bool IsPausedForGamePause => isPausedForGame;
+
     void Awake()
     {
         RhythmConductor.rhythmMusicPlayer = this;

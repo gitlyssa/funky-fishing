@@ -185,6 +185,9 @@ public class GamepadMenuNavigation : MonoBehaviour
 
     private static bool IsTutorialGateBlockingUiNavigation()
     {
+        if (PauseManager.IsAnyPauseUiOpen())
+            return false;
+
         return TutorialStartGate.IsOverlayGateActive() || RhythmTutorialCoach.IsOverlayGateActive();
     }
 

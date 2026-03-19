@@ -234,6 +234,9 @@ public class TutorialStartGate : MonoBehaviour
 
         Cursor.lockState = CursorLockMode.None;
 
+        if (PauseManager.IsAnyPauseUiOpen())
+            return;
+
         if (IsInteractiveGameplayGate(gateStepIndex))
             EnsurePauseManagersEnabled();
 
