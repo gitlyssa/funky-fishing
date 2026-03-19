@@ -36,7 +36,7 @@ public class RhythmJudge : MonoBehaviour
     [SerializeField] private float reelAudioStopDelay = 0.08f;
 
     public static event Action<JudgeRating> OnNoteJudged;
-    public static event Action<JudgeRating, RhythmArcNote.NoteType, FlickDirection> OnDetailedNoteJudged;
+    public static event Action<JudgeRating, RhythmArcNote.NoteType, FlickDirection, float> OnDetailedNoteJudged;
     public static event Action<bool> OnReelResolved;
 
     private EventInstance _reelLoopInstance;
@@ -92,68 +92,73 @@ public class RhythmJudge : MonoBehaviour
     }
 
     private void HandleFlick(FlickDirection dir)
-{
-    RhythmArcNote target = null;
-    float oldestHitTime = float.MaxValue;
-
-    foreach (var note in conductor.activeNotes)
     {
-        // 1. flick or first slide note 
-        if (note.Direction == dir)
-        {
-            float songTime = conductor.songTime;
-            float diff = songTime - note.TargetHitTime; // Negative = Early, Positive = Late
+        RhythmArcNote target = null;
+        float oldestHitTime = float.MaxValue;
 
-            // 2. Is this note within the judging window (-0.5s to +0.5s)?
-            if (Mathf.Abs(diff) <= badWindow)
+        foreach (var note in conductor.activeNotes)
+        {
+            // 1. flick or first slide note
+            if (note.Direction == dir)
             {
-                // 3. PRIORITY: Is this the oldest note we've found so far?
-                // By checking 'targetHitTime' instead of 'Abs(diff)', we ensure 
-                // we always try to hit the note that's been on screen the longest.
-                if (note.TargetHitTime < oldestHitTime)
+                float songTime = conductor.songTime;
+                float diff = songTime - note.TargetHitTime; // Negative = Early, Positive = Late
+
+                // 2. Is this note within the judging window (-0.5s to +0.5s)?
+                if (Mathf.Abs(diff) <= badWindow)
                 {
-                    target = note;
-                    oldestHitTime = note.TargetHitTime;
+                    // 3. PRIORITY: Is this the oldest note we've found so far?
+                    // By checking 'targetHitTime' instead of 'Abs(diff)', we ensure
+                    // we always try to hit the note that's been on screen the longest.
+                    if (note.TargetHitTime < oldestHitTime)
+                    {
+                        target = note;
+                        oldestHitTime = note.TargetHitTime;
+                    }
                 }
             }
         }
+
+        if (target != null)
+        {
+            float timingDelta = conductor.songTime - target.TargetHitTime;
+            JudgeRating rating = GetRating(Mathf.Abs(timingDelta));
+
+            if (rating == JudgeRating.Bad || rating == JudgeRating.Miss)
+                TryRecordMiss(true, timingDelta);
+            else
+                TryRecordHit(rating, timingDelta);
+
+            ResolveNote(target, rating, timingDelta);
+        }
     }
-
-    if (target != null)
-    {
-        float finalDiff = Mathf.Abs(conductor.songTime - target.TargetHitTime);
-        JudgeRating rating = GetRating(finalDiff);
-
-        if (rating == JudgeRating.Bad || rating == JudgeRating.Miss)
-            TryRecordMiss(true, finalDiff); // Input was provided, but late/early
-        else
-            TryRecordHit(rating, finalDiff);
-
-        ResolveNote(target, rating);
-    }
-}
 
     private void CheckSlideNotes()
-{
-    for (int i = conductor.activeNotes.Count - 1; i >= 0; i--)
     {
-        var note = conductor.activeNotes[i];
-        if (note.Type == RhythmArcNote.NoteType.Slide)
+        for (int i = conductor.activeNotes.Count - 1; i >= 0; i--)
         {
-            float songTime = conductor.songTime;
-            float rawDiff = songTime - note.TargetHitTime; // Negative = Early, Positive = Late
-            // For slides, we want to allow the player to hit early and then hold through the perfect window.
-            if (rawDiff >= 0 && rawDiff <= badWindow)
+            var note = conductor.activeNotes[i];
+            if (note.Type == RhythmArcNote.NoteType.Slide)
             {
-                if (processor.IsHoldingDirection(note.Direction))
+                float songTime = conductor.songTime;
+                float rawDiff = songTime - note.TargetHitTime; // Negative = Early, Positive = Late
+                // For slides, we want to allow the player to hit early and then hold through the perfect window.
+                if (rawDiff >= 0 && rawDiff <= badWindow)
                 {
-                    JudgeRating rating = GetRating(Mathf.Abs(rawDiff));
-                    ResolveNote(note, rating);
+                    if (processor.IsHoldingDirection(note.Direction))
+                    {
+                        JudgeRating rating = GetRating(Mathf.Abs(rawDiff));
+                        if (rating == JudgeRating.Bad || rating == JudgeRating.Miss)
+                            TryRecordMiss(true, rawDiff);
+                        else
+                            TryRecordHit(rating, rawDiff);
+
+                        ResolveNote(note, rating, rawDiff);
+                    }
                 }
             }
         }
     }
-}
 
     private void CheckAutoMiss()
     {
@@ -164,8 +169,9 @@ public class RhythmJudge : MonoBehaviour
             // If the current time is beyond the bad window on the LATE side
             if (conductor.songTime > note.TargetHitTime + badWindow)
             {
-                TryRecordMiss(false);
-                ResolveNote(note, JudgeRating.Miss);
+                float timingDelta = conductor.songTime - note.TargetHitTime;
+                TryRecordMiss(false, timingDelta);
+                ResolveNote(note, JudgeRating.Miss, timingDelta);
             }
         }
     }
@@ -189,7 +195,7 @@ public class RhythmJudge : MonoBehaviour
         return JudgeRating.Bad; // If it's within 0.5 but past 0.3
     }
 
-    private void ResolveNote(RhythmArcNote note, JudgeRating rating)
+    private void ResolveNote(RhythmArcNote note, JudgeRating rating, float timingDelta)
     {
         RhythmArcNote.NoteType noteType = note.Type;
         FlickDirection direction = note.Direction;
@@ -215,7 +221,7 @@ public class RhythmJudge : MonoBehaviour
         }
 
         OnNoteJudged?.Invoke(rating);
-        OnDetailedNoteJudged?.Invoke(rating, noteType, direction);
+        OnDetailedNoteJudged?.Invoke(rating, noteType, direction, timingDelta);
     }
 
     private void CheckReelNotes()

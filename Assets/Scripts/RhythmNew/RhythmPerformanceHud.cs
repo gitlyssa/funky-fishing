@@ -2,6 +2,8 @@ using System.Collections.Generic;
 using FMOD.Studio;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 public class RhythmPerformanceHud : MonoBehaviour
@@ -52,6 +54,21 @@ public class RhythmPerformanceHud : MonoBehaviour
     [Header("Detailed Text")]
     [SerializeField] private Vector2 detailAnchoredPosition = new Vector2(-28f, -28f);
     [SerializeField] private int detailFontSize = 26;
+
+    [Header("Timing Indicators")]
+    [SerializeField] private Vector2 timingIndicatorSize = new Vector2(540f, 180f);
+    [SerializeField] private int timingIndicatorFontSize = 88;
+    [FormerlySerializedAs("timingIndicatorRadiusOffset")]
+    [SerializeField] private float timingIndicatorScreenOffset = 18f;
+    [SerializeField] private float timingIndicatorSideScreenOffset = 108f;
+    [SerializeField] private float timingIndicatorScreenMargin = 24f;
+    [SerializeField] private Color earlyTimingIndicatorColor = new Color(0.45f, 0.95f, 1f, 1f);
+    [SerializeField] private Color lateTimingIndicatorColor = new Color(1f, 0.78f, 0.35f, 1f);
+    [SerializeField] private float timingIndicatorVisibleDuration = 0.42f;
+    [SerializeField] private float timingIndicatorFadeDuration = 0.45f;
+    [SerializeField] private float timingIndicatorPopReturnDuration = 0.16f;
+    [SerializeField] private float timingIndicatorPopScale = 1.12f;
+    [SerializeField] private float timingIndicatorRiseDistance = 10f;
 
     private RhythmConductor _conductor;
     private RhythmJudge _judge;
@@ -137,6 +154,23 @@ public class RhythmPerformanceHud : MonoBehaviour
         MissImage
     }
 
+    private sealed class TimingIndicatorState
+    {
+        public TextMeshProUGUI Text;
+        public RectTransform Rect;
+        public Vector2 BasePosition;
+        public Color BaseColor;
+        public float AnimTime = -1f;
+    }
+
+    private readonly Dictionary<FlickDirection, TimingIndicatorState> _timingIndicators =
+        new Dictionary<FlickDirection, TimingIndicatorState>
+        {
+            { FlickDirection.Left, new TimingIndicatorState() },
+            { FlickDirection.Right, new TimingIndicatorState() },
+            { FlickDirection.Up, new TimingIndicatorState() }
+        };
+
     private void Awake()
     {
         EnsureReferences();
@@ -172,11 +206,14 @@ public class RhythmPerformanceHud : MonoBehaviour
             _trackedNotes.Clear();
             HideJudgementImmediate();
             HideComboImmediate();
+            HideAllTimingIndicatorsImmediate();
             return;
         }
 
         if (_conductor == null || _judge == null)
             return;
+
+        RefreshTimingIndicatorBasePositions();
 
         bool playbackActive = IsRhythmPlaybackActive();
         bool isReeling = _conductor != null && _conductor.activeReel != null;
@@ -199,10 +236,12 @@ public class RhythmPerformanceHud : MonoBehaviour
 
         _wasPlaybackActive = playbackActive;
 
-        if (!playbackActive && !isReeling)
+        bool hasActiveFeedback = _judgementAnimTime >= 0f || _comboPulseTime >= 0f || HasActiveTimingIndicatorAnimation();
+        if (!playbackActive && !isReeling && !hasActiveFeedback)
             return;
 
         TickJudgementAnimation();
+        TickTimingIndicatorAnimations();
         TickComboPulseAnimation();
         TickReelVisuals();
     }
@@ -219,7 +258,13 @@ public class RhythmPerformanceHud : MonoBehaviour
 
     private void EnsureUi()
     {
-        if (_judgementText != null && _detailText != null && _comboText != null && _missJudgementImage != null && _perfectJudgementImage != null && _goodJudgementImage != null)
+        if (_judgementText != null &&
+            _detailText != null &&
+            _comboText != null &&
+            _missJudgementImage != null &&
+            _perfectJudgementImage != null &&
+            _goodJudgementImage != null &&
+            TimingIndicatorsReady())
             return;
 
         _canvas = GetOrCreateHudCanvas();
@@ -290,6 +335,10 @@ public class RhythmPerformanceHud : MonoBehaviour
             TextAlignmentOptions.TopRight,
             string.Empty);
 
+        EnsureTimingIndicator(FlickDirection.Left, "LeftTimingIndicator");
+        EnsureTimingIndicator(FlickDirection.Right, "RightTimingIndicator");
+        EnsureTimingIndicator(FlickDirection.Up, "UpTimingIndicator");
+
         _reelStatusImage = CreateImage(
         "ReelStatusImage",
         _canvas.transform,
@@ -341,8 +390,10 @@ public class RhythmPerformanceHud : MonoBehaviour
         imageColor.a = 0f;
         _missJudgementImage.color = imageColor;
 
+        RefreshTimingIndicatorBasePositions(true);
         HideComboImmediate();
         HideJudgementImmediate();
+        HideAllTimingIndicatorsImmediate();
 
         ApplyHudVisibility();
     }
@@ -459,6 +510,206 @@ public class RhythmPerformanceHud : MonoBehaviour
         return image;
     }
 
+    private bool TimingIndicatorsReady()
+    {
+        foreach (TimingIndicatorState state in _timingIndicators.Values)
+        {
+            if (state.Text == null || state.Rect == null)
+                return false;
+        }
+
+        return true;
+    }
+
+    private void EnsureTimingIndicator(FlickDirection direction, string objectName)
+    {
+        if (!_timingIndicators.TryGetValue(direction, out TimingIndicatorState state))
+            return;
+
+        state.Text = CreateText(
+            objectName,
+            _canvas.transform,
+            new Vector2(0.5f, 0.5f),
+            new Vector2(0.5f, 0.5f),
+            GetTimingIndicatorPivot(direction),
+            Vector2.zero,
+            timingIndicatorSize,
+            timingIndicatorFontSize,
+            GetTimingIndicatorAlignment(direction),
+            string.Empty);
+        state.Rect = state.Text.rectTransform;
+        state.Text.alignment = GetTimingIndicatorAlignment(direction);
+        state.Text.gameObject.layer = _canvas.gameObject.layer;
+        Color color = state.Text.color;
+        color.a = 0f;
+        state.Text.color = color;
+    }
+
+    private void RefreshTimingIndicatorBasePositions(bool snapToBase = false)
+    {
+        foreach (KeyValuePair<FlickDirection, TimingIndicatorState> entry in _timingIndicators)
+        {
+            TimingIndicatorState state = entry.Value;
+            if (state.Rect == null)
+                continue;
+
+            if (!TryGetTimingIndicatorAnchoredPosition(entry.Key, state.Rect, out Vector2 anchoredPosition))
+                continue;
+
+            state.BasePosition = anchoredPosition;
+            if (snapToBase || state.AnimTime < 0f)
+                state.Rect.anchoredPosition = anchoredPosition;
+        }
+    }
+
+    private bool TryGetTimingIndicatorAnchoredPosition(
+        FlickDirection direction,
+        RectTransform indicatorRect,
+        out Vector2 anchoredPosition)
+    {
+        anchoredPosition = Vector2.zero;
+        if (_canvas == null || _conductor == null || indicatorRect == null)
+            return false;
+
+        RectTransform canvasRect = _canvas.transform as RectTransform;
+        if (canvasRect == null)
+            return false;
+
+        Camera projectionCamera = GetProjectionCamera();
+        if (projectionCamera == null)
+            return false;
+
+        Camera canvasCamera = _canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : projectionCamera;
+        Vector3 centerWorldPosition = _conductor.transform.position;
+        Vector3 hitWorldPosition = centerWorldPosition +
+            (Vector3)(GetDirectionVector(direction) * _conductor.hitRingRadius);
+        Vector2 centerScreenPoint = RectTransformUtility.WorldToScreenPoint(projectionCamera, centerWorldPosition);
+        Vector2 hitScreenPoint = RectTransformUtility.WorldToScreenPoint(projectionCamera, hitWorldPosition);
+        Vector2 screenDirection = hitScreenPoint - centerScreenPoint;
+        if (screenDirection.sqrMagnitude < 0.001f)
+            screenDirection = GetDirectionVector(direction);
+        else
+            screenDirection.Normalize();
+
+        float directionalScreenOffset = GetTimingIndicatorDirectionalScreenOffset(direction);
+        Vector2 indicatorScreenPoint = hitScreenPoint + (screenDirection * directionalScreenOffset);
+        if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
+            canvasRect,
+            indicatorScreenPoint,
+            canvasCamera,
+            out anchoredPosition))
+        {
+            return false;
+        }
+
+        anchoredPosition = ClampTimingIndicatorPosition(canvasRect, indicatorRect, anchoredPosition);
+        return true;
+    }
+
+    private Camera GetProjectionCamera()
+    {
+        if (_canvas != null && _canvas.worldCamera != null)
+            return _canvas.worldCamera;
+
+        Camera sceneCamera = FindCameraInScene(GetReferenceScene());
+        if (sceneCamera != null)
+            return sceneCamera;
+
+        return Camera.main;
+    }
+
+    private Scene GetReferenceScene()
+    {
+        if (_conductor != null)
+            return _conductor.gameObject.scene;
+
+        return gameObject.scene;
+    }
+
+    private static Camera FindCameraInScene(Scene scene)
+    {
+        if (!scene.IsValid() || !scene.isLoaded)
+            return null;
+
+        GameObject[] roots = scene.GetRootGameObjects();
+        for (int i = 0; i < roots.Length; i++)
+        {
+            if (roots[i] == null)
+                continue;
+
+            Camera[] cameras = roots[i].GetComponentsInChildren<Camera>(true);
+            for (int j = 0; j < cameras.Length; j++)
+            {
+                Camera camera = cameras[j];
+                if (camera != null && camera.isActiveAndEnabled)
+                    return camera;
+            }
+        }
+
+        return null;
+    }
+
+    private float GetTimingIndicatorDirectionalScreenOffset(FlickDirection direction)
+    {
+        if (direction != FlickDirection.Left && direction != FlickDirection.Right)
+            return timingIndicatorScreenOffset;
+
+        return timingIndicatorSideScreenOffset;
+    }
+
+    private Vector2 GetTimingIndicatorPivot(FlickDirection direction)
+    {
+        return direction switch
+        {
+            FlickDirection.Left => new Vector2(1f, 0.5f),
+            FlickDirection.Right => new Vector2(0f, 0.5f),
+            FlickDirection.Up => new Vector2(0.5f, 0f),
+            _ => new Vector2(0.5f, 0.5f)
+        };
+    }
+
+    private TextAlignmentOptions GetTimingIndicatorAlignment(FlickDirection direction)
+    {
+        return direction switch
+        {
+            FlickDirection.Left => TextAlignmentOptions.MidlineRight,
+            FlickDirection.Right => TextAlignmentOptions.MidlineLeft,
+            FlickDirection.Up => TextAlignmentOptions.Center,
+            _ => TextAlignmentOptions.Center
+        };
+    }
+
+    private Vector2 ClampTimingIndicatorPosition(
+        RectTransform canvasRect,
+        RectTransform indicatorRect,
+        Vector2 anchoredPosition)
+    {
+        Rect canvasBounds = canvasRect.rect;
+        Vector2 size = indicatorRect.sizeDelta;
+        Vector2 pivot = indicatorRect.pivot;
+
+        float minX = canvasBounds.xMin + (size.x * pivot.x) + timingIndicatorScreenMargin;
+        float maxX = canvasBounds.xMax - (size.x * (1f - pivot.x)) - timingIndicatorScreenMargin;
+        float minY = canvasBounds.yMin + (size.y * pivot.y) + timingIndicatorScreenMargin;
+        float maxY = canvasBounds.yMax - (size.y * (1f - pivot.y)) - timingIndicatorScreenMargin;
+
+        anchoredPosition.x = Mathf.Clamp(anchoredPosition.x, minX, maxX);
+        anchoredPosition.y = Mathf.Clamp(anchoredPosition.y, minY, maxY);
+        return anchoredPosition;
+    }
+
+    private Vector2 GetDirectionVector(FlickDirection direction)
+    {
+        return direction switch
+        {
+            FlickDirection.Left => Vector2.left,
+            FlickDirection.Right => Vector2.right,
+            FlickDirection.Up => Vector2.up,
+            FlickDirection.Down => Vector2.down,
+            _ => Vector2.zero
+        };
+    }
+
     private bool IsRhythmPlaybackActive()
     {
         if (_musicPlayer == null || !_musicPlayer.musicInstance.isValid())
@@ -553,7 +804,8 @@ public class RhythmPerformanceHud : MonoBehaviour
     private void HandleDetailedNoteJudged(
         RhythmJudge.JudgeRating rating,
         RhythmArcNote.NoteType noteType,
-        FlickDirection direction)
+        FlickDirection direction,
+        float timingDelta)
     {
         if (!hudEnabled && !judgementFeedbackOnlyEnabled)
             return;
@@ -573,6 +825,9 @@ public class RhythmPerformanceHud : MonoBehaviour
         }
 
         ApplyResult(result);
+
+        if (result != ResultType.Perfect)
+            ShowTimingIndicator(direction, timingDelta);
     }
 
     private void ApplyResult(ResultType result)
@@ -807,6 +1062,21 @@ public class RhythmPerformanceHud : MonoBehaviour
         _judgementText.color = c;
     }
 
+    private void ShowTimingIndicator(FlickDirection direction, float timingDelta)
+    {
+        if (!_timingIndicators.TryGetValue(direction, out TimingIndicatorState state) || state.Text == null || state.Rect == null)
+            return;
+
+        bool isEarly = timingDelta < 0f;
+        state.Text.text = isEarly ? "Early!" : "Late!";
+        state.BaseColor = isEarly ? earlyTimingIndicatorColor : lateTimingIndicatorColor;
+        state.AnimTime = 0f;
+        if (TryGetTimingIndicatorAnchoredPosition(direction, state.Rect, out Vector2 anchoredPosition))
+            state.BasePosition = anchoredPosition;
+
+        ApplyTimingIndicatorAnimation(state, 0f);
+    }
+
     private void ShowComboPulseIfEligible()
     {
         if (_comboText == null || _comboRect == null)
@@ -878,6 +1148,7 @@ public class RhythmPerformanceHud : MonoBehaviour
         _baseScore = 0;
         _lastFiredMultiplier = 1f;
         HideComboImmediate();
+        HideAllTimingIndicatorsImmediate();
     }
 
     public void SetHudEnabled(bool enabled)
@@ -902,6 +1173,13 @@ public class RhythmPerformanceHud : MonoBehaviour
 
         if (_detailText != null)
             _detailText.enabled = hudEnabled;
+
+        bool feedbackVisible = hudEnabled || judgementFeedbackOnlyEnabled;
+        foreach (TimingIndicatorState state in _timingIndicators.Values)
+        {
+            if (state.Text != null)
+                state.Text.enabled = feedbackVisible;
+        }
     }
 
     private void TickJudgementAnimation()
@@ -917,6 +1195,35 @@ public class RhythmPerformanceHud : MonoBehaviour
         if (_judgementAnimTime >= totalDuration)
         {
             HideJudgementImmediate();
+        }
+    }
+
+    private bool HasActiveTimingIndicatorAnimation()
+    {
+        foreach (TimingIndicatorState state in _timingIndicators.Values)
+        {
+            if (state.AnimTime >= 0f)
+                return true;
+        }
+
+        return false;
+    }
+
+    private void TickTimingIndicatorAnimations()
+    {
+        float totalDuration = Mathf.Max(0.01f, timingIndicatorVisibleDuration + timingIndicatorFadeDuration);
+
+        foreach (TimingIndicatorState state in _timingIndicators.Values)
+        {
+            if (state.Text == null || state.Rect == null || state.AnimTime < 0f)
+                continue;
+
+            state.AnimTime += Time.unscaledDeltaTime;
+            float normalized = Mathf.Clamp01(state.AnimTime / totalDuration);
+            ApplyTimingIndicatorAnimation(state, normalized);
+
+            if (state.AnimTime >= totalDuration)
+                HideTimingIndicatorImmediate(state);
         }
     }
 
@@ -1064,6 +1371,51 @@ public class RhythmPerformanceHud : MonoBehaviour
             goodImageColor.a = 0f;
             _goodJudgementImage.color = goodImageColor;
         }
+    }
+
+    private void ApplyTimingIndicatorAnimation(TimingIndicatorState state, float normalized)
+    {
+        if (state.Text == null || state.Rect == null)
+            return;
+
+        float returnDuration = Mathf.Max(0.01f, timingIndicatorPopReturnDuration);
+        float popT = Mathf.Clamp01(state.AnimTime / returnDuration);
+        float scale = Mathf.Lerp(timingIndicatorPopScale, 1f, popT);
+
+        float alpha = 1f;
+        if (state.AnimTime > timingIndicatorVisibleDuration)
+        {
+            float fadeT = (state.AnimTime - timingIndicatorVisibleDuration) / Mathf.Max(0.01f, timingIndicatorFadeDuration);
+            alpha = 1f - Mathf.Clamp01(fadeT);
+        }
+
+        Vector2 riseOffset = Vector2.up * (timingIndicatorRiseDistance * normalized);
+        state.Rect.localScale = Vector3.one * scale;
+        state.Rect.anchoredPosition = state.BasePosition + riseOffset;
+
+        Color c = state.BaseColor;
+        c.a = alpha;
+        state.Text.color = c;
+    }
+
+    private void HideAllTimingIndicatorsImmediate()
+    {
+        foreach (TimingIndicatorState state in _timingIndicators.Values)
+            HideTimingIndicatorImmediate(state);
+    }
+
+    private void HideTimingIndicatorImmediate(TimingIndicatorState state)
+    {
+        if (state.Text == null || state.Rect == null)
+            return;
+
+        state.AnimTime = -1f;
+        state.Rect.localScale = Vector3.one;
+        state.Rect.anchoredPosition = state.BasePosition;
+
+        Color c = state.Text.color;
+        c.a = 0f;
+        state.Text.color = c;
     }
 
     private void HideComboImmediate()

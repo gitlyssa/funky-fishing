@@ -616,7 +616,8 @@ public class RhythmTutorialCoach : MonoBehaviour
     private void HandleDetailedNoteJudged(
         RhythmJudge.JudgeRating rating,
         RhythmArcNote.NoteType noteType,
-        FlickDirection direction)
+        FlickDirection direction,
+        float timingDelta)
     {
         if (flowState != FlowState.DirectionPracticeActive && flowState != FlowState.SequencePracticeActive)
             return;
