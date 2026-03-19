@@ -8,7 +8,7 @@ using System.Collections;
 public class PauseManager : MonoBehaviour
 {
     private const string PauseOverlayCanvasName = "PauseOverlayCanvas";
-    private const int PauseMenuSortingOrder = 3000;
+    private const int PauseMenuSortingOrder = 30000;
 
     public GameObject PausePanel;
     public GameObject ControlsPanel;
@@ -130,7 +130,6 @@ public class PauseManager : MonoBehaviour
         PausePanel.SetActive(true);
         if (ControlsPanel != null)
             ControlsPanel.SetActive(false);
-        SetRhythmHudPauseVisibility(true);
         Time.timeScale = 0f;
         isPaused = true;
         ResolveRhythmMusicPlayer();
@@ -147,7 +146,6 @@ public class PauseManager : MonoBehaviour
         PausePanel.SetActive(false);
         if (ControlsPanel != null)
             ControlsPanel.SetActive(false);
-        SetRhythmHudPauseVisibility(false);
         XboxFishingInput.BlockGameplayInputForRealtimeSeconds(resumeInputBlockSeconds);
         Time.timeScale = timeScaleBeforePause;
         isPaused = false;
@@ -322,19 +320,6 @@ public class PauseManager : MonoBehaviour
         }
 
         return false;
-    }
-
-    private static void SetRhythmHudPauseVisibility(bool suppressed)
-    {
-        RhythmPerformanceHud[] rhythmHuds = FindObjectsByType<RhythmPerformanceHud>(
-            FindObjectsInactive.Include,
-            FindObjectsSortMode.None);
-        for (int i = 0; i < rhythmHuds.Length; i++)
-        {
-            RhythmPerformanceHud hud = rhythmHuds[i];
-            if (hud != null)
-                hud.SetPauseVisibilitySuppressed(suppressed);
-        }
     }
 
     private static GameObject FindByNameRecursive(Transform root, string targetName)

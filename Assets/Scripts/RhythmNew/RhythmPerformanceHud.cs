@@ -82,7 +82,6 @@ public class RhythmPerformanceHud : MonoBehaviour
     private readonly HashSet<int> _activeNoteIdsBuffer = new HashSet<int>();
 
     private bool _wasPlaybackActive;
-    private bool _pauseVisibilitySuppressed;
 
     private int _perfectCount;
     private int _goodCount;
@@ -893,40 +892,16 @@ public class RhythmPerformanceHud : MonoBehaviour
         ApplyHudVisibility();
     }
 
-    public void SetPauseVisibilitySuppressed(bool suppressed)
-    {
-        if (_pauseVisibilitySuppressed == suppressed)
-            return;
-
-        _pauseVisibilitySuppressed = suppressed;
-        if (suppressed)
-        {
-            HideJudgementImmediate();
-            HideComboImmediate();
-
-            if (_reelStatusImage != null)
-            {
-                Color c = _reelStatusImage.color;
-                c.a = 0f;
-                _reelStatusImage.color = c;
-            }
-        }
-
-        ApplyHudVisibility();
-    }
-
     private void ApplyHudVisibility()
     {
-        bool visible = !_pauseVisibilitySuppressed && (hudEnabled || judgementFeedbackOnlyEnabled);
-
         if (_canvas != null)
-            _canvas.enabled = visible;
+            _canvas.enabled = hudEnabled || judgementFeedbackOnlyEnabled;
 
         if (_comboText != null)
-            _comboText.enabled = hudEnabled && !_pauseVisibilitySuppressed;
+            _comboText.enabled = hudEnabled;
 
         if (_detailText != null)
-            _detailText.enabled = hudEnabled && !_pauseVisibilitySuppressed;
+            _detailText.enabled = hudEnabled;
     }
 
     private void TickJudgementAnimation()
