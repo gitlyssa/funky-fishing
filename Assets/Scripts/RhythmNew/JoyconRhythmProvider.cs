@@ -7,35 +7,72 @@ public class JoyconRhythmProvider : MonoBehaviour, IRhythmInputT
     public event Action<int> OnButtonDown;
 
     [Header("Connection")]
-    public int deviceId = -1;
+    public int rodDeviceId = -1;   // Joy-Con 1: Flicks & Buttons
+    public int crankDeviceId = -1; // Joy-Con 2: Accelerometer Reeling
+    [SerializeField] private bool autoAssignDualMode = true;
     [SerializeField] private bool useAnyConnectedDevice = true;
     [SerializeField] private int deviceIndex = 0;
     [SerializeField, Min(0.1f)] private float reconnectInterval = 1.5f;
 
     [Header("Joycon Flick Settings")]
-    public float flickThreshold = 2.5f; // G-force threshold (1.0 is gravity)
-    public float resetThreshold = 1.2f; // Must drop below this to flick again
+
+    public float flickThreshold = 2.5f; // Minimum acceleration magnitude to register a flick
+    public float resetThreshold = 1.5f; // Acceleration magnitude below which we
     public float holdingDeadzone = 0.4f;
+    public float enterThreshold = 3.0f; 
+    public float exitThreshold = 1.5f;  
+
+    public float gyroSnapThreshold = 150f; // Degrees per second to trigger snap
+    public float gyroSnapResetThreshold = 80f; // Degrees per second to reset snap state
+    private Vector3 _peakDirectionVector = Vector3.zero;
+    private bool _isAwaitingSnap = false;
+
+    [Header("Simplified Gyro Gate")]
+    public float gyroEntryDps = 170f; 
+    public float gyroNeutralDps = 60f; 
+
 
     [Header("Reel Settings")]
     public float deadzone = 0.15f;
+    [Header("Accelerometer Crank Settings")]
+    public float crankRadiusThreshold = 0.2f; // Minimum "size" of the circle to count
+    public float accelFilterSmoothing = 15f; // To smooth out shaky hands
 
-    private readonly int[] _handlesBuffer = new int[16];
+    private Vector2 _smoothedAccel;
+    private float _lastCrankAngle;
+
     private int[] _connectedHandles = Array.Empty<int>();
+    private int _knownConnectionRevision = -1;
     private float _nextReconnectTime;
     private bool _warnedMissingDevices;
 
+    [Header("Flick Variables")]
     private Vector2 _virtualStick; // Derived from Gravity Tilt
+    private bool _isFlicking;
+    private Vector3 _lastFlickVector; // For direction consistency checks
+
+    private Vector3 _lastGyroVector; // For snap direction consistency
+
+    [Header("Rebound Protection")]
+    public float reboundLockoutTime = 0.08f; // 80ms window to ignore rebounds
+    public float requiredIntensityRatio = 0.6f; // New flick must be 60% as strong as previous peak
+
+    private float _lockoutTimer = 0f;
+    private float _lastPeakSpeed = 0f;
+    public float directionChangeThreshold = -0.2f; // -1 is perfectly opposite
+
+    [Header("Reel Variables")]
     private Vector2 _reelStick;    // Derived from Physical Thumbstick
     private float _currentSpinVelocity;
     private float _lastReelAngle;
     private float _accumulatedSpin;
-    private bool _isFlicking;
+    
     private JSL.JOY_SHOCK_STATE _lastSimpleState;
 
     private void Start()
     {
         ReconnectDevices();
+        _knownConnectionRevision = JoyConConnectionService.GetRevision();
     }
 
     private void OnApplicationQuit()
@@ -45,6 +82,13 @@ public class JoyconRhythmProvider : MonoBehaviour, IRhythmInputT
 
     private void Update()
     {
+        int revision = JoyConConnectionService.GetRevision();
+        if (revision != _knownConnectionRevision)
+        {
+            _knownConnectionRevision = revision;
+            ReconnectDevices();
+        }
+
         if (Time.timeScale <= 0f)
         {
             _currentSpinVelocity = 0f;
@@ -54,83 +98,111 @@ public class JoyconRhythmProvider : MonoBehaviour, IRhythmInputT
         if (!TryEnsureActiveDevice())
             return;
 
-        JSL.JOY_SHOCK_STATE state = JSL.JslGetSimpleState(deviceId);
-        JSL.MOTION_STATE motion = JSL.JslGetMotionState(deviceId);
-
-        HandleMotionFlick(motion);    // Accelerometer Logic
-        HandleThumbstickReel(state);  // Physical Stick Logic
-        HandleButtons(state);
-
-        _lastSimpleState = state;
-    }
-
-    private bool TryEnsureActiveDevice()
-    {
-        if (deviceId >= 0 && JSL.JslStillConnected(deviceId))
-            return true;
-
-        if (Time.unscaledTime >= _nextReconnectTime)
-            ReconnectDevices();
-
-        if (deviceId >= 0 && JSL.JslStillConnected(deviceId))
-            return true;
-
-        _currentSpinVelocity = 0f;
-        return false;
-    }
-
-    private void ReconnectDevices()
-    {
-        int count = JSL.JslConnectDevices();
-        if (count <= 0)
+        if (rodDeviceId >= 0)
         {
-            _connectedHandles = Array.Empty<int>();
-            deviceId = -1;
-            _nextReconnectTime = Time.unscaledTime + Mathf.Max(0.1f, reconnectInterval);
+            JSL.JOY_SHOCK_STATE rodState = JSL.JslGetSimpleState(rodDeviceId);
+            JSL.MOTION_STATE rodMotion = JSL.JslGetMotionState(rodDeviceId);
+            JSL.IMU_STATE rodImu = JSL.JslGetIMUState(rodDeviceId);
 
-            if (!_warnedMissingDevices)
+            HandleMotionFlick2(rodMotion, rodImu);
+            HandleButtons(rodState);
+            
+            HandleThumbstickReel(rodState);
+            _lastSimpleState = rodState;
+            
+        }
+
+        // --- POLL CRANK DEVICE (Circular Motion) ---
+        if (crankDeviceId >= 0)
+        {
+            JSL.MOTION_STATE crankMotion = JSL.JslGetMotionState(crankDeviceId);
+            HandleAccelerometerCrank(crankMotion);
+            
+        }
+
+        
+    }
+
+
+    private void HandleMotionFlick2(JSL.MOTION_STATE motion, JSL.IMU_STATE imu)
+    {
+        Vector2 userAcc2D = new Vector2(
+            motion.accelX - motion.gravX,
+            motion.accelY - motion.gravY
+        );
+
+        // get gyro for flick logic
+        Vector3 gyroVel = new Vector3(
+            -imu.gyroY,
+            imu.gyroX
+        );
+
+        float gyroSpeed = gyroVel.magnitude;
+        float force = userAcc2D.magnitude;
+
+        _lockoutTimer -= Time.deltaTime;
+
+        if (_isFlicking)
+        {
+
+
+            if (gyroSpeed > _lastPeakSpeed) _lastPeakSpeed = gyroSpeed;
+
+
+            if (_lockoutTimer <= 0)
             {
-                Debug.LogWarning("JoyconRhythmProvider: no JoyShockLibrary devices found.");
-                _warnedMissingDevices = true;
+                float dot = Vector2.Dot(gyroVel.normalized, _lastFlickVector.normalized);
+                
+                
+                if (dot < directionChangeThreshold && gyroSpeed > (_lastPeakSpeed * requiredIntensityRatio))
+                {
+                    _isFlicking = false; 
+                }
             }
-            return;
+
+
+            if (gyroSpeed < gyroNeutralDps)
+            {
+                _isFlicking = false;
+                _lastPeakSpeed = 0f;
+            }
+            return; 
+        }
+        if (gyroSpeed > gyroEntryDps && _lockoutTimer <= 0  )
+        {
+            FlickDirection dir = GetDirectionFromGyro(gyroVel);
+            if (dir != FlickDirection.None)
+            {
+                OnFlick?.Invoke(dir);
+                _isFlicking = true; 
+                _lastFlickVector = gyroVel;
+                _lastPeakSpeed = gyroSpeed;
+                _lockoutTimer = reboundLockoutTime; // START THE GUARD
+            }
         }
 
-        int copiedCount = JSL.JslGetConnectedDeviceHandles(_handlesBuffer, _handlesBuffer.Length);
-        copiedCount = Mathf.Clamp(copiedCount, 0, _handlesBuffer.Length);
+        // if (_isFlicking)
+        // {
+            
+        //     if (force < exitThreshold)
+        //     {
+        //         _isFlicking = false;
+        //     }
+        //     return; 
+        // }
 
-        _connectedHandles = new int[copiedCount];
-        Array.Copy(_handlesBuffer, _connectedHandles, copiedCount);
-        _warnedMissingDevices = false;
-        _nextReconnectTime = Time.unscaledTime + Mathf.Max(0.1f, reconnectInterval);
 
-        if (useAnyConnectedDevice)
-        {
-            deviceId = FindFirstConnectedHandle(_connectedHandles);
-        }
-        else if (_connectedHandles.Length > 0)
-        {
-            int idx = Mathf.Clamp(deviceIndex, 0, _connectedHandles.Length - 1);
-            deviceId = _connectedHandles[idx];
-        }
-        else
-        {
-            deviceId = -1;
-        }
+        // if (force > enterThreshold)
+        // {
+        //     FlickDirection dir = GetDirectionFromAccel(userAcc2D);
+        //     if (dir != FlickDirection.None)
+        //     {
+        //         OnFlick?.Invoke(dir);
+        //         _isFlicking = true; 
+
+        //     }
+        // }
     }
-
-    private static int FindFirstConnectedHandle(int[] handles)
-    {
-        for (int i = 0; i < handles.Length; i++)
-        {
-            int handle = handles[i];
-            if (handle >= 0 && JSL.JslStillConnected(handle))
-                return handle;
-        }
-
-        return -1;
-    }
-
     private void HandleMotionFlick(JSL.MOTION_STATE motion)
     {
         Vector3 userAcc = new Vector3(
@@ -154,7 +226,6 @@ public class JoyconRhythmProvider : MonoBehaviour, IRhythmInputT
         if (force < resetThreshold)
             _isFlicking = false;
     }
-
     private void HandleThumbstickReel(JSL.JOY_SHOCK_STATE state)
     {
         _reelStick = new Vector2(state.stickLX + state.stickRX, state.stickLY + state.stickRY);
@@ -174,6 +245,32 @@ public class JoyconRhythmProvider : MonoBehaviour, IRhythmInputT
         }
     }
 
+    private void HandleAccelerometerCrank(JSL.MOTION_STATE motion)
+    {
+
+        Vector2 rawInput = new Vector2(motion.accelX - motion.gravX, motion.accelY - motion.gravY);
+
+        _smoothedAccel = Vector2.Lerp(_smoothedAccel, rawInput, Time.deltaTime * accelFilterSmoothing);
+
+        if (_smoothedAccel.magnitude > crankRadiusThreshold)
+        {
+            float currentAngle = Mathf.Atan2(_smoothedAccel.y, _smoothedAccel.x) * Mathf.Rad2Deg;
+            
+            float delta = Mathf.DeltaAngle(_lastCrankAngle, currentAngle);
+
+            _currentSpinVelocity = delta / Mathf.Max(0.0001f, Time.deltaTime);
+            _accumulatedSpin += delta;
+            _lastCrankAngle = currentAngle;
+
+            float rad = currentAngle * Mathf.Deg2Rad;
+            _reelStick = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad));
+        }
+        else
+        {
+            _currentSpinVelocity = Mathf.MoveTowards(_currentSpinVelocity, 0, Time.deltaTime * 100f);
+        }
+    }
+
     private void HandleButtons(JSL.JOY_SHOCK_STATE state)
     {
         bool isDown = (state.buttons & (1 << JSL.ButtonMaskDown)) != 0;
@@ -183,28 +280,107 @@ public class JoyconRhythmProvider : MonoBehaviour, IRhythmInputT
             OnButtonDown?.Invoke(0);
     }
 
-    private void StopRumble() => JSL.JslSetRumble(deviceId, 0, 0);
+    private void StopRumble() => JSL.JslSetRumble(rodDeviceId, 0, 0);
     public bool IsHoldingDirection(FlickDirection direction) => GetDirectionFromVector(_virtualStick) == direction;
     public float GetSpinVelocity() => _currentSpinVelocity;
     public float GetTotalAccumulatedSpin() => _accumulatedSpin;
     public void ResetAccumulatedSpin() => _accumulatedSpin = 0f;
     public Vector2 GetReelStickDirection() => _reelStick;
+    private bool TryEnsureActiveDevice()
+{
+
+    if (rodDeviceId >= 0 && JSL.JslStillConnected(rodDeviceId))
+        return true;
+
+    if (Time.unscaledTime >= _nextReconnectTime)
+        ReconnectDevices();
+
+
+    if (rodDeviceId >= 0 && JSL.JslStillConnected(rodDeviceId))
+        return true;
+
+    _currentSpinVelocity = 0f;
+    return false;
+}
+
+    private void ReconnectDevices()
+    {
+        int count = JSL.JslConnectDevices();
+        
+        rodDeviceId = -1;
+        crankDeviceId = -1;
+
+        if (count <= 0)
+        {
+            _connectedHandles = Array.Empty<int>();
+            _nextReconnectTime = Time.unscaledTime + Mathf.Max(0.1f, reconnectInterval);
+            if (!_warnedMissingDevices)
+            {
+                Debug.LogWarning("JoyconRhythmProvider: No devices found.");
+                _warnedMissingDevices = true;
+            }
+            return;
+        }
+
+        int[] handlesBuffer = new int[count];
+        int copiedCount = JSL.JslGetConnectedDeviceHandles(handlesBuffer, handlesBuffer.Length);
+        _connectedHandles = new int[copiedCount];
+        Array.Copy(handlesBuffer, _connectedHandles, copiedCount);
+        
+        _warnedMissingDevices = false;
+        _nextReconnectTime = Time.unscaledTime + Mathf.Max(0.1f, reconnectInterval);
+
+        if (_connectedHandles.Length >= 2)
+        {
+            rodDeviceId = _connectedHandles[0];
+            crankDeviceId = _connectedHandles[1];
+            Debug.Log($"[Dual Mode] Rod ID: {rodDeviceId}, Crank ID: {crankDeviceId}");
+        }
+        else if (_connectedHandles.Length == 1)
+        {
+            rodDeviceId = _connectedHandles[0];
+            Debug.Log($"[Single Mode] Rod ID: {rodDeviceId}");
+        }
+    }
+
+    private static int FindFirstConnectedHandle(int[] handles)
+    {
+        for (int i = 0; i < handles.Length; i++)
+        {
+            int handle = handles[i];
+            if (handle >= 0 && JSL.JslStillConnected(handle))
+                return handle;
+        }
+
+        return -1;
+    }
 
     public bool GetButton(int index)
     {
-        if (index != 0)
+
+        if (index != 0 || rodDeviceId < 0 || !JSL.JslStillConnected(rodDeviceId))
             return false;
 
-        if (deviceId < 0 || !JSL.JslStillConnected(deviceId))
-            return false;
-
-        return (JSL.JslGetSimpleState(deviceId).buttons & (1 << JSL.ButtonMaskDown)) != 0;
+        return (JSL.JslGetSimpleState(rodDeviceId).buttons & (1 << JSL.ButtonMaskDown)) != 0;
     }
 
     private FlickDirection GetDirectionFromAccel(Vector3 acc)
     {
         float x = acc.x;
         float y = acc.y;
+        float absX = Mathf.Abs(x);
+        float absY = Mathf.Abs(y);
+
+        if (absX > absY)
+            return x > 0 ? FlickDirection.Right : FlickDirection.Left;
+
+        return y > 0 ? FlickDirection.Up : FlickDirection.Down;
+    }
+
+    private FlickDirection GetDirectionFromGyro(Vector3 gyroVelocity)
+    {
+        float x = gyroVelocity.x;
+        float y = gyroVelocity.y;
         float absX = Mathf.Abs(x);
         float absY = Mathf.Abs(y);
 

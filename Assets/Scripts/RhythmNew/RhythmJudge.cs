@@ -9,26 +9,37 @@ public class RhythmJudge : MonoBehaviour
     and has a reference to the conductor to get the position of all the acitve notes
     I have some manually set timing windows for now to control the scoring of the notes.
     */
+    public static RhythmJudge Instance { get; private set; }
     public enum JudgeRating { Perfect, Good, Bad, Miss }
     [Header("References")]
     public RhythmConductor conductor;
     public RhythmInputProcessorT processor;
 
     [Header("Timing Windows (Seconds)")]
-    public float perfectWindow = 0.1f;
-    public float goodWindow = 0.3f;
+    public float perfectWindow = 0.2f;
+    public float goodWindow = 0.4f;
     public float badWindow = 0.5f; // Beyond this is an automatic Miss
+    public float PerfectWindow => perfectWindow;
+    public float GoodWindow => goodWindow;
+    public float BadWindow => badWindow;
 
     [Header("Debug")]
     [SerializeField] private bool logNoteResolutions = false;
     [SerializeField] private bool logReelOutcome = false;
 
     public static event Action<JudgeRating> OnNoteJudged;
+    public static event Action<JudgeRating, RhythmArcNote.NoteType, FlickDirection> OnDetailedNoteJudged;
 
     void Start()
     {
         if (processor != null)
             processor.OnValidFlick += HandleFlick;
+    }
+    private void Awake()
+    {
+        // Initialize Singleton
+        if (Instance == null) Instance = this;
+        else Destroy(gameObject);
     }
 
     void OnDestroy()
@@ -154,6 +165,8 @@ public class RhythmJudge : MonoBehaviour
 
     private void ResolveNote(RhythmArcNote note, JudgeRating rating)
     {
+        RhythmArcNote.NoteType noteType = note.Type;
+        FlickDirection direction = note.Direction;
         conductor.activeNotes.Remove(note);
         if (logNoteResolutions)
         {
@@ -176,6 +189,7 @@ public class RhythmJudge : MonoBehaviour
         }
 
         OnNoteJudged?.Invoke(rating);
+        OnDetailedNoteJudged?.Invoke(rating, noteType, direction);
     }
 
     private void CheckReelNotes()
@@ -184,6 +198,7 @@ public class RhythmJudge : MonoBehaviour
         if (reel == null) return;
 
         float songTime = conductor.songTime;
+        float endTime = reel.Data.startTime + reel.Data.duration;
 
 
         if (reel.CurrentPhase == ReelPhase.Active)
@@ -192,9 +207,8 @@ public class RhythmJudge : MonoBehaviour
             float delta = spinVelocity * Time.deltaTime; // Convert velocity to delta for this frame
             reel.AddSpin(delta);
         }
-        
 
-        if (songTime >= reel.Data.startTime + reel.Data.duration && reel.CurrentPhase != ReelPhase.Resolved)
+        if (songTime >= endTime)
         {
             
             float finalProgress = reel.Progress;
@@ -215,6 +229,7 @@ public class RhythmJudge : MonoBehaviour
             }
             else
             {
+                Debug.Log("<color=red>REEL FAILED!</color>");
                 reel.OnFail();
             }
 

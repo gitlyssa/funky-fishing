@@ -50,8 +50,13 @@ public class JoyConDirectionalRhythmProvider : MonoBehaviour, IRhythmInputT
     [Header("Debug")]
     [SerializeField] private bool logFlicks = false;
 
+    [Header("Rhythm Pulse")]
+    [SerializeField] private bool useFixedHoldPulse = true;
+    [SerializeField] private float fixedHoldPulseSeconds = 0.06f;
+
     private int[] _handles = Array.Empty<int>();
     private int _deviceId = -1;
+    private int _knownConnectionRevision = -1;
     private float _nextReconnectTime = -1f;
     private bool _warnedMissingDevice;
 
@@ -66,6 +71,8 @@ public class JoyConDirectionalRhythmProvider : MonoBehaviour, IRhythmInputT
     private float _accumulatedSpin;
     private Vector2 _reelStick;
     private JSL.JOY_SHOCK_STATE _lastSimpleState;
+    private FlickDirection _pulseDirection = FlickDirection.None;
+    private float _pulseUntil = -1f;
 
     private void Start()
     {
@@ -77,6 +84,7 @@ public class JoyConDirectionalRhythmProvider : MonoBehaviour, IRhythmInputT
 
         SyncFromDirectionalSwingIfNeeded();
         ConnectDevice();
+        _knownConnectionRevision = JoyConConnectionService.GetRevision();
     }
 
     private void OnDisable()
@@ -87,11 +95,20 @@ public class JoyConDirectionalRhythmProvider : MonoBehaviour, IRhythmInputT
         _sideNeutralSince = -1f;
         _currentSpinVelocity = 0f;
         _reelStick = Vector2.zero;
+        _pulseDirection = FlickDirection.None;
+        _pulseUntil = -1f;
     }
 
     private void Update()
     {
         SyncFromDirectionalSwingIfNeeded();
+
+        int revision = JoyConConnectionService.GetRevision();
+        if (revision != _knownConnectionRevision)
+        {
+            _knownConnectionRevision = revision;
+            ConnectDevice();
+        }
 
         if (_deviceId < 0)
         {
@@ -99,9 +116,10 @@ public class JoyConDirectionalRhythmProvider : MonoBehaviour, IRhythmInputT
             if (_deviceId < 0)
                 return;
         }
-        else if (!JSL.JslStillConnected(_deviceId))
+        else if (!JoyConConnectionService.IsHandleConnected(_deviceId))
         {
             _deviceId = -1;
+            JoyConConnectionService.RequestScan();
             return;
         }
 
@@ -117,8 +135,19 @@ public class JoyConDirectionalRhythmProvider : MonoBehaviour, IRhythmInputT
         }
 
         float dt = Mathf.Max(0.0001f, Time.deltaTime);
-        JSL.IMU_STATE imu = JSL.JslGetIMUState(_deviceId);
-        JSL.JOY_SHOCK_STATE state = JSL.JslGetSimpleState(_deviceId);
+        JSL.IMU_STATE imu;
+        JSL.JOY_SHOCK_STATE state;
+        try
+        {
+            imu = JSL.JslGetIMUState(_deviceId);
+            state = JSL.JslGetSimpleState(_deviceId);
+        }
+        catch
+        {
+            JoyConConnectionService.RequestScan();
+            _deviceId = -1;
+            return;
+        }
 
         Vector3 gyroRaw = new Vector3(imu.gyroX, imu.gyroY, imu.gyroZ);
         float smoothK = 1f - Mathf.Exp(-Mathf.Max(0.01f, gyroSmooth) * dt);
@@ -153,13 +182,12 @@ public class JoyConDirectionalRhythmProvider : MonoBehaviour, IRhythmInputT
 
     private void ConnectDevice()
     {
-        int count = JSL.JslConnectDevices();
-        _handles = new int[Mathf.Max(0, count)];
-        if (count > 0)
-            JSL.JslGetConnectedDeviceHandles(_handles, _handles.Length);
+        _handles = JoyConConnectionService.GetConnectedHandles();
+        _knownConnectionRevision = JoyConConnectionService.GetRevision();
 
-        if (_handles.Length == 0)
+        if (_handles == null || _handles.Length == 0)
         {
+            _handles = Array.Empty<int>();
             if (!_warnedMissingDevice)
             {
                 Debug.LogWarning("JoyConDirectionalRhythmProvider: no JoyShockLibrary device found. Retrying...");
@@ -167,6 +195,7 @@ public class JoyConDirectionalRhythmProvider : MonoBehaviour, IRhythmInputT
             }
 
             _deviceId = -1;
+            JoyConConnectionService.RequestScan();
             return;
         }
 
@@ -181,11 +210,11 @@ public class JoyConDirectionalRhythmProvider : MonoBehaviour, IRhythmInputT
         if (followGestureDetectorLastTrigger && gestureDetector != null && gestureDetector.LastTriggerHandle >= 0)
         {
             int lastHandle = gestureDetector.LastTriggerHandle;
-            if (JSL.JslStillConnected(lastHandle))
+            if (JoyConConnectionService.IsHandleConnected(lastHandle))
                 return lastHandle;
         }
 
-        if (_deviceId >= 0 && JSL.JslStillConnected(_deviceId))
+        if (_deviceId >= 0 && JoyConConnectionService.IsHandleConnected(_deviceId))
             return _deviceId;
 
         if (_handles == null || _handles.Length == 0)
@@ -291,6 +320,8 @@ public class JoyConDirectionalRhythmProvider : MonoBehaviour, IRhythmInputT
         if (logFlicks)
             Debug.Log($"JoyConDirectionalRhythmProvider flick: {flick}");
 
+        _pulseDirection = flick;
+        _pulseUntil = Time.time + Mathf.Max(0.01f, fixedHoldPulseSeconds);
         OnFlick?.Invoke(flick);
     }
 
@@ -335,6 +366,15 @@ public class JoyConDirectionalRhythmProvider : MonoBehaviour, IRhythmInputT
 
     public bool IsHoldingDirection(FlickDirection direction)
     {
+        if (useFixedHoldPulse)
+        {
+            if (direction == FlickDirection.None)
+                return false;
+            if (Time.time > _pulseUntil)
+                return false;
+            return direction == _pulseDirection;
+        }
+
         if (direction == FlickDirection.Left)
             return IsHoldingMotion(MotionDirection.Left);
         if (direction == FlickDirection.Right)
@@ -347,16 +387,86 @@ public class JoyConDirectionalRhythmProvider : MonoBehaviour, IRhythmInputT
     public float GetSpinVelocity() => _currentSpinVelocity;
     public bool GetButton(int index)
     {
-        if (index != 0 || _deviceId < 0 || !JSL.JslStillConnected(_deviceId))
+        if (index != 0 || !JoyConConnectionService.IsHandleConnected(_deviceId))
             return false;
 
-        JSL.JOY_SHOCK_STATE state = JSL.JslGetSimpleState(_deviceId);
-        return (state.buttons & (1 << JSL.ButtonMaskDown)) != 0;
+        try
+        {
+            JSL.JOY_SHOCK_STATE state = JSL.JslGetSimpleState(_deviceId);
+            return (state.buttons & (1 << JSL.ButtonMaskDown)) != 0;
+        }
+        catch
+        {
+            JoyConConnectionService.RequestScan();
+            return false;
+        }
     }
 
     public float GetTotalAccumulatedSpin() => _accumulatedSpin;
     public void ResetAccumulatedSpin() => _accumulatedSpin = 0f;
     public Vector2 GetReelStickDirection() => _reelStick;
+
+    public bool SyncSettingsFromDirectionalSwing
+    {
+        get => syncSettingsFromDirectionalSwing;
+        set => syncSettingsFromDirectionalSwing = value;
+    }
+
+    public JoyConDirectionalSwingInput DirectionalSwingSource => directionalSwingInput;
+
+    public float GyroSmooth
+    {
+        get => gyroSmooth;
+        set => gyroSmooth = value;
+    }
+
+    public float UpEnterDps
+    {
+        get => upEnterDps;
+        set => upEnterDps = value;
+    }
+
+    public float UpExitDps
+    {
+        get => upExitDps;
+        set => upExitDps = value;
+    }
+
+    public float SideEnterDps
+    {
+        get => sideEnterDps;
+        set => sideEnterDps = value;
+    }
+
+    public float SideExitDps
+    {
+        get => sideExitDps;
+        set => sideExitDps = value;
+    }
+
+    public float UpPriorityBias
+    {
+        get => upPriorityBias;
+        set => upPriorityBias = value;
+    }
+
+    public float DirectionRearmDelay
+    {
+        get => directionRearmDelay;
+        set => directionRearmDelay = value;
+    }
+
+    public float SideNeutralRearmDps
+    {
+        get => sideNeutralRearmDps;
+        set => sideNeutralRearmDps = value;
+    }
+
+    public float SideNeutralHoldTime
+    {
+        get => sideNeutralHoldTime;
+        set => sideNeutralHoldTime = value;
+    }
 
     private static float GetAxis(Vector3 v, JoyConDirectionalSwingInput.Axis axis)
     {
@@ -370,13 +480,23 @@ public class JoyConDirectionalRhythmProvider : MonoBehaviour, IRhythmInputT
         if (_sideRearmed)
             return;
 
-        if (Mathf.Abs(sideValue) <= Mathf.Max(0f, sideNeutralRearmDps))
+        float neutralRearm = Mathf.Max(0f, sideNeutralRearmDps);
+        float holdSeconds = Mathf.Max(0f, sideNeutralHoldTime);
+
+        if (Mathf.Abs(sideValue) <= neutralRearm)
         {
+            if (holdSeconds <= 0f)
+            {
+                _sideRearmed = true;
+                _sideNeutralSince = Time.time;
+                return;
+            }
+
             if (_sideNeutralSince < 0f)
             {
                 _sideNeutralSince = Time.time;
             }
-            else if ((Time.time - _sideNeutralSince) >= Mathf.Max(0f, sideNeutralHoldTime))
+            else if ((Time.time - _sideNeutralSince) >= holdSeconds)
             {
                 _sideRearmed = true;
             }

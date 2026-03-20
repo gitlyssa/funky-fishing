@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.Serialization;
+using UnityEngine.SceneManagement;
 using FMOD.Studio;
 
 public class BobberArcCaster : MonoBehaviour
@@ -130,10 +131,17 @@ public class BobberArcCaster : MonoBehaviour
     private bool _hookedFishMovingToCenter;
     private float _hookedFishSwimSeed;
 
+    [Header("Success Requirements")]
+    public int minimumAccuracyForCatch = 65;
+    public FishCatchAnimation catchAnimation; 
+    [Header("Failed Catch Popup")]
+    public FailedCatchPopup failedCatchPopup;
+    public string failedCatchPopupLabel = "FISH ESCAPED!";
     public bool IsHookedFishDrivingBobber =>
         _hookedFishLockedToBobber &&
         CurrentState == State.Tension &&
         _hookedFish != null;
+    public GameObject HookedFish => _hookedFish;
 
     void Start()
     {
@@ -153,6 +161,8 @@ public class BobberArcCaster : MonoBehaviour
         if (pondManager == null)
             pondManager = FindObjectOfType<PondManager>();
 
+        TryResolveCatchAnimation();
+        TryResolveFailedCatchPopup();
         CacheStableRodBasePose();
     }
 
@@ -160,6 +170,9 @@ public class BobberArcCaster : MonoBehaviour
     public void Cast()
     {
         if (!rodTip || !bobber || !targetMarker) return;
+
+        if (!TutorialStartGate.IsCastAllowedByTutorial())
+            return;
 
         // Only allow a fresh cast from idle/hanging.
         if (CurrentState != State.Idle) return;
@@ -183,8 +196,19 @@ public class BobberArcCaster : MonoBehaviour
     {
         if (!rodTip || !bobber) return;
 
+        if (!TutorialStartGate.IsYankAllowedByTutorial())
+            return;
+
         // Guard: don't yank if already idle/hanging
         if (CurrentState == State.Idle || _isPreparingYank) return;
+
+        // Only allow yanks once the bobber is in-water (landed/tension flow).
+        bool bobberInWater =
+            CurrentState == State.Landed ||
+            CurrentState == State.Tension ||
+            _isRestoringFromTension;
+        if (!bobberInWater)
+            return;
 
         // If rod is displaced by tension feedback, let it settle before retracting bobber.
         if (CurrentState == State.Tension && IsBeatmapPlaying())
@@ -246,16 +270,286 @@ public class BobberArcCaster : MonoBehaviour
 
     public void CompleteRhythmEncounter()
     {
-        ConsumeHookedFish();
+        float accuracy = FishingSessionHud.GetCurrentRunAccuracyOrLast();
+        string grade = FishingSessionHud.GetLetterGradeForAccuracy(accuracy);
+        GameObject fishToResolve = ResolveFishForEncounter();
+        bool catchSucceeded = FishingSessionHud.IsSuccessfulCatchAccuracy(accuracy) && fishToResolve != null;
+        FishingSessionHud.RegisterCatchOutcome(catchSucceeded);
 
-        if (CurrentState == State.Tension || _isRestoringFromTension)
+        if (catchSucceeded)
         {
-            StartYankAfterRodRestore();
+            GameObject fishToShow = fishToResolve;
+            GameObject migratedFish = SceneLoading.MigratedFish;
+
+            // driveOverlayFromBobberTension can end rhythm as soon as we leave Tension.
+            // Clear SceneLoading's migrated reference so overlay teardown won't destroy
+            // the fish before the trophy animation consumes it.
+            if (fishToShow != null && fishToShow == migratedFish)
+                SceneLoading.MigratedFish = null;
+
+            if (SceneLoading.Instance != null)
+                SceneLoading.Instance.HideScoringCircleForCatchSequence();
+
+            BeginRodReturnForSuccessSequence();
+
+            _hookedFish = null; // Remove reference so Consume/Restore doesn't touch it
+
+            StartCoroutine(ExecuteSuccessSequence(fishToShow));
+        }
+        else
+        {
+            Debug.Log($"Catch failed ({grade}, {accuracy:F1}%). The fish got away.");
+            ShowFailedCatchPopup();
+            HandleFailedCatch(fishToResolve);
+            FinishTensionState();
+        }
+    }
+
+    private void ShowFailedCatchPopup()
+    {
+        if (!TryResolveFailedCatchPopup())
+            return;
+
+        failedCatchPopup.Show(failedCatchPopupLabel);
+    }
+
+    private GameObject ResolveFishForEncounter()
+    {
+        if (_hookedFish != null)
+            return _hookedFish;
+
+        return SceneLoading.MigratedFish;
+    }
+
+    private bool TryResolveFailedCatchPopup()
+    {
+        if (failedCatchPopup != null)
+            return true;
+
+        failedCatchPopup = FindObjectOfType<FailedCatchPopup>();
+        if (failedCatchPopup != null)
+            return true;
+
+        if (Camera.main != null)
+        {
+            failedCatchPopup = Camera.main.GetComponent<FailedCatchPopup>();
+            if (failedCatchPopup == null)
+                failedCatchPopup = Camera.main.gameObject.AddComponent<FailedCatchPopup>();
+        }
+
+        return failedCatchPopup != null;
+    }
+
+    private void HandleFailedCatch(GameObject fish)
+    {
+        BeginRodReturnForSuccessSequence();
+        FishMovement.ClearBobberNibbleVerticalOverride(bobber);
+
+        if (fish == null)
+        {
+            SceneLoading.MigratedFish = null;
+            _hookedFish = null;
+            ClearHookedFishLockState();
             return;
         }
 
-        if (CurrentState == State.Landed || CurrentState == State.InFlight || CurrentState == State.Retracting)
-            StartYank();
+        ReleaseFishAfterFailedCatch(fish);
+        _hookedFish = null;
+    }
+
+    private void ReleaseFishAfterFailedCatch(GameObject fish)
+    {
+        if (fish == null)
+            return;
+
+        if (SceneLoading.MigratedFish == fish)
+            SceneLoading.MigratedFish = null;
+
+        RestoreFishForGameplayAfterRhythm(fish);
+
+        _hookedFish = fish;
+        ClearHookedFishLockState();
+
+        FishMovement movement = fish.GetComponentInChildren<FishMovement>(true);
+        if (movement != null)
+        {
+            movement.enabled = true;
+            float panicDuration = Random.Range(1.25f, 2f);
+            movement.ForcePanicSwimAwayFrom(bobber, panicDuration);
+            return;
+        }
+
+        Rigidbody fishRb = fish.GetComponent<Rigidbody>();
+        if (fishRb != null)
+        {
+            fishRb.isKinematic = false;
+            Vector3 away = bobber != null
+                ? fish.transform.position - bobber.position
+                : fish.transform.forward;
+            away.y = 0f;
+            if (away.sqrMagnitude < 0.0001f)
+            {
+                Vector2 random = Random.insideUnitCircle;
+                if (random.sqrMagnitude < 0.0001f)
+                    random = Vector2.right;
+                away = new Vector3(random.x, 0f, random.y);
+            }
+
+            fishRb.linearVelocity = away.normalized * 2.5f;
+        }
+    }
+
+    private void RestoreFishForGameplayAfterRhythm(GameObject fish)
+    {
+        if (fish == null)
+            return;
+
+        Scene gameplayScene = gameObject.scene;
+        if (gameplayScene.IsValid() && fish.scene != gameplayScene)
+            SceneManager.MoveGameObjectToScene(fish, gameplayScene);
+
+        Vector3 releasePos = bobber != null ? bobber.position : fish.transform.position;
+        float surfaceY = pondManager != null ? pondManager.waterlevel : releasePos.y;
+        releasePos.y = surfaceY - Mathf.Max(0.05f, hookedFishDepthBelowSurface);
+        fish.transform.position = releasePos;
+
+        Collider[] colliders = fish.GetComponentsInChildren<Collider>(true);
+        for (int i = 0; i < colliders.Length; i++)
+        {
+            Collider col = colliders[i];
+            if (col != null)
+                col.enabled = true;
+        }
+
+        Rigidbody[] rigidbodies = fish.GetComponentsInChildren<Rigidbody>(true);
+        for (int i = 0; i < rigidbodies.Length; i++)
+        {
+            Rigidbody rb = rigidbodies[i];
+            if (rb != null)
+                rb.isKinematic = false;
+        }
+
+        SetLayerRecursively(fish.transform, 0);
+    }
+
+    private static void SetLayerRecursively(Transform root, int layer)
+    {
+        if (root == null)
+            return;
+
+        root.gameObject.layer = layer;
+        for (int i = 0; i < root.childCount; i++)
+            SetLayerRecursively(root.GetChild(i), layer);
+    }
+
+    private IEnumerator ExecuteSuccessSequence(GameObject fish)
+    {
+        yield return WaitForRodIdleBeforeSuccessAnimation();
+
+        if (fish == null)
+        {
+            Debug.LogWarning("Success sequence skipped fish trophy animation because no hooked fish was available.");
+        }
+        else if (TryResolveCatchAnimation())
+        {
+            yield return StartCoroutine(catchAnimation.TrophyRoutine(fish));
+        }
+        else
+        {
+            Debug.LogWarning("FishCatchAnimation reference is missing. Falling back to direct fish consume.");
+            if (pondManager != null)
+                pondManager.RemoveFish(fish);
+            else
+                Destroy(fish);
+        }
+
+        FinishTensionState();
+    }
+
+    private void FinishTensionState()
+    {
+        SceneLoading.MigratedFish = null;
+        if (SceneLoading.Instance != null)
+            SceneLoading.Instance.EndRhythmEncounter();
+
+        if (CurrentState != State.Idle &&
+            CurrentState != State.Retracting &&
+            !_isPreparingYank)
+        {
+            StartYankAfterRodRestore();
+        }
+        // retore fish
+        if (pondManager != null)
+                pondManager.RestoreFishAfterTension();
+                
+    }
+
+    private void BeginRodReturnForSuccessSequence()
+    {
+        if (CurrentState == State.Tension)
+            CurrentState = State.Landed;
+
+        if (CurrentState != State.Idle &&
+            CurrentState != State.Retracting &&
+            !_isPreparingYank)
+        {
+            StartYankAfterRodRestore();
+        }
+    }
+
+    private IEnumerator WaitForRodIdleBeforeSuccessAnimation()
+    {
+        const float timeout = 1.2f;
+        float elapsed = 0f;
+        while (CurrentState != State.Idle && elapsed < timeout)
+        {
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+    }
+
+    private bool TryResolveCatchAnimation()
+    {
+        if (catchAnimation != null)
+            return true;
+
+        catchAnimation = FindObjectOfType<FishCatchAnimation>();
+        if (catchAnimation != null)
+            return true;
+
+        FishCatchAnimation[] allAnimations = Resources.FindObjectsOfTypeAll<FishCatchAnimation>();
+        for (int i = 0; i < allAnimations.Length; i++)
+        {
+            FishCatchAnimation candidate = allAnimations[i];
+            if (candidate == null)
+                continue;
+            if (!candidate.gameObject.scene.IsValid())
+                continue;
+
+            catchAnimation = candidate;
+            break;
+        }
+
+        if (catchAnimation == null && Camera.main != null)
+        {
+            catchAnimation = Camera.main.GetComponent<FishCatchAnimation>();
+            if (catchAnimation == null)
+            {
+                catchAnimation = Camera.main.gameObject.AddComponent<FishCatchAnimation>();
+                Debug.LogWarning(
+                    "Added runtime FishCatchAnimation to Camera.main because no scene reference was found. " +
+                    "Assign BobberArcCaster.catchAnimation for authored UI bindings.");
+            }
+        }
+
+        if (catchAnimation == null)
+        {
+            Debug.LogWarning(
+                "Could not resolve FishCatchAnimation. " +
+                "Assign BobberArcCaster.catchAnimation in the inspector to enable trophy animation.");
+        }
+
+        return catchAnimation != null;
     }
 
     private void ConsumeHookedFish()
@@ -307,7 +601,7 @@ public class BobberArcCaster : MonoBehaviour
 
         ToggleTension();
         if (SceneLoading.Instance != null)
-            SceneLoading.Instance.StartRhythmEncounter();
+            SceneLoading.Instance.StartRhythmEncounter(_hookedFish);
     }
 
     private GameObject GetHookQueryBobber()
