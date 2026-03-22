@@ -14123,6 +14123,27 @@ MonoBehaviour:
   comboPulseRiseDistance: 10
   detailAnchoredPosition: {x: -28, y: -28}
   detailFontSize: 26
+  earlyTimingIndicatorSprite: {fileID: 21300000, guid: a2c55068d461305458b4323d9c6d428d, type: 3}
+  earlyTimingIndicatorUvRect:
+    serializedVersion: 2
+    x: 0.336
+    y: 0.522
+    width: 0.306
+    height: 0.077
+  lateTimingIndicatorSprite: {fileID: 21300000, guid: 08ef239454f105441acf563cbb4e24d4, type: 3}
+  lateTimingIndicatorUvRect:
+    serializedVersion: 2
+    x: 0.337
+    y: 0.522
+    width: 0.266
+    height: 0.079
+  timingIndicatorImageColor: {r: 1, g: 1, b: 1, a: 1}
+  timingIndicatorImageHeight: 75
+  timingIndicatorImageMaxWidth: 640
+  timingIndicatorImageUpInwardNudge: 60
+  timingIndicatorImageSideInwardNudge: 85
+  timingIndicatorScreenOffset: -42
+  timingIndicatorSideScreenOffset: -36
   maxPowerFlashInterval: 0.5
   reelStatusSprite: {fileID: 21300000, guid: c502aa7907ffec54d9709e82b69d85f5, type: 3}
   reelStatusPosition: {x: 0, y: 250}

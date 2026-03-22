@@ -58,9 +58,18 @@ public class RhythmPerformanceHud : MonoBehaviour
     [Header("Timing Indicators")]
     [SerializeField] private Vector2 timingIndicatorSize = new Vector2(540f, 180f);
     [SerializeField] private int timingIndicatorFontSize = 88;
+    [SerializeField] private Sprite earlyTimingIndicatorSprite;
+    [SerializeField] private Rect earlyTimingIndicatorUvRect = new Rect(0.336f, 0.522f, 0.306f, 0.077f);
+    [SerializeField] private Sprite lateTimingIndicatorSprite;
+    [SerializeField] private Rect lateTimingIndicatorUvRect = new Rect(0.337f, 0.522f, 0.266f, 0.079f);
+    [SerializeField] private Color timingIndicatorImageColor = Color.white;
+    [SerializeField] private float timingIndicatorImageHeight = 75f;
+    [SerializeField] private float timingIndicatorImageMaxWidth = 640f;
+    [SerializeField] private float timingIndicatorImageUpInwardNudge = 60f;
+    [SerializeField] private float timingIndicatorImageSideInwardNudge = 85f;
     [FormerlySerializedAs("timingIndicatorRadiusOffset")]
-    [SerializeField] private float timingIndicatorScreenOffset = 18f;
-    [SerializeField] private float timingIndicatorSideScreenOffset = 108f;
+    [SerializeField] private float timingIndicatorScreenOffset = -42f;
+    [SerializeField] private float timingIndicatorSideScreenOffset = -36f;
     [SerializeField] private float timingIndicatorScreenMargin = 24f;
     [SerializeField] private Color earlyTimingIndicatorColor = new Color(0.45f, 0.95f, 1f, 1f);
     [SerializeField] private Color lateTimingIndicatorColor = new Color(1f, 0.78f, 0.35f, 1f);
@@ -157,10 +166,13 @@ public class RhythmPerformanceHud : MonoBehaviour
     private sealed class TimingIndicatorState
     {
         public TextMeshProUGUI Text;
-        public RectTransform Rect;
+        public RectTransform TextRect;
+        public RawImage Image;
+        public RectTransform ImageRect;
         public Vector2 BasePosition;
         public Color BaseColor;
         public float AnimTime = -1f;
+        public bool UsingImage;
     }
 
     private readonly Dictionary<FlickDirection, TimingIndicatorState> _timingIndicators =
@@ -510,11 +522,48 @@ public class RhythmPerformanceHud : MonoBehaviour
         return image;
     }
 
+    private RawImage CreateRawImage(
+        string objectName,
+        Transform parent,
+        Vector2 anchorMin,
+        Vector2 anchorMax,
+        Vector2 pivot,
+        Vector2 anchoredPosition,
+        Vector2 size,
+        Texture texture,
+        Rect uvRect)
+    {
+        Transform existing = parent.Find(objectName);
+        if (existing != null)
+        {
+            RawImage existingImage = existing.GetComponent<RawImage>();
+            if (existingImage != null)
+                return existingImage;
+        }
+
+        GameObject go = new GameObject(objectName, typeof(RectTransform), typeof(RawImage));
+        go.transform.SetParent(parent, false);
+
+        RectTransform rect = go.GetComponent<RectTransform>();
+        rect.anchorMin = anchorMin;
+        rect.anchorMax = anchorMax;
+        rect.pivot = pivot;
+        rect.anchoredPosition = anchoredPosition;
+        rect.sizeDelta = size;
+
+        RawImage image = go.GetComponent<RawImage>();
+        image.texture = texture;
+        image.uvRect = uvRect;
+        image.raycastTarget = false;
+
+        return image;
+    }
+
     private bool TimingIndicatorsReady()
     {
         foreach (TimingIndicatorState state in _timingIndicators.Values)
         {
-            if (state.Text == null || state.Rect == null)
+            if (state.Text == null || state.TextRect == null || state.Image == null || state.ImageRect == null)
                 return false;
         }
 
@@ -537,12 +586,29 @@ public class RhythmPerformanceHud : MonoBehaviour
             timingIndicatorFontSize,
             GetTimingIndicatorAlignment(direction),
             string.Empty);
-        state.Rect = state.Text.rectTransform;
+        state.TextRect = state.Text.rectTransform;
         state.Text.alignment = GetTimingIndicatorAlignment(direction);
         state.Text.gameObject.layer = _canvas.gameObject.layer;
         Color color = state.Text.color;
         color.a = 0f;
         state.Text.color = color;
+
+        state.Image = CreateRawImage(
+            objectName + "Image",
+            _canvas.transform,
+            new Vector2(0.5f, 0.5f),
+            new Vector2(0.5f, 0.5f),
+            GetTimingIndicatorPivot(direction),
+            Vector2.zero,
+            new Vector2(timingIndicatorImageMaxWidth, timingIndicatorImageHeight),
+            GetDefaultTimingIndicatorTexture(),
+            new Rect(0f, 0f, 1f, 1f));
+        state.ImageRect = state.Image.rectTransform;
+        state.Image.gameObject.layer = _canvas.gameObject.layer;
+        Color imageColor = state.Image.color;
+        imageColor.a = 0f;
+        state.Image.color = imageColor;
+        state.UsingImage = false;
     }
 
     private void RefreshTimingIndicatorBasePositions(bool snapToBase = false)
@@ -550,15 +616,17 @@ public class RhythmPerformanceHud : MonoBehaviour
         foreach (KeyValuePair<FlickDirection, TimingIndicatorState> entry in _timingIndicators)
         {
             TimingIndicatorState state = entry.Value;
-            if (state.Rect == null)
+            RectTransform activeRect = GetTimingIndicatorRect(state);
+            if (activeRect == null)
                 continue;
 
-            if (!TryGetTimingIndicatorAnchoredPosition(entry.Key, state.Rect, out Vector2 anchoredPosition))
+            if (!TryGetTimingIndicatorAnchoredPosition(entry.Key, activeRect, out Vector2 anchoredPosition))
                 continue;
 
+            anchoredPosition = ApplyTimingIndicatorImageInwardNudge(entry.Key, state, anchoredPosition);
             state.BasePosition = anchoredPosition;
             if (snapToBase || state.AnimTime < 0f)
-                state.Rect.anchoredPosition = anchoredPosition;
+                ApplyTimingIndicatorPosition(state, anchoredPosition);
         }
     }
 
@@ -677,6 +745,91 @@ public class RhythmPerformanceHud : MonoBehaviour
             FlickDirection.Up => TextAlignmentOptions.Center,
             _ => TextAlignmentOptions.Center
         };
+    }
+
+    private Texture GetDefaultTimingIndicatorTexture()
+    {
+        if (earlyTimingIndicatorSprite != null)
+            return earlyTimingIndicatorSprite.texture;
+
+        if (lateTimingIndicatorSprite != null)
+            return lateTimingIndicatorSprite.texture;
+
+        return Texture2D.whiteTexture;
+    }
+
+    private bool TryGetTimingIndicatorSpriteData(bool isEarly, out Texture texture, out Rect uvRect)
+    {
+        Sprite sprite = isEarly ? earlyTimingIndicatorSprite : lateTimingIndicatorSprite;
+        if (sprite == null)
+        {
+            texture = null;
+            uvRect = new Rect(0f, 0f, 1f, 1f);
+            return false;
+        }
+
+        texture = sprite.texture;
+        uvRect = isEarly ? earlyTimingIndicatorUvRect : lateTimingIndicatorUvRect;
+        if (uvRect.width <= 0f || uvRect.height <= 0f)
+            uvRect = new Rect(0f, 0f, 1f, 1f);
+
+        return true;
+    }
+
+    private Vector2 GetTimingIndicatorImageSize(Rect uvRect)
+    {
+        float safeHeight = Mathf.Max(1f, timingIndicatorImageHeight);
+        float width = safeHeight;
+        if (uvRect.height > 0.0001f)
+            width = safeHeight * (uvRect.width / uvRect.height);
+
+        width = Mathf.Min(width, Mathf.Max(1f, timingIndicatorImageMaxWidth));
+        return new Vector2(width, safeHeight);
+    }
+
+    private RectTransform GetTimingIndicatorRect(TimingIndicatorState state)
+    {
+        if (state == null)
+            return null;
+
+        if (state.UsingImage && state.ImageRect != null)
+            return state.ImageRect;
+
+        if (state.TextRect != null)
+            return state.TextRect;
+
+        return state.ImageRect;
+    }
+
+    private Vector2 ApplyTimingIndicatorImageInwardNudge(
+        FlickDirection direction,
+        TimingIndicatorState state,
+        Vector2 anchoredPosition)
+    {
+        if (state == null || !state.UsingImage)
+            return anchoredPosition;
+
+        float inwardNudge = direction == FlickDirection.Up
+            ? timingIndicatorImageUpInwardNudge
+            : timingIndicatorImageSideInwardNudge;
+        return anchoredPosition - (GetDirectionVector(direction) * inwardNudge);
+    }
+
+    private void ApplyTimingIndicatorPosition(TimingIndicatorState state, Vector2 anchoredPosition)
+    {
+        if (state.TextRect != null)
+            state.TextRect.anchoredPosition = anchoredPosition;
+        if (state.ImageRect != null)
+            state.ImageRect.anchoredPosition = anchoredPosition;
+    }
+
+    private void ApplyTimingIndicatorScale(TimingIndicatorState state, float scale)
+    {
+        Vector3 scaleVector = Vector3.one * scale;
+        if (state.TextRect != null)
+            state.TextRect.localScale = scaleVector;
+        if (state.ImageRect != null)
+            state.ImageRect.localScale = scaleVector;
     }
 
     private Vector2 ClampTimingIndicatorPosition(
@@ -1064,15 +1217,38 @@ public class RhythmPerformanceHud : MonoBehaviour
 
     private void ShowTimingIndicator(FlickDirection direction, float timingDelta)
     {
-        if (!_timingIndicators.TryGetValue(direction, out TimingIndicatorState state) || state.Text == null || state.Rect == null)
+        if (!_timingIndicators.TryGetValue(direction, out TimingIndicatorState state))
             return;
 
         bool isEarly = timingDelta < 0f;
-        state.Text.text = isEarly ? "Early!" : "Late!";
-        state.BaseColor = isEarly ? earlyTimingIndicatorColor : lateTimingIndicatorColor;
+        if (state.Image != null && TryGetTimingIndicatorSpriteData(isEarly, out Texture texture, out Rect uvRect))
+        {
+            state.UsingImage = true;
+            state.Image.texture = texture;
+            state.Image.uvRect = uvRect;
+            state.Image.rectTransform.sizeDelta = GetTimingIndicatorImageSize(uvRect);
+            state.BaseColor = timingIndicatorImageColor;
+            if (state.Text != null)
+            {
+                Color textColor = state.Text.color;
+                textColor.a = 0f;
+                state.Text.color = textColor;
+            }
+        }
+        else
+        {
+            if (state.Text == null)
+                return;
+
+            state.UsingImage = false;
+            state.Text.text = isEarly ? "Early!" : "Late!";
+            state.BaseColor = isEarly ? earlyTimingIndicatorColor : lateTimingIndicatorColor;
+        }
+
         state.AnimTime = 0f;
-        if (TryGetTimingIndicatorAnchoredPosition(direction, state.Rect, out Vector2 anchoredPosition))
-            state.BasePosition = anchoredPosition;
+        RectTransform activeRect = GetTimingIndicatorRect(state);
+        if (TryGetTimingIndicatorAnchoredPosition(direction, activeRect, out Vector2 anchoredPosition))
+            state.BasePosition = ApplyTimingIndicatorImageInwardNudge(direction, state, anchoredPosition);
 
         ApplyTimingIndicatorAnimation(state, 0f);
     }
@@ -1178,7 +1354,9 @@ public class RhythmPerformanceHud : MonoBehaviour
         foreach (TimingIndicatorState state in _timingIndicators.Values)
         {
             if (state.Text != null)
-                state.Text.enabled = feedbackVisible;
+                state.Text.enabled = feedbackVisible && !state.UsingImage;
+            if (state.Image != null)
+                state.Image.enabled = feedbackVisible && state.UsingImage;
         }
     }
 
@@ -1215,7 +1393,7 @@ public class RhythmPerformanceHud : MonoBehaviour
 
         foreach (TimingIndicatorState state in _timingIndicators.Values)
         {
-            if (state.Text == null || state.Rect == null || state.AnimTime < 0f)
+            if (GetTimingIndicatorRect(state) == null || state.AnimTime < 0f)
                 continue;
 
             state.AnimTime += Time.unscaledDeltaTime;
@@ -1375,7 +1553,8 @@ public class RhythmPerformanceHud : MonoBehaviour
 
     private void ApplyTimingIndicatorAnimation(TimingIndicatorState state, float normalized)
     {
-        if (state.Text == null || state.Rect == null)
+        RectTransform activeRect = GetTimingIndicatorRect(state);
+        if (activeRect == null)
             return;
 
         float returnDuration = Mathf.Max(0.01f, timingIndicatorPopReturnDuration);
@@ -1390,12 +1569,25 @@ public class RhythmPerformanceHud : MonoBehaviour
         }
 
         Vector2 riseOffset = Vector2.up * (timingIndicatorRiseDistance * normalized);
-        state.Rect.localScale = Vector3.one * scale;
-        state.Rect.anchoredPosition = state.BasePosition + riseOffset;
+        ApplyTimingIndicatorScale(state, scale);
+        ApplyTimingIndicatorPosition(state, state.BasePosition + riseOffset);
 
         Color c = state.BaseColor;
         c.a = alpha;
-        state.Text.color = c;
+        if (state.Text != null)
+        {
+            Color textColor = state.Text.color;
+            textColor.a = state.UsingImage ? 0f : alpha;
+            state.Text.color = state.UsingImage ? textColor : c;
+            state.Text.enabled = !state.UsingImage;
+        }
+        if (state.Image != null)
+        {
+            Color imageColor = state.UsingImage ? c : state.Image.color;
+            imageColor.a = state.UsingImage ? alpha : 0f;
+            state.Image.color = imageColor;
+            state.Image.enabled = state.UsingImage;
+        }
     }
 
     private void HideAllTimingIndicatorsImmediate()
@@ -1406,16 +1598,28 @@ public class RhythmPerformanceHud : MonoBehaviour
 
     private void HideTimingIndicatorImmediate(TimingIndicatorState state)
     {
-        if (state.Text == null || state.Rect == null)
+        if (state == null)
             return;
 
         state.AnimTime = -1f;
-        state.Rect.localScale = Vector3.one;
-        state.Rect.anchoredPosition = state.BasePosition;
+        ApplyTimingIndicatorScale(state, 1f);
+        ApplyTimingIndicatorPosition(state, state.BasePosition);
 
-        Color c = state.Text.color;
-        c.a = 0f;
-        state.Text.color = c;
+        if (state.Text != null)
+        {
+            Color textColor = state.Text.color;
+            textColor.a = 0f;
+            state.Text.color = textColor;
+            state.Text.enabled = false;
+        }
+        if (state.Image != null)
+        {
+            Color imageColor = state.Image.color;
+            imageColor.a = 0f;
+            state.Image.color = imageColor;
+            state.Image.enabled = false;
+        }
+        state.UsingImage = false;
     }
 
     private void HideComboImmediate()
