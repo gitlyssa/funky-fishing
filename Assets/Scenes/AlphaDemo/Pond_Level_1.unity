@@ -11684,6 +11684,13 @@ MonoBehaviour:
   maxDistance: 30
   startAtPondCenter: 1
   markerSurfaceOffset: 0.04
+  markerSizeMultiplier: 1.35
+  markerPulseScale: 0.42
+  markerPulseSpeed: 0.42
+  markerHighlightColor: {r: 0.82, g: 0.08, b: 0.08, a: 1}
+  markerFlashColor: {r: 1, g: 0.1, b: 0.1, a: 1}
+  markerGlowMinIntensity: 0.02
+  markerGlowMaxIntensity: 0.18
 --- !u!1 &2061332168
 GameObject:
   m_ObjectHideFlags: 0
