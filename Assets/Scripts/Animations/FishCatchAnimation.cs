@@ -26,7 +26,7 @@ public class FishCatchAnimation : MonoBehaviour
     private readonly Dictionary<string, Sprite> _letterGradeSprites = new Dictionary<string, Sprite>();
 
     private float _imageSize = 3.1f; // Base size for judgement images
-    private const float LetterGradeImageSize = 160f;
+    private const float LetterGradeImageSize = 100f;
     private const string LetterGradeResourceFolder = "letter_grades";
 
 
@@ -159,7 +159,7 @@ public class FishCatchAnimation : MonoBehaviour
         }
 
         // SHOW TEXT
-        float accuracy = FishingSessionHud.LastCatchAccuracy;
+        float accuracy = FishingSessionHud.GetCurrentRunAccuracyOrLast();
         
         if (judgementText != null)
         {
@@ -293,7 +293,7 @@ public class FishCatchAnimation : MonoBehaviour
             gradeRect.anchorMin = judgementRect.anchorMin;
             gradeRect.anchorMax = judgementRect.anchorMax;
             gradeRect.pivot = judgementRect.pivot;
-            gradeRect.anchoredPosition = judgementRect.anchoredPosition + new Vector2(-120f, 120f);
+            gradeRect.anchoredPosition = judgementRect.anchoredPosition + new Vector2(-120f, 0f);
         }
         else
         {
