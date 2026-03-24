@@ -131,6 +131,16 @@ public class RhythmPerformanceHud : MonoBehaviour
     [SerializeField] private Color multiplierColor = new Color(1f, 0.8f, 0.2f); // Golden/Orange
     [SerializeField] private string multiplierFormat = "{0:F1}x"; // Displays as 1.1x, 1.2x etc.
 
+
+    [Header("Reel Progress Circle")]
+    public GameObject timingRingPrefab; 
+    public float reelArcThickness = 0.05f;
+
+    [SerializeField] private Color reelArcColor = new Color(0.4f, 0.95f, 1f, 0.5f); // Transparent Sapphire
+    private DynamicArc _currentReelArc;
+    private GameObject _reelArcObj;
+
+
     private Image _reelStatusImage;
     private RectTransform _reelStatusRect;
 
@@ -1644,9 +1654,39 @@ public class RhythmPerformanceHud : MonoBehaviour
 
         RhythmReelNote activeReel = _conductor.activeReel;
         bool isReeling = activeReel != null;
-        
-        if (isReeling)
+          
+        if (isReeling)   
         {
+            if (_reelArcObj == null)
+            {
+                _reelArcObj = Instantiate(timingRingPrefab, _conductor.transform);
+                _reelArcObj.name = "World_Reel_Progress_Arc";
+                
+                _reelArcObj.transform.localPosition = new Vector3(0, 0, 0.02f);
+                _reelArcObj.transform.localRotation = Quaternion.Euler(0, 0, 90f); // Start at top
+                _reelArcObj.layer = _conductor.gameObject.layer;
+                _currentReelArc = _reelArcObj.GetComponent<DynamicArc>();
+                if (_currentReelArc != null) _currentReelArc.Setup(64);
+
+                MeshRenderer ren = _reelArcObj.GetComponent<MeshRenderer>();
+                if (ren != null) ren.material.color = reelArcColor;
+            }
+
+            if (_currentReelArc != null)
+            {
+                // 1. Move to the OUTSIDE
+                // Radius = Hit Ring + half thickness + small gap for visibility
+                float radius = _conductor.hitRingRadius + (reelArcThickness / 2f) + 0.15f;
+                
+                // 2. Calculate Clockwise Progress Angle
+                float progressAngle = 360f * (Mathf.Clamp01(activeReel.Progress / 2f));
+                
+
+                _reelArcObj.transform.localRotation = Quaternion.Euler(0, 0, -progressAngle / 2f);
+                
+                _currentReelArc.Redraw(radius, reelArcThickness, progressAngle, 64);
+            }
+
             Color c = Color.white;
             c.a = 1f;
             _reelStatusImage.color = c;
@@ -1692,6 +1732,13 @@ public class RhythmPerformanceHud : MonoBehaviour
             _reelStatusImage.color = c;
             _lastFiredMultiplier = 1f;
             _maxPowerTimer = 0f;
+
+            if (_reelArcObj != null)
+            {
+                Destroy(_reelArcObj);
+                _reelArcObj = null;
+                _currentReelArc = null;
+            }
 
         }
     }

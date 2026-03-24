@@ -14167,6 +14167,9 @@ MonoBehaviour:
   reelPulseAmount: 0.15
   multiplierColor: {r: 1, g: 0.8, b: 0.2, a: 1}
   multiplierFormat: '{0:F1}x'
+  timingRingPrefab: {fileID: 4049253082992044910, guid: 867701417344e234cac41290000804e4, type: 3}
+  reelArcThickness: 0.8
+  reelArcColor: {r: 0.8166701, g: 0.83396226, b: 0, a: 0.6862745}
 --- !u!4 &2115724248
 Transform:
   m_ObjectHideFlags: 0
