@@ -727,7 +727,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: bbe0c47c46c204f759fc248e91456a13, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 61fe2282b99ab40ab812dbb7b6bb805f, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -1374,6 +1374,7 @@ MonoBehaviour:
   disconnectedLabel: Not Connected
   connectedColor: {r: 0, g: 0.7, b: 0, a: 1}
   disconnectedColor: {r: 0.75, g: 0, b: 0, a: 1}
+  enableControllerDetection: 1
   refreshInterval: 0.1
   logDetection: 1
   preferWirelessGamepadAsJoyCon: 1
