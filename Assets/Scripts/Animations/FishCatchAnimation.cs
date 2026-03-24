@@ -1,7 +1,12 @@
-using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
+using System.IO;
 using TMPro;
+using UnityEngine;
 using UnityEngine.UI;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 public class FishCatchAnimation : MonoBehaviour
 {
@@ -16,9 +21,13 @@ public class FishCatchAnimation : MonoBehaviour
     public Image greatJudgementImage;
     public Image goodJudgementImage;
     private Image _activeJudgementImage;
+    private Image _letterGradeImage;
     private string _defaultClickText;
+    private readonly Dictionary<string, Sprite> _letterGradeSprites = new Dictionary<string, Sprite>();
 
     private float _imageSize = 3.1f; // Base size for judgement images
+    private const float LetterGradeImageSize = 160f;
+    private const string LetterGradeResourceFolder = "letter_grades";
 
 
     [Header("Positioning")]
@@ -40,6 +49,7 @@ public class FishCatchAnimation : MonoBehaviour
         if (clickText != null) _defaultClickText = clickText.text;
         if (judgementText != null) judgementText.gameObject.SetActive(false);
         if (fishNameText != null) fishNameText.gameObject.SetActive(false);
+        EnsureLetterGradeImage();
         HideAllJudgements();
     }
 
@@ -73,6 +83,7 @@ public class FishCatchAnimation : MonoBehaviour
         if (perfectJudgementImage != null) perfectJudgementImage.gameObject.SetActive(false);
         if (greatJudgementImage != null) greatJudgementImage.gameObject.SetActive(false);
         if (goodJudgementImage != null) goodJudgementImage.gameObject.SetActive(false);
+        if (_letterGradeImage != null) _letterGradeImage.gameObject.SetActive(false);
     }
 
     private void SetContinue()
@@ -164,6 +175,14 @@ public class FishCatchAnimation : MonoBehaviour
             _activeJudgementImage.rectTransform.localScale = Vector3.zero;
         }
 
+        EnsureLetterGradeImage();
+        if (_letterGradeImage != null)
+        {
+            _letterGradeImage.sprite = GetLetterGradeSprite(accuracy);
+            _letterGradeImage.gameObject.SetActive(_letterGradeImage.sprite != null);
+            _letterGradeImage.rectTransform.localScale = Vector3.zero;
+        }
+
         
         if (fishNameText != null)
         {
@@ -185,6 +204,7 @@ public class FishCatchAnimation : MonoBehaviour
             float bounceScale = Mathf.Lerp(0f, 1f, t); 
 
             if (_activeJudgementImage != null) _activeJudgementImage.rectTransform.localScale = Vector3.one * _imageSize * bounceScale;
+            if (_letterGradeImage != null && _letterGradeImage.gameObject.activeSelf) _letterGradeImage.rectTransform.localScale = Vector3.one * bounceScale;
             if (judgementText != null) judgementText.transform.localScale = Vector3.one * bounceScale;
             if (fishNameText != null) fishNameText.transform.localScale = Vector3.one * bounceScale;
 
@@ -241,6 +261,105 @@ public class FishCatchAnimation : MonoBehaviour
         if (acc >= 95f) return perfectJudgementImage;
         if (acc >= 80f) return greatJudgementImage;
         return goodJudgementImage;
+    }
+
+    private void EnsureLetterGradeImage()
+    {
+        if (_letterGradeImage != null)
+            return;
+
+        Transform parent = null;
+        if (judgementText != null)
+            parent = judgementText.transform.parent;
+        else if (overlayPanel != null)
+            parent = overlayPanel.transform;
+
+        if (parent == null)
+            return;
+
+        GameObject gradeGo = new GameObject("LetterGradeImage", typeof(RectTransform), typeof(Image));
+        gradeGo.transform.SetParent(parent, false);
+        gradeGo.transform.SetSiblingIndex(judgementText != null ? judgementText.transform.GetSiblingIndex() + 1 : gradeGo.transform.GetSiblingIndex());
+
+        _letterGradeImage = gradeGo.GetComponent<Image>();
+        _letterGradeImage.raycastTarget = false;
+        _letterGradeImage.preserveAspect = true;
+        _letterGradeImage.gameObject.SetActive(false);
+
+        RectTransform gradeRect = _letterGradeImage.rectTransform;
+        if (judgementText != null)
+        {
+            RectTransform judgementRect = judgementText.rectTransform;
+            gradeRect.anchorMin = judgementRect.anchorMin;
+            gradeRect.anchorMax = judgementRect.anchorMax;
+            gradeRect.pivot = judgementRect.pivot;
+            gradeRect.anchoredPosition = judgementRect.anchoredPosition + new Vector2(-120f, 120f);
+        }
+        else
+        {
+            gradeRect.anchorMin = new Vector2(0.5f, 0.5f);
+            gradeRect.anchorMax = new Vector2(0.5f, 0.5f);
+            gradeRect.pivot = new Vector2(0.5f, 0.5f);
+            gradeRect.anchoredPosition = new Vector2(0f, 120f);
+        }
+
+        gradeRect.sizeDelta = new Vector2(LetterGradeImageSize, LetterGradeImageSize);
+    }
+
+    private Sprite GetLetterGradeSprite(float accuracy)
+    {
+        string gradeKey = GetLetterGradeKey(accuracy);
+        if (string.IsNullOrEmpty(gradeKey))
+            return null;
+
+        if (_letterGradeSprites.TryGetValue(gradeKey, out Sprite cachedSprite))
+            return cachedSprite;
+
+        Sprite sprite = LoadLetterGradeSprite(gradeKey);
+        _letterGradeSprites[gradeKey] = sprite;
+        return sprite;
+    }
+
+    private static string GetLetterGradeKey(float accuracy)
+    {
+        float clampedAccuracy = Mathf.Clamp(accuracy, 0f, 100f);
+        if (clampedAccuracy >= 99.95f) return "s";
+        if (clampedAccuracy >= 80f) return "a";
+        if (clampedAccuracy >= 70f) return "b";
+        if (clampedAccuracy >= 60f) return "c";
+        if (clampedAccuracy >= 50f) return "d";
+        return "f";
+    }
+
+    private static Sprite LoadLetterGradeSprite(string gradeKey)
+    {
+        string resourcePath = $"{LetterGradeResourceFolder}/grade_{gradeKey}";
+        Sprite sprite = Resources.Load<Sprite>(resourcePath);
+        if (sprite != null)
+            return sprite;
+
+#if UNITY_EDITOR
+        string editorAssetPath = $"Assets/Images/letter_grades/grade_{gradeKey}.png";
+        sprite = AssetDatabase.LoadAssetAtPath<Sprite>(editorAssetPath);
+        if (sprite != null)
+            return sprite;
+#endif
+
+        string absolutePath = Path.Combine(Application.dataPath, "Images", "letter_grades", $"grade_{gradeKey}.png");
+        if (!File.Exists(absolutePath))
+            return null;
+
+        byte[] fileBytes = File.ReadAllBytes(absolutePath);
+        Texture2D texture = new Texture2D(2, 2, TextureFormat.ARGB32, false);
+        if (!texture.LoadImage(fileBytes))
+            return null;
+
+        texture.name = $"grade_{gradeKey}_texture";
+        return Sprite.Create(
+            texture,
+            new Rect(0f, 0f, texture.width, texture.height),
+            new Vector2(0.5f, 0.5f),
+            100f);
     }
 }
 
