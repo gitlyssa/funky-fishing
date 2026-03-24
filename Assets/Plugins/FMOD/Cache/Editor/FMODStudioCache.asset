@@ -1,5 +1,32 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-7736516469385645638
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Sfx/ui1
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Sfx/ui1
+  Guid:
+    Data1: -1104803391
+    Data2: 1309476805
+    Data3: 1467559865
+    Data4: 318537816
+  Banks:
+  - {fileID: -2648038191006552393}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 943
 --- !u!114 &-5875265738577587281
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -69,10 +96,10 @@ MonoBehaviour:
   Path: Assets/FMOD/Desktop/Master.strings.bank
   Name: Master.strings
   StudioPath: bank:/Master.strings
-  lastModified: 639080840323150906
+  lastModified: 639093473684013732
   FileSizes:
   - Name: 
-    Value: 1166
+    Value: 1236
   Exists: 1
 --- !u!114 &-2648038191006552393
 MonoBehaviour:
@@ -89,7 +116,7 @@ MonoBehaviour:
   Path: Assets/FMOD/Desktop/Master.bank
   Name: Master
   StudioPath: bank:/Master
-  lastModified: 639080840323074540
+  lastModified: 639093473684003730
   FileSizes: []
   Exists: 1
 --- !u!114 &-2567683884387202836
@@ -119,6 +146,33 @@ MonoBehaviour:
   MinDistance: 1
   MaxDistance: 20
   Length: 21818
+--- !u!114 &-1338222309852876353
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Sfx/reel
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Sfx/reel
+  Guid:
+    Data1: -571558819
+    Data2: 1166440785
+    Data3: -44763713
+    Data4: 841467529
+  Banks:
+  - {fileID: -2648038191006552393}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 0
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 407
 --- !u!114 &-235916971953375120
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -172,13 +226,15 @@ MonoBehaviour:
   - {fileID: -235916971953375120}
   - {fileID: -3363737237843273750}
   - {fileID: 612667523792534380}
+  - {fileID: -1338222309852876353}
+  - {fileID: -7736516469385645638}
   EditorParameters: []
   MasterBanks:
   - {fileID: -2648038191006552393}
   StringsBanks:
   - {fileID: -3217896682293650524}
   cacheVersion: 131858
-  cacheTime: 639080840323150906
+  cacheTime: 639093473684013732
   SerializableEventsDict:
   - key: event:/Music/TestMusic
     index: 0

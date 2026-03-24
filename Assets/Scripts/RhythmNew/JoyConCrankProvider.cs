@@ -8,7 +8,7 @@ public class JoyConCrankProvider : MonoBehaviour, IRhythmInputT
     public event Action<int> OnButtonDown;
 
     [Header("Crank Settings")]
-    public float radiusThreshold = 0.2f;
+    public float radiusThreshold = 0.1f;
     public float smoothing = 15f;
     
     private int _deviceId = -1;
@@ -30,20 +30,14 @@ public class JoyConCrankProvider : MonoBehaviour, IRhythmInputT
         _deviceId = handles[1];
         JSL.MOTION_STATE motion = JSL.JslGetMotionState(_deviceId);
 
-        // 1. ISOLATE USER ACCELERATION
-        // We subtract gravity so we only see the "swing" of the arm.
-        // Assuming the crank is a vertical circle in front of you (X and Y axes).
         Vector2 userAccel = new Vector2(
-            motion.accelX - motion.gravX, 
+            motion.accelZ - motion.gravZ, 
             motion.accelY - motion.gravY
         );
 
-        // 2. SMOOTH THE NOISE
-        // Accelerometer data is "spikier" than gravity, so we need a filter.
+
         _smoothedAccel = Vector2.Lerp(_smoothedAccel, userAccel, Time.deltaTime * smoothing);
 
-        // 3. DISTANCE CHECK (The "Crank Radius")
-        // If the player isn't moving their arm in a big enough circle, ignore it.
         if (_smoothedAccel.magnitude > radiusThreshold)
         {
             // Treat the smoothed acceleration vector like a virtual joystick
