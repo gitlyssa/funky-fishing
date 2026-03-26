@@ -13385,10 +13385,38 @@ PrefabInstance:
       propertyPath: m_ConstrainProportionsScale
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: -2690134187693510071, guid: db25d5ded9e4ee24c83237a213db6c58, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 9587cde40a370054e83afdbf5a89739f, type: 2}
+    - target: {fileID: -1776599074003739012, guid: db25d5ded9e4ee24c83237a213db6c58, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 9587cde40a370054e83afdbf5a89739f, type: 2}
     - target: {fileID: 919132149155446097, guid: db25d5ded9e4ee24c83237a213db6c58, type: 3}
       propertyPath: m_Name
       value: buoy low poly funky fishing
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: db25d5ded9e4ee24c83237a213db6c58, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2432580018918869743, guid: db25d5ded9e4ee24c83237a213db6c58, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 9587cde40a370054e83afdbf5a89739f, type: 2}
+    - target: {fileID: 2509802017764886665, guid: db25d5ded9e4ee24c83237a213db6c58, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 9587cde40a370054e83afdbf5a89739f, type: 2}
+    - target: {fileID: 5066036425167929466, guid: db25d5ded9e4ee24c83237a213db6c58, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 9587cde40a370054e83afdbf5a89739f, type: 2}
+    - target: {fileID: 7220676442781968581, guid: db25d5ded9e4ee24c83237a213db6c58, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 9587cde40a370054e83afdbf5a89739f, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -13566,7 +13594,7 @@ MonoBehaviour:
   notePrefab: {fileID: 4897388239609443938, guid: 7236b4e7e53abbc45996582de97acaa3, type: 3}
   flickMaterial: {fileID: 0}
   slideMaterial: {fileID: 0}
-  enableDebugInput: 1
+  enableDebugInput: 0
   songTime: 0
   noteSpeed: 2
   noteTravelTime: 2

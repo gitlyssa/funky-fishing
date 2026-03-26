@@ -55,10 +55,10 @@ public class DebugVisualController : MonoBehaviour
             lightingManager.TriggerTimedBlackout(2f, 0.5f);
         }
 
-        // F: Trigger a Spatial Wave flash from the center (0,0,0)
+        // F: Trigger a Spatial Wave from this transform
         if (Input.GetKeyDown(KeyCode.F))
         {
-            lightingManager.TriggerWave(Vector3.zero, 20f, flashIntensity, flashDuration);
+            lightingManager.TriggerWave(transform.position, 20f, flashIntensity, flashDuration);
         }
     }
 }
