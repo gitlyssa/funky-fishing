@@ -5,6 +5,7 @@ public class DebugVisualController : MonoBehaviour
 {
     [Header("Manager Reference")]
     public GlobalLightingManager lightingManager;
+    public RhythmBeatPulse rhythmBeatPulse;
 
     [Header("Mood Profiles")]
     public List<LightingProfile> moodProfiles;
@@ -17,7 +18,6 @@ public class DebugVisualController : MonoBehaviour
 
     public Color lightningColor = Color.white;
     public Color synthwaveColor = new Color(1f, 0f, 1f); // Neon Purple
-
     void Update()
     {
         if (lightingManager == null || moodProfiles.Count == 0) return;
@@ -30,8 +30,12 @@ public class DebugVisualController : MonoBehaviour
             Debug.Log($"Transitioning to Mood: {moodProfiles[_currentMoodIndex].name}");
         }
 
-        // SPACE: Trigger Skybox Lightning Flash
-        if (Input.GetKeyDown(KeyCode.Space))
+        if(Input.GetKeyDown(KeyCode.Space))
+        {
+            rhythmBeatPulse.TriggerPulse();
+        }    
+   
+        if (Input.GetKeyDown(KeyCode.O))
         {
             lightingManager.TriggerSkyboxFlash(lightningColor, flashIntensity, flashDuration);
         }
@@ -39,6 +43,10 @@ public class DebugVisualController : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.P))
         {
             lightingManager.TriggerSkyboxFlash(synthwaveColor, 4.0f, 0.5f);
+        }
+        if (Input.GetKeyDown(KeyCode.B))
+        {
+            lightingManager.TriggerTimedBlackout(2f, 0.5f);
         }
 
         // F: Trigger a Spatial Wave flash from the center (0,0,0)

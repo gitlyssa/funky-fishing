@@ -10,23 +10,26 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a52a96cc05b5afa418ae8dd80da24c51, type: 3}
-  m_Name: Sunset
+  m_Name: Void
   m_EditorClassIdentifier: Assembly-CSharp::LightingProfile
   ambientEnabled: 1
-  ambientColor: {r: 0.43994004, g: 0.05587037, b: 0.5018867, a: 1}
-  ambientIntensity: 0.2
+  ambientColor: {r: 0, g: 0, b: 0, a: 1}
+  ambientIntensity: 0
   fogEnabled: 1
-  fogColor: {r: 0.90188676, g: 0.5709751, b: 0.33863285, a: 1}
-  fogDensity: 0.005
+  fogColor: {r: 0.02641511, g: 0.02641511, b: 0.02641511, a: 1}
+  fogDensity: 0.06
   skyboxMaterial: {fileID: 10304, guid: 0000000000000000f000000000000000, type: 0}
-  skyboxExposure: 0.8
-  skyboxTint: {r: 0.8509804, g: 0.2470588, b: 0.4293222, a: 1}
-  directionalLightColor: {r: 0.85660374, g: 0.3139636, b: 0.18586673, a: 1}
-  directionalLightIntensity: 1
-  directionalLightDirection: {x: 166, y: 155.4, z: 0}
+  skyboxExposure: 0
+  skyboxTint: {r: 0, g: 0, b: 0, a: 1}
+  directionalLightColor: {r: 0, g: 0, b: 0, a: 1}
+  directionalLightIntensity: 0
+  directionalLightDirection: {x: 15, y: -30, z: 0}
   directionalLightShadowStrength: 1
-  localLightColor: {r: 0.24528301, g: 0.23543702, b: 0.121715896, a: 1}
-  localLightIntensity: 0
+  localLightColor: {r: 1, g: 1, b: 1, a: 1}
+  localLightIntensity: 0.5
   localLightRange: 10
   localLightShadowStrength: 0
+  fireflyBPM: 60
+  fireflyMoveSpeed: 1.5
+  fireflyMoveRange: 0.2
   volumeProfile: {fileID: 0}

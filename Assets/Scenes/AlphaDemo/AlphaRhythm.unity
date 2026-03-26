@@ -1129,7 +1129,6 @@ GameObject:
   m_Component:
   - component: {fileID: 635976673}
   - component: {fileID: 635976674}
-  - component: {fileID: 635976675}
   m_Layer: 0
   m_Name: MusicPlayer
   m_TagString: Untagged
@@ -1171,19 +1170,6 @@ MonoBehaviour:
       Data3: -255170375
       Data4: -1468407509
     Path: event:/Music/TestMusic
---- !u!114 &635976675
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 635976672}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 59e2e407061ae6a4186e49f5cfccad87, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::RhythmBeatPulse
-  bpm: 120
 --- !u!1 &639150794
 GameObject:
   m_ObjectHideFlags: 0
@@ -13335,6 +13321,84 @@ MonoBehaviour:
   m_SelectedFaces: 
   m_SelectedEdges: []
   m_SelectedVertices: 
+--- !u!1001 &1480700428
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 1761328189}
+    m_Modifications:
+    - target: {fileID: -8679921383154817045, guid: db25d5ded9e4ee24c83237a213db6c58, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 107.14285
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: db25d5ded9e4ee24c83237a213db6c58, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 75
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: db25d5ded9e4ee24c83237a213db6c58, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 107.14285
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: db25d5ded9e4ee24c83237a213db6c58, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: db25d5ded9e4ee24c83237a213db6c58, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: db25d5ded9e4ee24c83237a213db6c58, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: db25d5ded9e4ee24c83237a213db6c58, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: db25d5ded9e4ee24c83237a213db6c58, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: db25d5ded9e4ee24c83237a213db6c58, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: db25d5ded9e4ee24c83237a213db6c58, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: db25d5ded9e4ee24c83237a213db6c58, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 90
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: db25d5ded9e4ee24c83237a213db6c58, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: db25d5ded9e4ee24c83237a213db6c58, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: db25d5ded9e4ee24c83237a213db6c58, type: 3}
+      propertyPath: m_ConstrainProportionsScale
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: db25d5ded9e4ee24c83237a213db6c58, type: 3}
+      propertyPath: m_Name
+      value: buoy low poly funky fishing
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: db25d5ded9e4ee24c83237a213db6c58, type: 3}
+--- !u!4 &1480700429 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: db25d5ded9e4ee24c83237a213db6c58, type: 3}
+  m_PrefabInstance: {fileID: 1480700428}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1506493915
 GameObject:
   m_ObjectHideFlags: 0
@@ -13668,6 +13732,7 @@ Transform:
   m_LocalScale: {x: 0.7, y: 0.7, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 1480700429}
   - {fileID: 1173819259}
   - {fileID: 1610214995}
   - {fileID: 635976673}
@@ -13681,14 +13746,13 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1761328188}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a01ba573ab943524498578eb120192e2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ObjectPulseResponder
   pulseScaleAmount: 1.05
-  returnSpeed: 5
-  useIntensityMultiplier: 1
+  returnSpeed: 10
 --- !u!1 &1886759211
 GameObject:
   m_ObjectHideFlags: 0

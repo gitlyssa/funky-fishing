@@ -25,8 +25,11 @@ MonoBehaviour:
   directionalLightIntensity: 0.2
   directionalLightDirection: {x: 100, y: -200, z: 0}
   directionalLightShadowStrength: 1
-  localLightColor: {r: 0.24528301, g: 0.23543702, b: 0.121715896, a: 1}
-  localLightIntensity: 0
+  localLightColor: {r: 0.57924527, g: 0.9633424, b: 1, a: 1}
+  localLightIntensity: 2
   localLightRange: 10
-  localLightShadowStrength: 0
+  localLightShadowStrength: 0.5
+  fireflyBPM: 60
+  fireflyMoveSpeed: 1.5
+  fireflyMoveRange: 0.2
   volumeProfile: {fileID: 0}

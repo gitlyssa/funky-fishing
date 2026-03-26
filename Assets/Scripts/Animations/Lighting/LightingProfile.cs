@@ -28,10 +28,14 @@ public class LightingProfile : ScriptableObject
     [Header("Local Environment Lights")]
     public Color localLightColor = Color.yellow;
     public float localLightIntensity = 1.5f;
-
     public float localLightRange = 10.0f;
     [Range(0, 1)]
     public float localLightShadowStrength = 0.5f;
+
+    [Header("Firefly Behavior")]
+    public float fireflyBPM = 60f;
+    public float fireflyMoveSpeed = 1.5f;
+    public float fireflyMoveRange = 0.2f;
 
     [Header("Post-Processing")]
     public VolumeProfile volumeProfile;

@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a52a96cc05b5afa418ae8dd80da24c51, type: 3}
+  m_Name: Deep Blue
+  m_EditorClassIdentifier: Assembly-CSharp::LightingProfile
+  ambientEnabled: 1
+  ambientColor: {r: 0, g: 0, b: 0.2, a: 1}
+  ambientIntensity: 0.4
+  fogEnabled: 1
+  fogColor: {r: 0, g: 0, b: 0.5019608, a: 1}
+  fogDensity: 0.08
+  skyboxMaterial: {fileID: 10304, guid: 0000000000000000f000000000000000, type: 0}
+  skyboxExposure: 0.2
+  skyboxTint: {r: 0, g: 0.012374212, b: 0.4415095, a: 1}
+  directionalLightColor: {r: 0.30058375, g: 0.9732991, b: 0.97735846, a: 1}
+  directionalLightIntensity: 0.3
+  directionalLightDirection: {x: 90, y: 0, z: 0}
+  directionalLightShadowStrength: 1
+  localLightColor: {r: 0.24528301, g: 0.23543702, b: 0.121715896, a: 1}
+  localLightIntensity: 0
+  localLightRange: 10
+  localLightShadowStrength: 0
+  volumeProfile: {fileID: 0}

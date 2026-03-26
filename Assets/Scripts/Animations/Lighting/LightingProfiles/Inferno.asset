@@ -10,20 +10,20 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a52a96cc05b5afa418ae8dd80da24c51, type: 3}
-  m_Name: Default Day
+  m_Name: Inferno
   m_EditorClassIdentifier: Assembly-CSharp::LightingProfile
   ambientEnabled: 1
-  ambientColor: {r: 0.15389816, g: 0.56524414, b: 0.6226415, a: 1}
-  ambientIntensity: 0.2
+  ambientColor: {r: 0.81960785, g: 0.8980392, b: 1, a: 1}
+  ambientIntensity: 0.8
   fogEnabled: 1
-  fogColor: {r: 0.2999999, g: 0.96838945, b: 1, a: 1}
-  fogDensity: 0.0005
+  fogColor: {r: 0.8784314, g: 0.8784314, b: 0.8784314, a: 1}
+  fogDensity: 0.06
   skyboxMaterial: {fileID: 10304, guid: 0000000000000000f000000000000000, type: 0}
-  skyboxExposure: 1.3
-  skyboxTint: {r: 0.5396226, g: 0.5396226, b: 0.5396226, a: 1}
-  directionalLightColor: {r: 1, g: 0.95686275, b: 0.8392157, a: 1}
-  directionalLightIntensity: 1
-  directionalLightDirection: {x: 50, y: -230, z: 0}
+  skyboxExposure: 0.7
+  skyboxTint: {r: 0.72264147, g: 1, b: 0.98627514, a: 1}
+  directionalLightColor: {r: 0.8352941, g: 0.67058825, b: 0.4, a: 1}
+  directionalLightIntensity: 0.5
+  directionalLightDirection: {x: 15, y: -30, z: 0}
   directionalLightShadowStrength: 1
   localLightColor: {r: 0.24528301, g: 0.23543702, b: 0.121715896, a: 1}
   localLightIntensity: 0

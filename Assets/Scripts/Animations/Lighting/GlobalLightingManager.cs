@@ -4,6 +4,16 @@ using System.Collections.Generic;
 using UnityEngine.Rendering;
 public class GlobalLightingManager : MonoBehaviour
 {
+    public static GlobalLightingManager Instance { get; private set; }
+     void Awake()
+    {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(this);
+            return;
+        }
+        Instance = this;
+    }
     public LightingProfile currentProfile;
     private static List<LocalLightController> _allLights = new List<LocalLightController>();
     private Coroutine _transitionCoroutine;
@@ -254,5 +264,63 @@ public class GlobalLightingManager : MonoBehaviour
             float randDur = Random.Range(0.3f, 0.7f);
             _allLights[idx].TriggerOneShot(randIntensity, randDur);
         }
+    }
+
+    public void TriggerAngularSweep(Vector3 origin, float rotationSpeed, float intensity, float duration)
+{
+    foreach (var light in _allLights)
+    {
+        Vector3 dir = light.Position - origin;
+        // Calculate angle in degrees (0 to 360)
+        float angle = Mathf.Atan2(dir.z, dir.x) * Mathf.Rad2Deg;
+        if (angle < 0) angle += 360f;
+
+        // Delay is based on the angle instead of distance
+        float delay = angle / rotationSpeed;
+        light.TriggerOneShot(intensity, duration, delay);
+    }
+}
+
+public void TriggerDirectionalScan(Vector3 direction, float speed, float intensity, float duration)
+{
+    // Normalize the direction (e.g., Vector3.right)
+    Vector3 scanAxis = direction.normalized;
+
+    foreach (var light in _allLights)
+    {
+        // Project position onto the scan axis to get the "distance" along that path
+        float projection = Vector3.Dot(light.Position, scanAxis);
+        float delay = projection / speed;
+        
+        // Offset delay so it doesn't start at a negative time
+        light.TriggerOneShot(intensity, duration, Mathf.Max(0, delay));
+    }
+}
+
+public void TriggerGlobalFlash(float intensity, float duration)
+{
+    foreach (var light in _allLights)
+    {
+        light.TriggerOneShot(intensity, duration, 0f);
+    }
+}
+
+public void TriggerGlobalBlackout(bool state, float duration)
+    {
+        foreach (var light in _allLights)
+            light.SetBlackout(state, duration);
+    }
+
+    // Call this for a timed "blink" effect
+    public void TriggerTimedBlackout(float duration, float fadeTime)
+    {
+        StartCoroutine(TimedBlackout(duration, fadeTime));
+    }
+
+    private IEnumerator TimedBlackout(float duration, float fadeTime)
+    {
+        TriggerGlobalBlackout(true, fadeTime);
+        yield return new WaitForSeconds(duration + fadeTime);
+        TriggerGlobalBlackout(false, fadeTime);
     }
 }

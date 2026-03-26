@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a52a96cc05b5afa418ae8dd80da24c51, type: 3}
+  m_Name: Frigid
+  m_EditorClassIdentifier: Assembly-CSharp::LightingProfile
+  ambientEnabled: 1
+  ambientColor: {r: 0.81960785, g: 0.8980392, b: 1, a: 1}
+  ambientIntensity: 0.8
+  fogEnabled: 1
+  fogColor: {r: 0.8784314, g: 0.8784314, b: 0.8784314, a: 1}
+  fogDensity: 0.06
+  skyboxMaterial: {fileID: 10304, guid: 0000000000000000f000000000000000, type: 0}
+  skyboxExposure: 0.7
+  skyboxTint: {r: 0.72264147, g: 1, b: 0.98627514, a: 1}
+  directionalLightColor: {r: 1, g: 1, b: 1, a: 1}
+  directionalLightIntensity: 0.5
+  directionalLightDirection: {x: 15, y: -30, z: 0}
+  directionalLightShadowStrength: 1
+  localLightColor: {r: 0.16167314, g: 0.96720177, b: 0.98490566, a: 1}
+  localLightIntensity: 1
+  localLightRange: 10
+  localLightShadowStrength: 0.2
+  fireflyBPM: 60
+  fireflyMoveSpeed: 1.5
+  fireflyMoveRange: 0.2
+  volumeProfile: {fileID: 0}

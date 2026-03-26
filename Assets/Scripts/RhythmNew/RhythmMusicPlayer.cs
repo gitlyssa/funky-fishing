@@ -165,8 +165,6 @@ public class RhythmMusicPlayer : MonoBehaviour
         StopRhythmPlayback();
         musicInstance.setTimelinePosition(0);
         musicInstance.start();
-        if (RhythmBeatPulse.Instance != null)
-            RhythmBeatPulse.Instance.ResetTimer();
     }
 
     private void StopRhythmPlayback()
