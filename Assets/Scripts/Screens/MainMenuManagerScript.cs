@@ -7,7 +7,14 @@ public class MainMenuManagerScript : MonoBehaviour
     {
         FunkyAudioSettings.PlayUiConfirm();
         Debug.Log("Start Game");
-        SceneManager.LoadScene("PondSelect");
+        SceneManager.LoadScene("Pond_Level_1");
+    }
+
+    public void TutorialSelected()
+    {
+        FunkyAudioSettings.PlayUiConfirm();
+        Debug.Log("Tutorial Selected");
+        SceneManager.LoadScene("Tutorial_Level");
     }
 
     public void ControllerMenu()
