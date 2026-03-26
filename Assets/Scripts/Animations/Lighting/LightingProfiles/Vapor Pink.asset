@@ -32,4 +32,4 @@ MonoBehaviour:
   fireflyBPM: 10
   fireflyMoveSpeed: 0.3
   fireflyMoveRange: 0.2
-  volumeProfile: {fileID: 11400000, guid: 7f58427047d65984b93ea782e9748c7d, type: 2}
+  volumeProfile: {fileID: 11400000, guid: d79e8173427eeff4b8da00d8ce198da2, type: 2}

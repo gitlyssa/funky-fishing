@@ -18,9 +18,9 @@ MonoBehaviour:
   fogEnabled: 1
   fogColor: {r: 0, g: 0, b: 0.5019608, a: 1}
   fogDensity: 0.08
-  skyboxMaterial: {fileID: 10304, guid: 0000000000000000f000000000000000, type: 0}
-  skyboxExposure: 0.2
-  skyboxTint: {r: 0, g: 0.012374212, b: 0.4415095, a: 1}
+  skyboxMaterial: {fileID: 2100000, guid: d4454f71d85928744be7771e2143dab7, type: 2}
+  skyboxExposure: 1
+  skyboxTint: {r: 0, g: 0.0070917765, b: 0.4113207, a: 1}
   directionalLightColor: {r: 0.30058375, g: 0.9732991, b: 0.97735846, a: 1}
   directionalLightIntensity: 0.3
   directionalLightDirection: {x: 90, y: 0, z: 0}
@@ -29,4 +29,7 @@ MonoBehaviour:
   localLightIntensity: 0
   localLightRange: 10
   localLightShadowStrength: 0
-  volumeProfile: {fileID: 0}
+  fireflyBPM: 60
+  fireflyMoveSpeed: 1.5
+  fireflyMoveRange: 0.2
+  volumeProfile: {fileID: 11400000, guid: 1f54cfb6f5d46d54aaf6ed18165c0258, type: 2}

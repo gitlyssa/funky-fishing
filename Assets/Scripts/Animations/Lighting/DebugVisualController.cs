@@ -29,6 +29,12 @@ public class DebugVisualController : MonoBehaviour
             lightingManager.TransitionToProfile(moodProfiles[_currentMoodIndex], transitionDuration);
             Debug.Log($"Transitioning to Mood: {moodProfiles[_currentMoodIndex].name}");
         }
+        // q to just reload current profile
+            if (Input.GetKeyDown(KeyCode.Q))
+            {
+                lightingManager.TransitionToProfile(moodProfiles[_currentMoodIndex], transitionDuration);
+                Debug.Log($"Reapplying Mood: {moodProfiles[_currentMoodIndex].name}");
+            }
 
         if(Input.GetKeyDown(KeyCode.Space))
         {

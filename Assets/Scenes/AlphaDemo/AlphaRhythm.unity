@@ -13751,7 +13751,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a01ba573ab943524498578eb120192e2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ObjectPulseResponder
-  pulseScaleAmount: 1.05
+  pulseScaleAmount: 1.15
   returnSpeed: 10
 --- !u!1 &1886759211
 GameObject:
