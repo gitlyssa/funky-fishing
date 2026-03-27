@@ -62,6 +62,8 @@ public class VisualConductor : MonoBehaviour
         }
         
         _eventList.Sort((a, b) => a.timestamp.CompareTo(b.timestamp));
+        if (lightingManager != null) lightingManager.isAutoCycling = false;
+    
         _isActive = true;
     }
     
@@ -69,8 +71,12 @@ public class VisualConductor : MonoBehaviour
     {
         _isActive = false;
         _eventList.Clear();
-        // Return the pond to a neutral state so fishing looks normal again
-        if (lightingManager != null) lightingManager.TriggerBlackout(false, 1.0f);
+        
+    
+        if (lightingManager != null) 
+        {
+            lightingManager.ResumeAutoCycle(lightingManager.exitBattleTransitionDuration);
+        }
     }
 
     void Update()
@@ -148,11 +154,13 @@ private void ExecuteSingleCommand(string command, string[] p)
                 lightingManager.TriggerPulse(pulseIntensity, groups);
                 break;
 
-            case "Flash":
-                if (ColorUtility.TryParseHtmlString(p[0], out Color c))
-                // show colour or if invalid, flash white    
-                if (c == default) c = Color.white;
-                    lightingManager.TriggerGlobalFlash(c, float.Parse(p[1]), float.Parse(p[2]));
+           case "Flash":
+                // Hex string safety logic
+                string hex = p[0];
+                if (!hex.StartsWith("#")) hex = "#" + hex;
+                if (!ColorUtility.TryParseHtmlString(hex, out Color c)) c = Color.white;
+                
+                lightingManager.TriggerGlobalFlash(c, float.Parse(p[1], CultureInfo.InvariantCulture), float.Parse(p[2], CultureInfo.InvariantCulture));
                 break;
 
             case "FireflyPulse":

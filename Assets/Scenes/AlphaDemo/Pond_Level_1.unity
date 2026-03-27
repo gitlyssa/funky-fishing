@@ -9090,13 +9090,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1118731301}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.23063724, y: -0.7590017, z: 0.35271937, w: -0.49629834}
+  m_LocalRotation: {x: -0.13302214, y: 0.63302225, z: -0.7544065, w: -0.11161883}
   m_LocalPosition: {x: 0, y: 20, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 49.85, y: -246.36, z: 0}
+  m_LocalEulerAnglesHint: {x: 100, y: 200, z: 0}
 --- !u!1001 &1126016774
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -18240,6 +18240,13 @@ MonoBehaviour:
   volumeA: {fileID: 256125419}
   volumeB: {fileID: 1442347459}
   effectVolume: {fileID: 621884616}
+  isAutoCycling: 1
+  timeSpeed: 0.1
+  dawn: {fileID: 11400000, guid: c583cf3dfe9c49846960174405d6e938, type: 2}
+  day: {fileID: 11400000, guid: 6491e9f1fb51fe346a71b1d773982247, type: 2}
+  sunset: {fileID: 11400000, guid: acfd5aed7c77adb47a9110deb5d43243, type: 2}
+  midnight: {fileID: 11400000, guid: a6524c61367ab194897c873085734acb, type: 2}
+  exitBattleTransitionDuration: 3
   mainSunlight: {fileID: 1118731303}
 --- !u!4 &2114351023
 Transform:

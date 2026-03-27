@@ -30,6 +30,15 @@ public class GlobalLightingManager : MonoBehaviour
     private ChromaticAberration _chromatic;
     private LensDistortion _lens;
 
+    [Header("Global Time Cycle")]
+    public bool isAutoCycling = true;
+    public float timeSpeed = 0.1f;
+    public LightingProfile dawn, day, sunset, midnight;
+    public float exitBattleTransitionDuration = 3.0f;
+
+    private float _globalTime = 0f;
+    private int _lastHour = -1;
+
     private Material _runtimeSkybox;
     public Light mainSunlight; 
     public static void RegisterLight(LocalLightController l) => _allLights.Add(l);
@@ -46,11 +55,218 @@ public class GlobalLightingManager : MonoBehaviour
         effectVolume.profile.TryGet(out _lens);
         effectVolume.weight = 0;
     }
+    void Update()
+    {
+        _globalTime = (_globalTime + Time.unscaledDeltaTime * timeSpeed) % 4f;
+
+        if (isAutoCycling)
+        {
+            int currentHour = Mathf.FloorToInt(_globalTime);
+
+            if (currentHour != _lastHour)
+            {
+                SnapToBoundary(currentHour);
+                _lastHour = currentHour;
+            }
+
+            ApplyCycleState(_globalTime);
+        }
+    }
+    public LightingProfile GetProfileByHour(int hour)
+    {
+        hour = hour % 4;
+        if (hour < 0) hour += 4;
+        switch (hour)
+        {
+            case 0: return dawn;
+            case 1: return day;
+            case 2: return sunset;
+            case 3: return midnight;
+            default: return day;
+        }
+    }
+
+    private void SnapToBoundary(int hour)
+    {
+        LightingProfile profile = GetProfileByHour(hour);
+        ApplyProfileImmediate(profile);
+    }
+
+    private void ApplyCycleState(float clockTime)
+    {
+        int hour = Mathf.FloorToInt(clockTime);
+        float subT = clockTime % 1f;
+
+        LightingProfile from = GetProfileByHour(hour);
+        LightingProfile to = GetProfileByHour(hour + 1);
+
+    float localClockTime = (clockTime + 0.5f) % 4f;
+    int localHour = Mathf.FloorToInt(localClockTime);
+    float localSubT = localClockTime % 1f;
+
+    LightingProfile localFrom = GetProfileByHour(localHour);
+    LightingProfile localTo = GetProfileByHour(localHour + 1);
+
+    float localInt = Mathf.Lerp(localFrom.localLightIntensity, localTo.localLightIntensity, localSubT);
+    float localRange = Mathf.Lerp(localFrom.localLightRange, localTo.localLightRange, localSubT);
+
+    SetEnvironmentState(from, to, subT, localFrom, localInt, localRange);
+
+
+    }
+
+    private void SetEnvironmentState(LightingProfile from, LightingProfile to, float subT, LightingProfile localFrom, float localInt, float localRange)
+    {
+        //Volumes
+        volumeA.profile = from.volumeProfile;
+        volumeB.profile = to.volumeProfile;
+        volumeA.weight = 1f - subT;
+        volumeB.weight = subT;
+
+        // Sun
+        if (mainSunlight != null)
+        {
+            mainSunlight.color = Color.Lerp(from.directionalLightColor, to.directionalLightColor, subT);
+            mainSunlight.intensity = Mathf.Lerp(from.directionalLightIntensity, to.directionalLightIntensity, subT);
+            mainSunlight.shadowStrength = Mathf.Lerp(from.directionalLightShadowStrength, to.directionalLightShadowStrength, subT);
+            mainSunlight.transform.rotation = Quaternion.Slerp(
+                Quaternion.Euler(from.directionalLightDirection),
+                Quaternion.Euler(to.directionalLightDirection),
+                subT);
+        }
+
+        // Ambient & Fog
+        RenderSettings.ambientLight = Color.Lerp(from.ambientColor, to.ambientColor, subT);
+        RenderSettings.ambientIntensity = Mathf.Lerp(from.ambientIntensity, to.ambientIntensity, subT);
+        RenderSettings.fogColor = Color.Lerp(from.fogColor, to.fogColor, subT);
+        RenderSettings.fogDensity = Mathf.Lerp(from.fogDensity, to.fogDensity, subT);
+
+        // Skybox Params
+        if (_runtimeSkybox != null)
+        {
+            _runtimeSkybox.SetFloat("_Exposure", Mathf.Lerp(from.skyboxExposure, to.skyboxExposure, subT));
+            ApplyTintToRuntime(Color.Lerp(from.skyboxTint, to.skyboxTint, subT));
+        }
+
+
+        foreach (var light in _allLights) 
+        {
+            light.UpdateFromProfile(localFrom, 1f, localInt, localRange);
+        }
+    }
+
+    public void ResumeAutoCycle(float duration)
+    {
+        isAutoCycling = false; 
+        if (_transitionCoroutine != null) StopCoroutine(_transitionCoroutine);
+        _transitionCoroutine = StartCoroutine(TransitionBackToClockRoutine(duration));
+    }
+
+    private IEnumerator TransitionBackToClockRoutine(float duration)
+    {
+        // 1. Capture the exact state of the pond the moment the song ended
+        Color startAmb = RenderSettings.ambientLight;
+        float startAmbInt = RenderSettings.ambientIntensity;
+        Color startFog = RenderSettings.fogColor;
+        float startFogDens = RenderSettings.fogDensity;
+
+        Color startSun = mainSunlight != null ? mainSunlight.color : Color.white;
+        float startSunInt = mainSunlight != null ? mainSunlight.intensity : 1f;
+        Quaternion startSunRot = mainSunlight != null ? mainSunlight.transform.rotation : Quaternion.identity;
+
+        float startSkyExp = _runtimeSkybox != null ? _runtimeSkybox.GetFloat("_Exposure") : 1f;
+        Color startSkyTint = GetCurrentSkyTint();
+
+        float startLocalInt = currentProfile != null ? currentProfile.localLightIntensity : 1.5f;
+        float startLocalRange = currentProfile != null ? currentProfile.localLightRange : 10f;
+
+        Volume activeVol = _isUsingA ? volumeA : volumeB;
+        Volume targetVol = _isUsingA ? volumeB : volumeA;
+        float startActiveWeight = activeVol.weight;
+
+        float elapsed = 0;
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / duration;
+            float curve = Mathf.SmoothStep(0, 1, t);
+
+            // 2. Determine where the Clock target is RIGHT NOW
+            float clockT = _globalTime;
+            int currentHour = Mathf.FloorToInt(clockT);
+            float subT = clockT % 1f;
+            LightingProfile from = GetProfileByHour(currentHour);
+            LightingProfile to = GetProfileByHour(currentHour + 1);
+
+            // Calculate Target Values
+            Color targetAmb = Color.Lerp(from.ambientColor, to.ambientColor, subT);
+            float targetAmbInt = Mathf.Lerp(from.ambientIntensity, to.ambientIntensity, subT);
+            Color targetFog = Color.Lerp(from.fogColor, to.fogColor, subT);
+            float targetFogDens = Mathf.Lerp(from.fogDensity, to.fogDensity, subT);
+            Color targetSun = Color.Lerp(from.directionalLightColor, to.directionalLightColor, subT);
+            float targetSunInt = Mathf.Lerp(from.directionalLightIntensity, to.directionalLightIntensity, subT);
+            Quaternion targetSunRot = Quaternion.Slerp(Quaternion.Euler(from.directionalLightDirection), Quaternion.Euler(to.directionalLightDirection), subT);
+            float targetSkyExp = Mathf.Lerp(from.skyboxExposure, to.skyboxExposure, subT);
+            Color targetSkyTint = Color.Lerp(from.skyboxTint, to.skyboxTint, subT);
+
+            // 3. Lerp from Captured Start -> Moving Target
+            RenderSettings.ambientLight = Color.Lerp(startAmb, targetAmb, curve);
+            RenderSettings.ambientIntensity = Mathf.Lerp(startAmbInt, targetAmbInt, curve);
+            RenderSettings.fogColor = Color.Lerp(startFog, targetFog, curve);
+            RenderSettings.fogDensity = Mathf.Lerp(startFogDens, targetFogDens, curve);
+
+            if (mainSunlight != null)
+            {
+                mainSunlight.color = Color.Lerp(startSun, targetSun, curve);
+                mainSunlight.intensity = Mathf.Lerp(startSunInt, targetSunInt, curve);
+                mainSunlight.transform.rotation = Quaternion.Slerp(startSunRot, targetSunRot, curve);
+            }
+
+            if (_runtimeSkybox != null)
+            {
+                _runtimeSkybox.SetFloat("_Exposure", Mathf.Lerp(startSkyExp, targetSkyExp, curve));
+                ApplyTintToRuntime(Color.Lerp(startSkyTint, targetSkyTint, curve));
+            }
+
+            // Volume Swap: Fade battle out, pop the clock's profile in
+            targetVol.profile = subT < 0.5f ? from.volumeProfile : to.volumeProfile;
+            activeVol.weight = Mathf.Lerp(startActiveWeight, 0f, curve);
+            targetVol.weight = Mathf.Lerp(0f, 1f, curve);
+
+            // Local Lights
+            float localClockT = (clockT + 0.5f) % 4f;
+    int localHour = Mathf.FloorToInt(localClockT);
+    float localSubT = localClockT % 1f;
+    LightingProfile localFrom = GetProfileByHour(localHour);
+    LightingProfile localTo = GetProfileByHour(localHour + 1);
+
+    float targetLocalInt = Mathf.Lerp(localFrom.localLightIntensity, localTo.localLightIntensity, localSubT);
+    float targetLocalRange = Mathf.Lerp(localFrom.localLightRange, localTo.localLightRange, localSubT);
+            foreach (var light in _allLights)
+    {
+        light.UpdateFromProfile(localFrom, 1f, 
+            Mathf.Lerp(startLocalInt, targetLocalInt, curve), 
+            Mathf.Lerp(startLocalRange, targetLocalRange, curve));
+    }
+
+            yield return null;
+        }
+
+        // 4. Clean execution handoff
+        SnapToBoundary(Mathf.FloorToInt(_globalTime));
+        isAutoCycling = true;
+        _transitionCoroutine = null;
+    }
+
+
+
+    
     public void TransitionToProfile(LightingProfile target, float duration)
     {
         if (_transitionCoroutine != null) StopCoroutine(_transitionCoroutine);
         _transitionCoroutine = StartCoroutine(LerpLighting(target, duration));
     }
+    
 
     private IEnumerator LerpLighting(LightingProfile target, float duration)
     {

@@ -164,6 +164,7 @@ public class SceneLoading : MonoBehaviour
         if (VisualConductor.Instance != null)
         {
             VisualConductor.Instance.StopAndReset();
+            Debug.Log("Stopped Visual Conductor.");
         }
 
         if (isRhythmLoaded)
