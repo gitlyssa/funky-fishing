@@ -4,7 +4,7 @@ using System;
 public class RhythmBeatPulse : MonoBehaviour
 {
     public static RhythmBeatPulse Instance;
-    public static event Action OnBeat;
+    public static event System.Action<float, int[]> OnBeat;
 
     void Awake()
     {
@@ -12,9 +12,9 @@ public class RhythmBeatPulse : MonoBehaviour
         else Destroy(gameObject);
     }
 
-    public void TriggerPulse()
+    public void TriggerBeat(float intensity, int[] groups)
     {
-        OnBeat?.Invoke();
+        OnBeat?.Invoke(intensity, groups);
     }
 
 }

@@ -38,7 +38,7 @@ public class DebugVisualController : MonoBehaviour
 
         if(Input.GetKeyDown(KeyCode.Space))
         {
-            rhythmBeatPulse.TriggerPulse();
+            rhythmBeatPulse.TriggerBeat(1f, null);
         }    
    
         if (Input.GetKeyDown(KeyCode.O))

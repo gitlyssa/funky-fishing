@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
 public class GlobalLightingManager : MonoBehaviour
 {
     public static GlobalLightingManager Instance { get; private set; }
@@ -23,6 +24,12 @@ public class GlobalLightingManager : MonoBehaviour
     public Volume volumeB;
     private bool _isUsingA = true;
 
+    [Header("Effect Volume")]
+    public Volume effectVolume; 
+    private Bloom _bloom;
+    private ChromaticAberration _chromatic;
+    private LensDistortion _lens;
+
     private Material _runtimeSkybox;
     public Light mainSunlight; 
     public static void RegisterLight(LocalLightController l) => _allLights.Add(l);
@@ -33,6 +40,11 @@ public class GlobalLightingManager : MonoBehaviour
     {
         if (currentProfile != null)
             ApplyProfileImmediate(currentProfile);
+
+        effectVolume.profile.TryGet(out _bloom);
+        effectVolume.profile.TryGet(out _chromatic);
+        effectVolume.profile.TryGet(out _lens);
+        effectVolume.weight = 0;
     }
     public void TransitionToProfile(LightingProfile target, float duration)
     {
@@ -305,10 +317,9 @@ public void TriggerGlobalFlash(float intensity, float duration)
     }
 }
 
-public void TriggerGlobalBlackout(bool state, float duration)
+    public void TriggerBlackout(bool state, float duration)
     {
-        foreach (var light in _allLights)
-            light.SetBlackout(state, duration);
+        foreach (var light in _allLights) light.SetBlackout(state, duration);
     }
 
     // Call this for a timed "blink" effect
@@ -319,8 +330,58 @@ public void TriggerGlobalBlackout(bool state, float duration)
 
     private IEnumerator TimedBlackout(float duration, float fadeTime)
     {
-        TriggerGlobalBlackout(true, fadeTime);
+        TriggerBlackout(true, fadeTime);
         yield return new WaitForSeconds(duration + fadeTime);
-        TriggerGlobalBlackout(false, fadeTime);
+        TriggerBlackout(false, fadeTime);
     }
+
+    public void TriggerAgitation(float speed, float range, float duration)
+    {
+        foreach (var light in _allLights) light.SetAgitation(speed, range, duration);
+    }
+
+    public void TriggerBloomKick(float intensity, float duration)
+    {
+        StartCoroutine(BloomKickRoutine(intensity, duration));
+    }
+
+    private IEnumerator BloomKickRoutine(float intensity, float duration)
+    {
+        _bloom.intensity.Override(intensity);
+        float elapsed = 0;
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            effectVolume.weight = Mathf.Lerp(1, 0, elapsed / duration);
+            yield return null;
+        }
+        effectVolume.weight = 0;
+    }
+
+    public void TriggerGlitch(float intensity, float duration)
+    {
+        StartCoroutine(GlitchRoutine(intensity, duration));
+    }
+
+    private IEnumerator GlitchRoutine(float intensity, float duration)
+    {
+        _chromatic.intensity.Override(intensity);
+        _lens.intensity.Override(-intensity * 0.5f); // Slight "suck in" effect
+        float elapsed = 0;
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            effectVolume.weight = Mathf.Lerp(1, 0, elapsed / duration);
+            yield return null;
+        }
+        effectVolume.weight = 0;
+    }
+
+public void TriggerPulse(float intensity, int[] groups) => RhythmBeatPulse.Instance.TriggerBeat(intensity, groups);
+
+
+
+
+
+
 }

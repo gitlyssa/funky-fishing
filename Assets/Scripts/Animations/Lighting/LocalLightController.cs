@@ -20,6 +20,9 @@ public class LocalLightController : MonoBehaviour
     private Material _bodyMaterial;
     private Material _glowMaterial;
 
+    private float _agitateSpeedMult = 1f;
+    private float _agitateRangeMult = 1f;
+
     private bool _isBlackedOut = false;
     
 
@@ -53,10 +56,10 @@ public class LocalLightController : MonoBehaviour
         if (GlobalLightingManager.Instance.currentProfile == null) return;
 
         Vector3 movement = new Vector3(
-            Mathf.Sin(Time.time * _currentMoveSpeed + _moveOffset),
-            Mathf.Cos(Time.time * _currentMoveSpeed * 0.8f + _moveOffset),
-            Mathf.Sin(Time.time * _currentMoveSpeed * 1.2f + _moveOffset)
-        ) * _currentMoveRange;
+            Mathf.Sin(Time.time * _currentMoveSpeed * _agitateSpeedMult + _moveOffset),
+            Mathf.Cos(Time.time * _currentMoveSpeed * 0.8f * _agitateSpeedMult + _moveOffset),
+            Mathf.Sin(Time.time * _currentMoveSpeed * 1.2f * _agitateSpeedMult + _moveOffset)
+        ) * _currentMoveRange * _agitateRangeMult;
 
         transform.position = _startPos + movement;
 
@@ -85,6 +88,20 @@ public class LocalLightController : MonoBehaviour
         }
 
         
+    }
+
+    public void SetAgitation(float speed, float range, float duration)
+    {
+        StartCoroutine(AgitationRoutine(speed, range, duration));
+    }
+
+    private IEnumerator AgitationRoutine(float s, float r, float d)
+    {
+        _agitateSpeedMult = s;
+        _agitateRangeMult = r;
+        yield return new WaitForSeconds(d);
+        _agitateSpeedMult = 1f;
+        _agitateRangeMult = 1f;
     }
 
     public void SetBlackout(bool state, float duration)

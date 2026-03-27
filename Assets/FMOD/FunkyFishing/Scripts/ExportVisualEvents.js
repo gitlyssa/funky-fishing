@@ -1,3 +1,14 @@
+```
+Profile: <profile_name> <transition_duration>
+Pulse: <intensity> <groups> ...
+Flash: <hexColor> <intensity> <duration>
+Ripple: <x><y><z> <speed> <intensity> <duration>
+Blackout: <bool> <duration>
+FireflyAgitation: <speed> <range> <duration>
+BloomKick: <intensity> <duration>
+Glitch: <intensity> <duration>
+```
+
 studio.menu.addMenuItem({ 
     name: "Export Visual Events",
     execute: function() {
@@ -9,13 +20,21 @@ studio.menu.addMenuItem({
 
         var markers = event.markerTrack.markers;
         var output = "Timestamp,Command,Params\n";
-        var validPrefixes = ["Profile:", "Pulse:", "Flash:", "Ripple:"];
+        var validPrefixes = [
+            "Profile:", 
+            "Pulse:", 
+            "Flash:", 
+            "Ripple:", 
+            "Blackout:", 
+            "FireflyAgitation:", 
+            "BloomKick:", 
+            "Glitch:"
+        ];
 
         markers.forEach(function(marker) {
             if (marker.isOfType("NamedMarker")) {
                 var name = marker.name;
                 
-                // Check for the colon separator
                 if (name.indexOf(':') === -1) return;
 
                 var prefix = name.split(':')[0] + ":";
