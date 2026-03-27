@@ -185,7 +185,7 @@
 			<value>4.9000000000000004</value>
 		</property>
 		<property name="name">
-			<value>Flash: repeat 99 20 ffffff 1.1 0</value>
+			<value>Glitch: repeat 99 20 1.1 0</value>
 		</property>
 		<relationship name="timeline">
 			<destination>{7486f0d7-fc0d-4054-8464-e65524a9d5f8}</destination>

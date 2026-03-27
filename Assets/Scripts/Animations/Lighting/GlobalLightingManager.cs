@@ -226,7 +226,7 @@ public class GlobalLightingManager : MonoBehaviour
         else if (_runtimeSkybox.HasProperty("_SkyTint")) _runtimeSkybox.SetColor("_SkyTint", color);
     }
 
-    public void TriggerSkyboxFlash(Color flashColor, float intensity, float duration)
+    public void TriggerGlobalFlash(Color flashColor, float intensity, float duration)
     {
         if (_runtimeSkybox == null) return;
         StartCoroutine(LightningRoutine(flashColor, intensity, duration));
@@ -309,7 +309,7 @@ public void TriggerDirectionalScan(Vector3 direction, float speed, float intensi
     }
 }
 
-public void TriggerGlobalFlash(float intensity, float duration)
+public void TriggerLocalFlash(float intensity, float duration)
 {
     foreach (var light in _allLights)
     {
@@ -356,6 +356,7 @@ public void TriggerGlobalFlash(float intensity, float duration)
             yield return null;
         }
         effectVolume.weight = 0;
+        _bloom.intensity.Override(0);
     }
 
     public void TriggerGlitch(float intensity, float duration)
@@ -375,6 +376,8 @@ public void TriggerGlobalFlash(float intensity, float duration)
             yield return null;
         }
         effectVolume.weight = 0;
+        _chromatic.intensity.Override(0);
+        _lens.intensity.Override(0);
     }
 
 public void TriggerPulse(float intensity, int[] groups) => RhythmBeatPulse.Instance.TriggerBeat(intensity, groups);

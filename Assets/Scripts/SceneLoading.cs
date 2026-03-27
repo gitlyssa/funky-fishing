@@ -161,6 +161,11 @@ public class SceneLoading : MonoBehaviour
             return;
         }
 
+        if (VisualConductor.Instance != null)
+        {
+            VisualConductor.Instance.StopAndReset();
+        }
+
         if (isRhythmLoaded)
         {
             StartCoroutine(UnloadRhythm());
@@ -478,6 +483,11 @@ public class SceneLoading : MonoBehaviour
         RhythmConductor conductor = FindObjectOfType<RhythmConductor>();
         if (conductor != null)
             conductor.SetBeatmapFile(rhythmProfile.beatmapFile);
+
+        if (VisualConductor.Instance != null)
+        {
+            VisualConductor.Instance.LoadVisualScript(rhythmProfile.visualScriptFile);
+        }
 
         RhythmMusicPlayer musicPlayer = FindObjectOfType<RhythmMusicPlayer>();
         if (musicPlayer != null)

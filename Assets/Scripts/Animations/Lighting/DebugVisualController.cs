@@ -6,6 +6,7 @@ public class DebugVisualController : MonoBehaviour
     [Header("Manager Reference")]
     public GlobalLightingManager lightingManager;
     public RhythmBeatPulse rhythmBeatPulse;
+    private bool _isBlackedOut = false;
 
     [Header("Mood Profiles")]
     public List<LightingProfile> moodProfiles;
@@ -36,29 +37,54 @@ public class DebugVisualController : MonoBehaviour
                 Debug.Log($"Reapplying Mood: {moodProfiles[_currentMoodIndex].name}");
             }
 
-        if(Input.GetKeyDown(KeyCode.Space))
-        {
-            rhythmBeatPulse.TriggerBeat(1f, null);
-        }    
-   
-        if (Input.GetKeyDown(KeyCode.O))
-        {
-            lightingManager.TriggerSkyboxFlash(lightningColor, flashIntensity, flashDuration);
-        }
-
+        // trigger various effects based on key input
         if (Input.GetKeyDown(KeyCode.P))
         {
-            lightingManager.TriggerSkyboxFlash(synthwaveColor, 4.0f, 0.5f);
-        }
-        if (Input.GetKeyDown(KeyCode.B))
-        {
-            lightingManager.TriggerTimedBlackout(2f, 0.5f);
+            lightingManager.TriggerPulse(1.0f, new int[] { 0 }); 
+            Debug.Log("Triggered Pulse: Intensity 1.0, Group 0");
         }
 
-        // F: Trigger a Spatial Wave from this transform
+        // F: Flash - Trigger a global lightning flash
         if (Input.GetKeyDown(KeyCode.F))
         {
-            lightingManager.TriggerWave(transform.position, 20f, flashIntensity, flashDuration);
+            lightingManager.TriggerGlobalFlash(lightningColor, flashIntensity, flashDuration);
+            Debug.Log("Triggered Global Flash");
+        }
+
+        // R: Ripple - Trigger a wave from the center (0,0,0)
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            lightingManager.TriggerWave(Vector3.zero, 10.0f, 2.0f, 1.0f);
+            Debug.Log("Triggered Ripple from Center");
+        }
+
+        // B: Blackout - Toggle the forced-off state
+        if (Input.GetKeyDown(KeyCode.B))
+        {
+            _isBlackedOut = !_isBlackedOut;
+            lightingManager.TriggerBlackout(_isBlackedOut, 0.5f);
+            Debug.Log($"Blackout State: {_isBlackedOut}");
+        }
+
+        // A: Agitation - Make fireflies "scared" and erratic
+        if (Input.GetKeyDown(KeyCode.A))
+        {
+            lightingManager.TriggerAgitation(5.0f, 3.0f, 2.0f);
+            Debug.Log("Triggered Firefly Agitation");
+        }
+
+        // K: Bloom Kick - Spike the 3rd Volume's Bloom
+        if (Input.GetKeyDown(KeyCode.K))
+        {
+            lightingManager.TriggerBloomKick(10.0f, 0.3f);
+            Debug.Log("Triggered Bloom Kick");
+        }
+
+        // G: Glitch - Spike Chromatic Aberration and Lens Distortion
+        if (Input.GetKeyDown(KeyCode.G))
+        {
+            lightingManager.TriggerGlitch(0.8f, 0.4f);
+            Debug.Log("Triggered Glitch Effect");
         }
     }
 }

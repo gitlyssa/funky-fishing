@@ -4955,10 +4955,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Unity.RenderPipelines.Core.Runtime::UnityEngine.Rendering.Volume
   m_IsGlobal: 1
-  priority: 0
+  priority: 1
   blendDistance: 0
   weight: 1
-  sharedProfile: {fileID: 0}
+  sharedProfile: {fileID: 11400000, guid: 040e547fdf7a9bd49b0a88bc62061fcb, type: 2}
 --- !u!4 &621884617
 Transform:
   m_ObjectHideFlags: 0
@@ -18182,6 +18182,7 @@ GameObject:
   - component: {fileID: 2114351022}
   - component: {fileID: 2114351021}
   - component: {fileID: 2114351024}
+  - component: {fileID: 2114351025}
   m_Layer: 0
   m_Name: Visual Manager
   m_TagString: Untagged
@@ -18220,7 +18221,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 0552ce8d383aefb478434501768c06ea, type: 2}
   transitionDuration: 1.5
   flashIntensity: 5
-  flashDuration: 0.2
+  flashDuration: 0.1
   lightningColor: {r: 1, g: 1, b: 1, a: 1}
   synthwaveColor: {r: 1, g: 0, b: 1, a: 1}
 --- !u!114 &2114351022
@@ -18270,6 +18271,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 59e2e407061ae6a4186e49f5cfccad87, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RhythmBeatPulse
+--- !u!114 &2114351025
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2114351020}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a69bca4def246b7499e2e90f68e48bf8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::VisualConductor
 --- !u!23 &2119327728 stripped
 MeshRenderer:
   m_CorrespondingSourceObject: {fileID: 3320423923844719573, guid: 5507dabb40685764599262ba5ec5cd5d, type: 3}

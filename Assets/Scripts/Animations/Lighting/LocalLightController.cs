@@ -133,7 +133,8 @@ public class LocalLightController : MonoBehaviour
         float startAlpha = _glowMaterial != null ? _glowMaterial.GetColor(_glowMaterial.HasProperty("_BaseColor") ? "_BaseColor" : "_Color").a / 0.6f : 0f;
 
         if (targetState) 
-        {
+        {   
+            _isBlackedOut = true;
             while (elapsed < duration)
             {
                 elapsed += Time.deltaTime;
@@ -143,7 +144,7 @@ public class LocalLightController : MonoBehaviour
                 UpdateVisuals(Mathf.Lerp(startInt, 0f, t), Mathf.Lerp(startAlpha, 0f, t));
                 yield return null;
             }
-            _isBlackedOut = true;
+            
         }
         else 
         {

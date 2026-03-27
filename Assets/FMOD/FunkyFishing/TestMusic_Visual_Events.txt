@@ -1,0 +1,4 @@
+BPM: 99
+Timestamp,Command,Params
+0,Profile,Dawn 8
+4.9,Pulse,repeat 99 20 1.05 0
