@@ -36,9 +36,9 @@ public class GlobalLightingManager : MonoBehaviour
     public LightingProfile dawn, day, sunset, midnight;
     public float exitBattleTransitionDuration = 3.0f;
 
-    private float _globalTime = 0f;
+    private float _globalTime = 1f;
     private int _lastHour = -1;
-
+  
     private Material _runtimeSkybox;
     public Light mainSunlight; 
     public static void RegisterLight(LocalLightController l) => _allLights.Add(l);
