@@ -1545,7 +1545,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &728557104
 Transform:
   m_ObjectHideFlags: 0
@@ -2917,7 +2917,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1444786408
 Transform:
   m_ObjectHideFlags: 0
@@ -14059,6 +14059,7 @@ MonoBehaviour:
   tutorialPracticeNoteBeatSpacing: 1
   tutorialPracticeSpawnPaused: 0
   tutorialPracticeClockAdvancesWhilePaused: 0
+  gameRing: {fileID: 1173819258}
   timingRingPrefab: {fileID: 4049253082992044910, guid: 867701417344e234cac41290000804e4, type: 3}
   ringThickness: 0.05
   perfectZoneColor: {r: 1, g: 0.85, b: 0, a: 0.4}

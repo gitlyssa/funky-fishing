@@ -69,6 +69,8 @@ public class RhythmConductor : MonoBehaviour
     private float _overtimeClock = 0f;
     private bool _isUsingOvertime = false;
     public bool isOvertime => _isUsingOvertime;
+    
+    [SerializeField]private GameObject gameRing;
 
     [Header("Timing Ring Visuals")]
     public GameObject timingRingPrefab; 
@@ -596,8 +598,9 @@ public class RhythmConductor : MonoBehaviour
         GameObject ring = Instantiate(timingRingPrefab, transform);
         ring.name = ringName;
         ring.transform.localPosition = new Vector3(0, 0, 0.01f); 
-        ring.layer = gameObject.layer;
-
+        ring.layer = gameObject.layer;  
+        // attach the ring to the game ring
+        ring.transform.SetParent(gameRing.transform);
         DynamicArc arc = ring.GetComponent<DynamicArc>();
         if (arc != null)
         {

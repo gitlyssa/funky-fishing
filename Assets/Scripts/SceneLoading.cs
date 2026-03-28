@@ -339,9 +339,11 @@ public class SceneLoading : MonoBehaviour
         if (!TryResolveScoringCircle(out GameObject scoringCircle))
             return;
 
-        StartCoroutine(JellyBounceRoutine(scoringCircle, 2f));
+        // StartCoroutine(SmoothGrowRoutine(scoringCircle, 1f)); 
+        scoringCircle.SetActive(true);
     }
-    private IEnumerator JellyBounceRoutine(GameObject target, float duration)
+
+    private IEnumerator SmoothGrowRoutine(GameObject target, float duration)
     {
         target.transform.localScale = Vector3.zero;
         target.SetActive(true);
@@ -353,24 +355,19 @@ public class SceneLoading : MonoBehaviour
             elapsed += Time.deltaTime;
             float t = elapsed / duration;
             
-            float scale = EaseOutElastic(t);
+            float scale = EaseOutCubic(t);
             target.transform.localScale = new Vector3(scale, scale, scale);
             
             yield return null;
         }
 
+
         target.transform.localScale = Vector3.one;
     }
 
-
-    private float EaseOutElastic(float x)
+    private float EaseOutCubic(float x)
     {
-        float c4 = (2f * Mathf.PI) / 3f;
-
-        if (x == 0f) return 0f;
-        if (x == 1f) return 1f;
-        
-        return Mathf.Pow(2f, -10f * x) * Mathf.Sin((x * 10f - 0.75f) * c4) + 1f;
+        return 1f - Mathf.Pow(1f - x, 3f);
     }
 
 
