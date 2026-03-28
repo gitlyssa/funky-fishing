@@ -1,4 +1,4 @@
 BPM: 112
 Timestamp,Command,Params
 0,Profile,Sunset 5
-
+0,FireflyPulse,repeat 60 10 5 3 0.5

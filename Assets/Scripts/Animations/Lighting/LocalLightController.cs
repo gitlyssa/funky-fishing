@@ -27,7 +27,7 @@ public class LocalLightController : MonoBehaviour
     private bool _isBlackedOut = false;
 
     private bool _realLight = false;
-    private float _realLightProb = 0.3f; // 30% chance to have a real light
+    private float _realLightProb = 0.02f; // 2% chance to have a real light for fun
 
     [SerializeField] private bool _realLightForce = false; 
 
@@ -232,7 +232,7 @@ public class LocalLightController : MonoBehaviour
         if(_realLight || _realLightForce) _light.intensity = intensity;
         else _light.intensity = 0f; // If not a real light, keep intensity at 0 but still drive the emission and glow for visual effect
         
-
+        if (_isFlashing) _light.intensity = intensity; 
         if (_bodyMaterial != null)
         {
             _bodyMaterial.EnableKeyword("_EMISSION");
