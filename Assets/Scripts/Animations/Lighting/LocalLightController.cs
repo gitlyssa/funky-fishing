@@ -7,6 +7,7 @@ public class LocalLightController : MonoBehaviour
     [SerializeField] private MeshRenderer _bodyRenderer;
     [SerializeField] private MeshRenderer _glowRenderer;
     [SerializeField] private Transform _glowRing;
+    [SerializeField] private Transform _body;
     [SerializeField] private Light _light;
     private float _baseIntensity;
     private float _baseRange;
@@ -24,7 +25,11 @@ public class LocalLightController : MonoBehaviour
     private float _agitateRangeMult = 1f;
 
     private bool _isBlackedOut = false;
-    
+
+    private bool _realLight = false;
+    private float _realLightProb = 0.3f; // 30% chance to have a real light
+
+    [SerializeField] private bool _realLightForce = false; 
 
     private float _currentBPM;
     private float _currentMoveSpeed;
@@ -36,6 +41,7 @@ public class LocalLightController : MonoBehaviour
     private void Awake()
     {   
         _startPos = transform.position;
+        _realLight = Random.value < _realLightProb;
         
         
         _pulseOffset = Random.Range(0f, 100f);
@@ -62,7 +68,8 @@ public class LocalLightController : MonoBehaviour
         ) * _currentMoveRange * _agitateRangeMult;
 
         transform.position = _startPos + movement;
-
+        // _body.localPosition = movement;
+        // _glowRing.localPosition = movement;
         if (_isBlackedOut)
         {
             UpdateVisuals(0f, 0f); // Explicitly force off every frame
@@ -176,6 +183,8 @@ public class LocalLightController : MonoBehaviour
         _baseRange = Mathf.Lerp(startRange, profile.localLightRange, t);
         _light.range = _baseRange;
         _light.shadowStrength = profile.localLightShadowStrength;
+        
+        
 
         // randomly offset bpm by up to 10% to create a more natural, unsynced effect across multiple fireflies
         _currentBPM = Mathf.Lerp(_currentBPM, profile.fireflyBPM, t);
@@ -220,7 +229,9 @@ public class LocalLightController : MonoBehaviour
 
     private void UpdateVisuals(float intensity, float alphaFactor)
     {
-        _light.intensity = intensity;
+        if(_realLight || _realLightForce) _light.intensity = intensity;
+        else _light.intensity = 0f; // If not a real light, keep intensity at 0 but still drive the emission and glow for visual effect
+        
 
         if (_bodyMaterial != null)
         {
