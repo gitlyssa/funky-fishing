@@ -340,6 +340,7 @@ public class SceneLoading : MonoBehaviour
             return;
 
         // StartCoroutine(SmoothGrowRoutine(scoringCircle, 1f)); 
+        scoringCircle.transform.localScale = Vector3.one;
         scoringCircle.SetActive(true);
     }
 
