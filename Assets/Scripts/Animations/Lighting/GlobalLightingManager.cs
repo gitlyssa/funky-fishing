@@ -95,8 +95,8 @@ public class GlobalLightingManager : MonoBehaviour
 
     private void SnapToBoundary(int hour)
     {
-        LightingProfile profile = GetProfileByHour(hour);
-        ApplyProfileImmediate(profile);
+        // LightingProfile profile = GetProfileByHour(hour);
+        // ApplyProfileImmediate(profile);
     }
 
     private void ApplyCycleState(float clockTime)

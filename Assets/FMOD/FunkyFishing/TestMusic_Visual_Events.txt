@@ -1,3 +1,4 @@
 BPM: 99
 Timestamp,Command,Params
 0,Profile,Dawn 8
+0,Glitch,repeat 99 10 0.5 0.5
