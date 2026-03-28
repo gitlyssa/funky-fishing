@@ -30,6 +30,9 @@ public class GlobalLightingManager : MonoBehaviour
     private ChromaticAberration _chromatic;
     private LensDistortion _lens;
 
+    [Header("Screen Effects")]
+    [SerializeField] private bool enableScreenEffects = false;
+
     [Header("Global Time Cycle")]
     public bool isAutoCycling = true;
     public float timeSpeed = 0.1f;
@@ -50,10 +53,14 @@ public class GlobalLightingManager : MonoBehaviour
         if (currentProfile != null)
             ApplyProfileImmediate(currentProfile);
 
-        effectVolume.profile.TryGet(out _bloom);
-        effectVolume.profile.TryGet(out _chromatic);
-        effectVolume.profile.TryGet(out _lens);
-        effectVolume.weight = 0;
+        if (effectVolume != null && effectVolume.profile != null)
+        {
+            effectVolume.profile.TryGet(out _bloom);
+            effectVolume.profile.TryGet(out _chromatic);
+            effectVolume.profile.TryGet(out _lens);
+        }
+
+        ResetScreenEffects();
     }
     void Update()
     {
@@ -444,7 +451,12 @@ public class GlobalLightingManager : MonoBehaviour
 
     public void TriggerGlobalFlash(Color flashColor, float intensity, float duration)
     {
-        if (_runtimeSkybox == null) return;
+        if (!enableScreenEffects || _runtimeSkybox == null)
+        {
+            ResetScreenEffects();
+            return;
+        }
+
         StartCoroutine(LightningRoutine(flashColor, intensity, duration));
     }
 
@@ -558,6 +570,12 @@ public void TriggerLocalFlash(float intensity, float duration)
 
     public void TriggerBloomKick(float intensity, float duration)
     {
+        if (!enableScreenEffects || _bloom == null || effectVolume == null)
+        {
+            ResetScreenEffects();
+            return;
+        }
+
         StartCoroutine(BloomKickRoutine(intensity, duration));
     }
 
@@ -577,6 +595,12 @@ public void TriggerLocalFlash(float intensity, float duration)
 
     public void TriggerGlitch(float intensity, float duration)
     {
+        if (!enableScreenEffects || _chromatic == null || _lens == null || effectVolume == null)
+        {
+            ResetScreenEffects();
+            return;
+        }
+
         StartCoroutine(GlitchRoutine(intensity, duration));
     }
 
@@ -598,6 +622,20 @@ public void TriggerLocalFlash(float intensity, float duration)
 
 public void TriggerPulse(float intensity, int[] groups) => RhythmBeatPulse.Instance.TriggerBeat(intensity, groups);
 
+    private void ResetScreenEffects()
+    {
+        if (effectVolume != null)
+            effectVolume.weight = 0f;
+
+        if (_bloom != null)
+            _bloom.intensity.Override(0f);
+
+        if (_chromatic != null)
+            _chromatic.intensity.Override(0f);
+
+        if (_lens != null)
+            _lens.intensity.Override(0f);
+    }
 
 
 

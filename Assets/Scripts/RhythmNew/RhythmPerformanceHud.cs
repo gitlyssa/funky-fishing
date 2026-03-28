@@ -118,6 +118,7 @@ public class RhythmPerformanceHud : MonoBehaviour
     private int _baseScore;
     private float _lastFiredMultiplier = 1f;
     private float _maxPowerTimer = 0f; // New timer for the visual loop
+    private float _activeReelInputTime = 0f;
     [SerializeField] private float maxPowerFlashInterval = 0.5f;
 
     [Header("Reel Status (Pulsing)")]
@@ -130,6 +131,11 @@ public class RhythmPerformanceHud : MonoBehaviour
     [Header("Reel Judgement (Multiplier)")]
     [SerializeField] private Color multiplierColor = new Color(1f, 0.8f, 0.2f); // Golden/Orange
     [SerializeField] private string multiplierFormat = "{0:F1}x"; // Displays as 1.1x, 1.2x etc.
+    [SerializeField, Min(1f)] private float maxReelMultiplier = 5f;
+    [SerializeField, Range(0.05f, 2f)] private float reelProgressForMaxMultiplier = 0.9f;
+    [SerializeField, Min(0.1f)] private float reelInputSecondsForMaxMultiplier = 3.5f;
+    [SerializeField, Min(0f)] private float reelMotionThreshold = 90f;
+    [SerializeField, Min(0.1f)] private float reelMultiplierGrowthExponent = 1.35f;
 
 
     [Header("Reel Progress Circle")]
@@ -1695,14 +1701,29 @@ public class RhythmPerformanceHud : MonoBehaviour
             _reelStatusRect.localScale = Vector3.one * pulse;
 
 
-            float currentMultiplier = 1f + (activeReel.Progress * 0.5f);
-            currentMultiplier = Mathf.Min(currentMultiplier, 2f); 
+            float spinVelocity = 0f;
+            if (_judge != null && _judge.processor != null)
+                spinVelocity = Mathf.Abs(_judge.processor.GetSmoothedSpinVelocity());
 
-            if(_lastFiredMultiplier < 2.0f)
+            if (spinVelocity >= reelMotionThreshold)
+                _activeReelInputTime += Time.deltaTime;
+
+            float normalizedSpinProgress = Mathf.Clamp01(activeReel.Progress / Mathf.Max(0.01f, reelProgressForMaxMultiplier));
+            float normalizedInputTimeProgress = Mathf.Clamp01(_activeReelInputTime / Mathf.Max(0.01f, reelInputSecondsForMaxMultiplier));
+            float normalizedMultiplierProgress = Mathf.Min(
+                normalizedInputTimeProgress,
+                normalizedSpinProgress);
+            normalizedMultiplierProgress = Mathf.Pow(normalizedMultiplierProgress, reelMultiplierGrowthExponent);
+            float currentMultiplier = Mathf.Lerp(1f, maxReelMultiplier, normalizedMultiplierProgress);
+            currentMultiplier = Mathf.Min(currentMultiplier, maxReelMultiplier); 
+
+            if(_lastFiredMultiplier < maxReelMultiplier)
             {
-                if (currentMultiplier >= _lastFiredMultiplier + 0.099f || currentMultiplier >= 2.0f)
+                if (currentMultiplier >= _lastFiredMultiplier + 0.099f || currentMultiplier >= maxReelMultiplier)
                 {
-                    _lastFiredMultiplier = (currentMultiplier >= 2.0f) ? 2.0f : Mathf.Floor(currentMultiplier * 10f) / 10f;
+                    _lastFiredMultiplier = (currentMultiplier >= maxReelMultiplier)
+                        ? maxReelMultiplier
+                        : Mathf.Floor(currentMultiplier * 10f) / 10f;
 
                     _score = Mathf.RoundToInt(_baseScore * _lastFiredMultiplier);
                     RefreshDetailText();
@@ -1711,17 +1732,17 @@ public class RhythmPerformanceHud : MonoBehaviour
                     string multText = string.Format(multiplierFormat, _lastFiredMultiplier);
                     
                     // Color shift to Red/Neon when Max is reached
-                    Color displayColor = (_lastFiredMultiplier >= 2.0f) ? Color.red : multiplierColor;
+                    Color displayColor = (_lastFiredMultiplier >= maxReelMultiplier) ? Color.red : multiplierColor;
                     ShowJudgement(multText, displayColor);
                 }
             }
-            else if (_lastFiredMultiplier >= 2.0f)
+            else if (_lastFiredMultiplier >= maxReelMultiplier)
             {
                 _maxPowerTimer += Time.deltaTime;
                 if (_maxPowerTimer >= maxPowerFlashInterval)
                 {
                     _maxPowerTimer = 0f;
-                    TriggerMultiplierPop(2.0f);
+                    TriggerMultiplierPop(maxReelMultiplier);
                 }
             }
         }
@@ -1732,6 +1753,7 @@ public class RhythmPerformanceHud : MonoBehaviour
             _reelStatusImage.color = c;
             _lastFiredMultiplier = 1f;
             _maxPowerTimer = 0f;
+            _activeReelInputTime = 0f;
 
             if (_reelArcObj != null)
             {
@@ -1746,7 +1768,7 @@ public class RhythmPerformanceHud : MonoBehaviour
     private void TriggerMultiplierPop(float multValue)
     {
         string multText = string.Format(multiplierFormat, multValue);
-        Color displayColor = (multValue >= 2.0f) ? Color.red : multiplierColor;
+        Color displayColor = (multValue >= maxReelMultiplier) ? Color.red : multiplierColor;
         
         ShowJudgement(multText, displayColor);
     }
