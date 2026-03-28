@@ -180,7 +180,7 @@ public class SceneLoading : MonoBehaviour
             return;
         TryResolveRhythmCameraRoot(out GameObject cameraRoot);
 
-        StartCoroutine(JellyShrinkRoutine(scoringCircle, cameraRoot, 1f)); 
+        StartCoroutine(JellyShrinkRoutine(scoringCircle, cameraRoot, 0.8f)); 
     }
 
     private IEnumerator JellyShrinkRoutine(GameObject target, GameObject cameraRoot, float duration)
@@ -339,9 +339,38 @@ public class SceneLoading : MonoBehaviour
         if (!TryResolveScoringCircle(out GameObject scoringCircle))
             return;
 
-        // StartCoroutine(SmoothGrowRoutine(scoringCircle, 1f)); 
-        scoringCircle.transform.localScale = Vector3.one;
-        scoringCircle.SetActive(true);
+        StartCoroutine(JellyBounceRoutine(scoringCircle, 0.7f));
+        // StartCoroutine(SmoothGrowRoutine(scoringCircle, 0.8f)); 
+    }
+
+    private IEnumerator JellyBounceRoutine(GameObject target, float duration)
+    {
+        target.transform.localScale = Vector3.zero;
+        target.SetActive(true);
+
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / duration;
+        
+            float scale = EaseOutBack(t);
+            target.transform.localScale = new Vector3(scale, scale, scale);
+            
+            yield return null;
+        }
+
+
+        target.transform.localScale = Vector3.one;
+    }
+
+    private float EaseOutBack(float x)
+    {
+        float c1 = 1.2f; 
+        float c3 = c1 + 1f;
+
+        return 1f + c3 * Mathf.Pow(x - 1f, 3f) + c1 * Mathf.Pow(x - 1f, 2f);
     }
 
     private IEnumerator SmoothGrowRoutine(GameObject target, float duration)

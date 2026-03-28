@@ -12,6 +12,9 @@ using UnityEngine.UI;
 [RequireComponent(typeof(PauseManager))]
 public class FishingPauseTuningPanel : MonoBehaviour
 {
+    private const string TuningFontResourcePath = "Fonts & Materials/LiberationSans SDF";
+    private static TMP_FontAsset s_tuningFontAsset;
+
     private enum TuningField
     {
         RequireBumperOrTriggerHold,
@@ -509,11 +512,25 @@ public class FishingPauseTuningPanel : MonoBehaviour
         resetRect.sizeDelta = new Vector2(128f, 0f);
         resetRect.anchoredPosition = Vector2.zero;
 
+        Button resetTopScoresButton = CreateButton(
+            header,
+            "ResetTopScoresButton",
+            "Reset Top Scores",
+            ResetTopScores,
+            new Color(0.26f, 0.13f, 0.13f, 1f),
+            11f);
+        RectTransform resetTopScoresRect = resetTopScoresButton.transform as RectTransform;
+        resetTopScoresRect.anchorMin = new Vector2(1f, 0f);
+        resetTopScoresRect.anchorMax = new Vector2(1f, 1f);
+        resetTopScoresRect.pivot = new Vector2(1f, 0.5f);
+        resetTopScoresRect.sizeDelta = new Vector2(152f, 0f);
+        resetTopScoresRect.anchoredPosition = new Vector2(-134f, 0f);
+
         TextMeshProUGUI title = CreateText(header, "Title", "Fishing Joy-Con Tuning", 16f, FontStyles.Bold, TextAlignmentOptions.Center);
         title.color = new Color(1f, 0.95f, 0.72f, 1f);
         Stretch(title.rectTransform);
         title.rectTransform.offsetMin = new Vector2(98f, 0f);
-        title.rectTransform.offsetMax = new Vector2(-134f, 0f);
+        title.rectTransform.offsetMax = new Vector2(-292f, 0f);
     }
 
     private void CreateTargetLabel()
@@ -913,6 +930,12 @@ public class FishingPauseTuningPanel : MonoBehaviour
         GameObject go = new GameObject(name, typeof(RectTransform), typeof(TextMeshProUGUI));
         go.transform.SetParent(parent, false);
         TextMeshProUGUI tmp = go.GetComponent<TextMeshProUGUI>();
+        if (s_tuningFontAsset == null)
+            s_tuningFontAsset = Resources.Load<TMP_FontAsset>(TuningFontResourcePath);
+
+        if (s_tuningFontAsset != null)
+            tmp.font = s_tuningFontAsset;
+
         tmp.text = text;
         tmp.fontSize = size;
         tmp.fontStyle = style;
@@ -948,6 +971,12 @@ public class FishingPauseTuningPanel : MonoBehaviour
     private void ResetToDefaults()
     {
         ApplyDefaultPreset(autoSaveOnChange);
+    }
+
+    private void ResetTopScores()
+    {
+        SessionTopScoresTracker.ResetAllScores();
+        SetStatus("Status: Top scores reset.");
     }
 
     private void SaveCurrentToPersistentFile()

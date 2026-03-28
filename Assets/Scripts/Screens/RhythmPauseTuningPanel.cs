@@ -12,6 +12,9 @@ using UnityEngine.UI;
 [RequireComponent(typeof(PauseManager))]
 public class RhythmPauseTuningPanel : MonoBehaviour
 {
+    private const string TuningFontResourcePath = "Fonts & Materials/LiberationSans SDF";
+    private static TMP_FontAsset s_tuningFontAsset;
+
     public const float GeneralSensitivityDefault = 0.4f;
 
     private enum TuningField
@@ -988,6 +991,12 @@ public class RhythmPauseTuningPanel : MonoBehaviour
         GameObject go = new GameObject(name, typeof(RectTransform), typeof(TextMeshProUGUI));
         go.transform.SetParent(parent, false);
         TextMeshProUGUI tmp = go.GetComponent<TextMeshProUGUI>();
+        if (s_tuningFontAsset == null)
+            s_tuningFontAsset = Resources.Load<TMP_FontAsset>(TuningFontResourcePath);
+
+        if (s_tuningFontAsset != null)
+            tmp.font = s_tuningFontAsset;
+
         tmp.text = text;
         tmp.fontSize = size;
         tmp.fontStyle = style;

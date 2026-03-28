@@ -27,8 +27,8 @@ MonoBehaviour:
   directionalLightShadowStrength: 1
   localLightColor: {r: 0.57924527, g: 0.9633424, b: 1, a: 1}
   localLightIntensity: 2
-  localLightRange: 10
-  localLightShadowStrength: 0.5
+  localLightRange: 5
+  localLightShadowStrength: 0.2
   fireflyBPM: 40
   fireflyMoveSpeed: 1.5
   fireflyMoveRange: 0.2

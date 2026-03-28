@@ -21,13 +21,23 @@ public class FishCatchAnimation : MonoBehaviour
     public Image greatJudgementImage;
     public Image goodJudgementImage;
     private Image _activeJudgementImage;
+    private RectTransform _letterGradeContainer;
     private Image _letterGradeImage;
+    private TextMeshProUGUI _letterGradeLabel;
     private string _defaultClickText;
     private readonly Dictionary<string, Sprite> _letterGradeSprites = new Dictionary<string, Sprite>();
 
     private float _imageSize = 3.1f; // Base size for judgement images
-    private const float LetterGradeImageSize = 100f;
+    private const float LetterGradeImageSize = 180f;
     private const string LetterGradeResourceFolder = "letter_grades";
+    private const float LetterGradeContainerWidth = 240f;
+    private const float LetterGradeContainerHeight = 280f;
+    private const float LetterGradeLabelWidth = 240f;
+    private const float LetterGradeLabelFontSize = 42f;
+    private static readonly Vector2 LetterGradeAnchor = new Vector2(0.5f, 0.5f);
+    private static readonly Vector2 LetterGradeAnchoredPosition = new Vector2(-260f, -20f);
+    private static readonly Vector2 LetterGradeLabelPosition = new Vector2(0f, 92f);
+    private static readonly Vector2 LetterGradeImagePosition = new Vector2(0f, -8f);
 
 
     [Header("Positioning")]
@@ -83,7 +93,7 @@ public class FishCatchAnimation : MonoBehaviour
         if (perfectJudgementImage != null) perfectJudgementImage.gameObject.SetActive(false);
         if (greatJudgementImage != null) greatJudgementImage.gameObject.SetActive(false);
         if (goodJudgementImage != null) goodJudgementImage.gameObject.SetActive(false);
-        if (_letterGradeImage != null) _letterGradeImage.gameObject.SetActive(false);
+        if (_letterGradeContainer != null) _letterGradeContainer.gameObject.SetActive(false);
     }
 
     private void SetContinue()
@@ -176,11 +186,13 @@ public class FishCatchAnimation : MonoBehaviour
         }
 
         EnsureLetterGradeImage();
-        if (_letterGradeImage != null)
+        if (_letterGradeContainer != null && _letterGradeImage != null && _letterGradeLabel != null)
         {
             _letterGradeImage.sprite = GetLetterGradeSprite(accuracy);
-            _letterGradeImage.gameObject.SetActive(_letterGradeImage.sprite != null);
-            _letterGradeImage.rectTransform.localScale = Vector3.zero;
+            bool hasGradeSprite = _letterGradeImage.sprite != null;
+            _letterGradeLabel.text = "Grade:";
+            _letterGradeContainer.gameObject.SetActive(hasGradeSprite);
+            _letterGradeContainer.localScale = Vector3.zero;
         }
 
         
@@ -204,7 +216,7 @@ public class FishCatchAnimation : MonoBehaviour
             float bounceScale = Mathf.Lerp(0f, 1f, t); 
 
             if (_activeJudgementImage != null) _activeJudgementImage.rectTransform.localScale = Vector3.one * _imageSize * bounceScale;
-            if (_letterGradeImage != null && _letterGradeImage.gameObject.activeSelf) _letterGradeImage.rectTransform.localScale = Vector3.one * bounceScale;
+            if (_letterGradeContainer != null && _letterGradeContainer.gameObject.activeSelf) _letterGradeContainer.localScale = Vector3.one * bounceScale;
             if (judgementText != null) judgementText.transform.localScale = Vector3.one * bounceScale;
             if (fishNameText != null) fishNameText.transform.localScale = Vector3.one * bounceScale;
 
@@ -265,7 +277,7 @@ public class FishCatchAnimation : MonoBehaviour
 
     private void EnsureLetterGradeImage()
     {
-        if (_letterGradeImage != null)
+        if (_letterGradeContainer != null && _letterGradeImage != null && _letterGradeLabel != null)
             return;
 
         Transform parent = null;
@@ -277,33 +289,58 @@ public class FishCatchAnimation : MonoBehaviour
         if (parent == null)
             return;
 
-        GameObject gradeGo = new GameObject("LetterGradeImage", typeof(RectTransform), typeof(Image));
-        gradeGo.transform.SetParent(parent, false);
-        gradeGo.transform.SetSiblingIndex(judgementText != null ? judgementText.transform.GetSiblingIndex() + 1 : gradeGo.transform.GetSiblingIndex());
+        GameObject containerGo = new GameObject("LetterGradeContainer", typeof(RectTransform));
+        containerGo.transform.SetParent(parent, false);
+        containerGo.transform.SetSiblingIndex(judgementText != null ? judgementText.transform.GetSiblingIndex() + 1 : containerGo.transform.GetSiblingIndex());
+        _letterGradeContainer = containerGo.GetComponent<RectTransform>();
+        _letterGradeContainer.anchorMin = LetterGradeAnchor;
+        _letterGradeContainer.anchorMax = LetterGradeAnchor;
+        _letterGradeContainer.pivot = new Vector2(0.5f, 0.5f);
+        _letterGradeContainer.anchoredPosition = LetterGradeAnchoredPosition;
+        _letterGradeContainer.sizeDelta = new Vector2(LetterGradeContainerWidth, LetterGradeContainerHeight);
 
+        GameObject labelGo = new GameObject("LetterGradeLabel", typeof(RectTransform), typeof(TextMeshProUGUI));
+        labelGo.transform.SetParent(_letterGradeContainer, false);
+        _letterGradeLabel = labelGo.GetComponent<TextMeshProUGUI>();
+        _letterGradeLabel.raycastTarget = false;
+        _letterGradeLabel.text = "Grade:";
+        _letterGradeLabel.fontSize = LetterGradeLabelFontSize;
+        _letterGradeLabel.alignment = TextAlignmentOptions.Center;
+        _letterGradeLabel.color = Color.white;
+        _letterGradeLabel.enableAutoSizing = false;
+
+        if (judgementText != null)
+        {
+            _letterGradeLabel.font = judgementText.font;
+            _letterGradeLabel.fontSharedMaterial = judgementText.fontSharedMaterial;
+        }
+        else if (fishNameText != null)
+        {
+            _letterGradeLabel.font = fishNameText.font;
+            _letterGradeLabel.fontSharedMaterial = fishNameText.fontSharedMaterial;
+        }
+
+        RectTransform labelRect = _letterGradeLabel.rectTransform;
+        labelRect.anchorMin = new Vector2(0.5f, 0.5f);
+        labelRect.anchorMax = new Vector2(0.5f, 0.5f);
+        labelRect.pivot = new Vector2(0.5f, 0.5f);
+        labelRect.anchoredPosition = LetterGradeLabelPosition;
+        labelRect.sizeDelta = new Vector2(LetterGradeLabelWidth, 64f);
+
+        GameObject gradeGo = new GameObject("LetterGradeImage", typeof(RectTransform), typeof(Image));
+        gradeGo.transform.SetParent(_letterGradeContainer, false);
         _letterGradeImage = gradeGo.GetComponent<Image>();
         _letterGradeImage.raycastTarget = false;
         _letterGradeImage.preserveAspect = true;
-        _letterGradeImage.gameObject.SetActive(false);
 
         RectTransform gradeRect = _letterGradeImage.rectTransform;
-        if (judgementText != null)
-        {
-            RectTransform judgementRect = judgementText.rectTransform;
-            gradeRect.anchorMin = judgementRect.anchorMin;
-            gradeRect.anchorMax = judgementRect.anchorMax;
-            gradeRect.pivot = judgementRect.pivot;
-            gradeRect.anchoredPosition = judgementRect.anchoredPosition + new Vector2(-120f, 0f);
-        }
-        else
-        {
-            gradeRect.anchorMin = new Vector2(0.5f, 0.5f);
-            gradeRect.anchorMax = new Vector2(0.5f, 0.5f);
-            gradeRect.pivot = new Vector2(0.5f, 0.5f);
-            gradeRect.anchoredPosition = new Vector2(0f, 120f);
-        }
-
+        gradeRect.anchorMin = new Vector2(0.5f, 0.5f);
+        gradeRect.anchorMax = new Vector2(0.5f, 0.5f);
+        gradeRect.pivot = new Vector2(0.5f, 0.5f);
+        gradeRect.anchoredPosition = LetterGradeImagePosition;
         gradeRect.sizeDelta = new Vector2(LetterGradeImageSize, LetterGradeImageSize);
+
+        _letterGradeContainer.gameObject.SetActive(false);
     }
 
     private Sprite GetLetterGradeSprite(float accuracy)
