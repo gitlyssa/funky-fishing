@@ -116,8 +116,6 @@ public class PauseManager : MonoBehaviour
         if (ControlsPanel != null)
             ControlsPanel.SetActive(false);
 
-        EnsurePauseUiForeground();
-
         Time.timeScale = 1f;
         ResolveSelectionReferences();
         ClearSelectedObject();

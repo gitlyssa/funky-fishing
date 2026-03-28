@@ -678,8 +678,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Move the joystick to position your bobber
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
+  m_sharedMaterial: {fileID: 4311783658566970924, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -1795,8 +1795,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Nice.\nNow, hit 3 successful Left notes in a row.
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
+  m_sharedMaterial: {fileID: 4311783658566970924, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -3268,8 +3268,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Press A to cast your rod.
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
+  m_sharedMaterial: {fileID: 4311783658566970924, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -4372,8 +4372,8 @@ MonoBehaviour:
     fish with your rhythm skills.\n\nFlick the left joystick in the direction of
     incoming notes when it reaches the edge of the circle.
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
+  m_sharedMaterial: {fileID: 4311783658566970924, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -4509,8 +4509,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Let's mix up some notes!\nTry out the next sequence for size.
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
+  m_sharedMaterial: {fileID: 4311783658566970924, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -5002,8 +5002,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: GAME PAUSED
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
+  m_sharedMaterial: {fileID: 4311783658566970924, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -5349,8 +5349,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: We've reached the final stretch!\nReel the fish in by spinning the thumbstick.
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
+  m_sharedMaterial: {fileID: 4311783658566970924, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -5486,8 +5486,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Press any button to continue
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
+  m_sharedMaterial: {fileID: 4311783658566970924, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -5782,8 +5782,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Swing your joycon forward while holding ZL/ZR to cast your rod.
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
+  m_sharedMaterial: {fileID: 4311783658566970924, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -6039,8 +6039,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Press any button to continue
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
+  m_sharedMaterial: {fileID: 4311783658566970924, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -6735,8 +6735,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Press any button to continue
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
+  m_sharedMaterial: {fileID: 4311783658566970924, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -7285,8 +7285,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Press any button to continue
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
+  m_sharedMaterial: {fileID: 4311783658566970924, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -7555,8 +7555,8 @@ MonoBehaviour:
   m_text: Welcome to Funky Fishing!\n\n This tutorial will teach you the basics of
     how to catch fish!
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
+  m_sharedMaterial: {fileID: 4311783658566970924, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -7796,8 +7796,8 @@ MonoBehaviour:
   m_text: Now you're ready to catch fish. Position your bobber close to a fish and
     cast when ready. Once the fish bites, yank your fishing rod back!
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
+  m_sharedMaterial: {fileID: 4311783658566970924, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -8863,10 +8863,10 @@ MonoBehaviour:
   pondLevelSceneName: Tutorial_Level
   hideInTutorialLevel: 1
   tutorialSceneName: Tutorial_Level
-  panelSize: {x: 340, y: 320}
+  panelSize: {x: 575, y: 154}
   panelOffset: {x: -24, y: -24}
-  fontSize: 24
-  panelColor: {r: 0, g: 0, b: 0, a: 0.55}
+  fontSize: 45
+  panelColor: {r: 0, g: 0, b: 0, a: 0}
   textColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!4 &1015900472
 Transform:
@@ -9357,8 +9357,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Press any button to continue
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
+  m_sharedMaterial: {fileID: 4311783658566970924, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -9494,8 +9494,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Press any button to continue
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
+  m_sharedMaterial: {fileID: 4311783658566970924, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -9841,8 +9841,8 @@ MonoBehaviour:
     fish with your rhythm skills.\n\nLightly flick your joycon in the direction of
     incoming notes when it reaches the edge of the circle.
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
+  m_sharedMaterial: {fileID: 4311783658566970924, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -10393,8 +10393,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Nice.\nNow, hit 3 successful Left notes in a row. (XBox)
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
+  m_sharedMaterial: {fileID: 4311783658566970924, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -10603,8 +10603,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Swing your joycon backwards to bring the line in.
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
+  m_sharedMaterial: {fileID: 4311783658566970924, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -11568,8 +11568,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Ready?\nHit 3 successful Up notes in a row! (XBox)
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
+  m_sharedMaterial: {fileID: 4311783658566970924, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -11705,8 +11705,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Let's mix up some notes!\nTry out the next sequence for size. (XBox)
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
+  m_sharedMaterial: {fileID: 4311783658566970924, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -11847,8 +11847,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Now, you're ready to catch fish!
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
+  m_sharedMaterial: {fileID: 4311783658566970924, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -12466,8 +12466,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Move the right stick to position your bobber
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
+  m_sharedMaterial: {fileID: 4311783658566970924, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -13228,8 +13228,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Press any button to continue
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
+  m_sharedMaterial: {fileID: 4311783658566970924, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -13577,8 +13577,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Press any button to continue
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
+  m_sharedMaterial: {fileID: 4311783658566970924, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -14024,8 +14024,8 @@ MonoBehaviour:
 
 '
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
+  m_sharedMaterial: {fileID: 4311783658566970924, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -14441,8 +14441,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Press any button to continue
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
+  m_sharedMaterial: {fileID: 4311783658566970924, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -14900,8 +14900,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -69.5, y: 0.9488201}
-  m_SizeDelta: {x: 62.3472, y: 26.5976}
+  m_AnchoredPosition: {x: -78, y: 0.9488201}
+  m_SizeDelta: {x: 100, y: 26.5976}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1504439948
 MonoBehaviour:
@@ -14925,8 +14925,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Switch
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
+  m_sharedMaterial: {fileID: 4311783658566970924, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -15633,8 +15633,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Ready?\nHit 3 successful Up notes in a row!
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
+  m_sharedMaterial: {fileID: 4311783658566970924, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -15746,8 +15746,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 64.6, y: 0.9488201}
-  m_SizeDelta: {x: 62.3472, y: 26.5976}
+  m_AnchoredPosition: {x: 98, y: 0.9488201}
+  m_SizeDelta: {x: 100, y: 26.5976}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1541541319
 MonoBehaviour:
@@ -15771,8 +15771,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: XBox
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
+  m_sharedMaterial: {fileID: 4311783658566970924, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -16248,8 +16248,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Press any button to continue
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
+  m_sharedMaterial: {fileID: 4311783658566970924, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -16517,8 +16517,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: 'Select which controller you are using:'
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
+  m_sharedMaterial: {fileID: 4311783658566970924, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -17176,8 +17176,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Great job!\nNow, hit 3 successful Right notes in a row.
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
+  m_sharedMaterial: {fileID: 4311783658566970924, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -17407,8 +17407,8 @@ MonoBehaviour:
   m_text: Now you're ready to catch fish. Position your bobber close to a fish and
     cast when ready. Once the fish bites, yank your fishing rod back!
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
+  m_sharedMaterial: {fileID: 4311783658566970924, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -19594,8 +19594,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Press any button to continue
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
+  m_sharedMaterial: {fileID: 4311783658566970924, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -19870,8 +19870,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Press any button to continue
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
+  m_sharedMaterial: {fileID: 4311783658566970924, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -20490,8 +20490,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Great job!\nNow, hit 3 successful Right notes in a row. (XBox)
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
+  m_sharedMaterial: {fileID: 4311783658566970924, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -20627,8 +20627,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Press any button to continue
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
+  m_sharedMaterial: {fileID: 4311783658566970924, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -20769,8 +20769,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Press any button to continue
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
+  m_sharedMaterial: {fileID: 4311783658566970924, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -21959,8 +21959,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Press any button to continue
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
+  m_sharedMaterial: {fileID: 4311783658566970924, guid: be6f75e3fdaac7843807ddb56de34754, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []

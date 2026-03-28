@@ -41,10 +41,10 @@ public class FishingSessionHud : MonoBehaviour
     [SerializeField] private string pondLevelSceneName = "Pond_Level_1";
     [SerializeField] private bool hideInTutorialLevel = true;
     [SerializeField] private string tutorialSceneName = "Tutorial_Level";
-    [SerializeField] private Vector2 panelSize = new Vector2(308f, 290f);
+    [SerializeField] private Vector2 panelSize = new Vector2(575f, 154f);
     [SerializeField] private Vector2 panelOffset = new Vector2(-24f, -24f);
-    [SerializeField] private int fontSize = 22;
-    [SerializeField] private Color panelColor = new Color(0f, 0f, 0f, 0.55f);
+    [SerializeField] private int fontSize = 45;
+    [SerializeField] private Color panelColor = new Color(0f, 0f, 0f, 0f);
     [SerializeField] private Color textColor = Color.white;
 
     private Canvas canvas;
@@ -220,22 +220,12 @@ public class FishingSessionHud : MonoBehaviour
         if (hudText == null)
             return;
 
-        int avgScore = sessionRunsCompleted > 0
-            ? Mathf.RoundToInt((float)sessionTotalScore / sessionRunsCompleted)
-            : 0;
         string lastResult = lastCatchSucceeded ? "Caught" : "Escaped";
 
         hudText.text =
-            "Fishing Session\n" +
-            $"Last Attempt: {lastCatchScore} pts ({GetLetterGradeForAccuracy(lastCatchAccuracy)}) [{lastResult}]\n" +
-            $"High Score: {sessionHighScore} pts\n" +
-            $"Caught / Attempts: {sessionFishCaught}/{sessionRunsCompleted}\n" +
-            $"Session Score: {sessionTotalScore}\n" +
-            $"Avg / Attempt: {avgScore}\n" +
-            $"Best Combo: {sessionBestCombo}\n" +
-            $"Last Combo: {lastCatchBestCombo}\n" +
-            $"Last P/G/M: {lastCatchPerfect}/{lastCatchGood}/{lastCatchMiss}\n" +
-            $"Last Accuracy: {lastCatchAccuracy:F1}%";
+            $"<size=55>Session Score: {sessionTotalScore}</size>\n" +
+            $"<size=31>Highest Catch: {sessionHighScore} pts</size>\n" +
+            $"<size=31>Last Attempt: {lastCatchScore} pts [{lastResult}]</size>";
     }
 
     public void SetHudEnabled(bool enabled)
@@ -358,17 +348,22 @@ public class FishingSessionHud : MonoBehaviour
         RectTransform textRect = textGo.GetComponent<RectTransform>();
         textRect.anchorMin = Vector2.zero;
         textRect.anchorMax = Vector2.one;
-        textRect.offsetMin = new Vector2(10f, 10f);
-        textRect.offsetMax = new Vector2(-10f, -10f);
+        textRect.offsetMin = new Vector2(16f, 16f);
+        textRect.offsetMax = new Vector2(-16f, -16f);
 
         hudText = textGo.GetComponent<TextMeshProUGUI>();
         if (TMP_Settings.defaultFontAsset != null)
             hudText.font = TMP_Settings.defaultFontAsset;
 
+        hudText.enableAutoSizing = true;
+        hudText.fontSizeMin = Mathf.Max(24, fontSize - 12);
+        hudText.fontSizeMax = fontSize;
         hudText.fontSize = fontSize;
         hudText.color = textColor;
         hudText.alignment = TextAlignmentOptions.TopRight;
         hudText.textWrappingMode = TextWrappingModes.Normal;
+        hudText.overflowMode = TextOverflowModes.Overflow;
+        hudText.lineSpacing = -8f;
         hudText.raycastTarget = false;
     }
 

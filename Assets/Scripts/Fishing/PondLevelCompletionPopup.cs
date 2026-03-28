@@ -270,21 +270,13 @@ public class PondLevelCompletionPopup : MonoBehaviour
             return;
 
         FishingSessionHud.SessionSummary s = FishingSessionHud.GetSessionSummary();
-        string lastGrade = FishingSessionHud.GetLetterGradeForAccuracy(s.LastCatchAccuracy);
         string lastResult = s.LastCatchSucceeded ? "Caught" : "Escaped";
 
         bodyText.text =
             $"{subtitleMessage}\n\n" +
-            $"Fish Caught: {s.FishCaught}\n" +
-            $"Catch Attempts: {s.CatchAttempts}\n" +
             $"Session Score: {s.SessionScore}\n" +
-            $"High Score: {s.HighScore}\n" +
-            $"Best Combo: {s.SessionBestCombo}\n" +
-            $"Avg / Attempt: {s.AverageScorePerAttempt}\n\n" +
-            $"Last Attempt: {s.LastCatchScore} pts ({lastGrade}) [{lastResult}]\n" +
-            $"Last Combo: {s.LastCatchBestCombo}\n" +
-            $"Last P/G/M: {s.LastCatchPerfect}/{s.LastCatchGood}/{s.LastCatchMiss}\n" +
-            $"Last Accuracy: {s.LastCatchAccuracy:F1}%";
+            $"Highest Catch: {s.HighScore} pts\n" +
+            $"Last Attempt: {s.LastCatchScore} pts [{lastResult}]";
     }
 
     private void RefreshScoreboardText()

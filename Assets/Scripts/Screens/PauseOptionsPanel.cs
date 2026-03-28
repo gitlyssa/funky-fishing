@@ -10,6 +10,9 @@ using UnityEngine.UI;
 [RequireComponent(typeof(PauseManager))]
 public class PauseOptionsPanel : MonoBehaviour
 {
+    private const string OptionsFontResourcePath = "Fonts & Materials/LiberationSans SDF";
+    private static TMP_FontAsset s_optionsFontAsset;
+
     private enum OptionsTab
     {
         GeneralSettings,
@@ -1111,6 +1114,7 @@ public class PauseOptionsPanel : MonoBehaviour
 
         float maxW = size.x * Mathf.Clamp(panelMaxViewportPercent.x, 0.1f, 1f);
         float maxH = size.y * Mathf.Clamp(panelMaxViewportPercent.y, 0.1f, 1f);
+        _panelRoot.localScale = Vector3.one;
         _panelRoot.sizeDelta = new Vector2(Mathf.Min(panelSize.x, maxW), Mathf.Min(panelSize.y, maxH));
     }
 
@@ -1251,6 +1255,12 @@ public class PauseOptionsPanel : MonoBehaviour
         GameObject go = new GameObject(name, typeof(RectTransform), typeof(TextMeshProUGUI));
         go.transform.SetParent(parent, false);
         TextMeshProUGUI tmp = go.GetComponent<TextMeshProUGUI>();
+        if (s_optionsFontAsset == null)
+            s_optionsFontAsset = Resources.Load<TMP_FontAsset>(OptionsFontResourcePath);
+
+        if (s_optionsFontAsset != null)
+            tmp.font = s_optionsFontAsset;
+
         tmp.text = text;
         tmp.fontSize = size;
         tmp.fontStyle = style;
