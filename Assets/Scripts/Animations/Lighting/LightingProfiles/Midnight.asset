@@ -29,7 +29,7 @@ MonoBehaviour:
   localLightIntensity: 2
   localLightRange: 10
   localLightShadowStrength: 0.5
-  fireflyBPM: 60
+  fireflyBPM: 40
   fireflyMoveSpeed: 1.5
   fireflyMoveRange: 0.2
   volumeProfile: {fileID: 11400000, guid: 790eb669e3896154face29e13a30c8f0, type: 2}

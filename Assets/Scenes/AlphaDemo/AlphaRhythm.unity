@@ -13924,7 +13924,7 @@ MonoBehaviour:
   timingRingPrefab: {fileID: 4049253082992044910, guid: 867701417344e234cac41290000804e4, type: 3}
   ringThickness: 0.05
   perfectZoneColor: {r: 1, g: 0.85, b: 0, a: 0.4}
-  goodGuidelineColor: {r: 0.2, g: 1, b: 1, a: 1}
+  RingColour: {r: 0.745283, g: 1, b: 1, a: 1}
 --- !u!114 &1610214993
 MonoBehaviour:
   m_ObjectHideFlags: 0

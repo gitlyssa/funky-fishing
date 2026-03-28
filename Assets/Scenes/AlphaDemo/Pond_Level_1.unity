@@ -18241,7 +18241,7 @@ MonoBehaviour:
   volumeB: {fileID: 1442347459}
   effectVolume: {fileID: 621884616}
   isAutoCycling: 1
-  timeSpeed: 0.1
+  timeSpeed: 0.005
   dawn: {fileID: 11400000, guid: c583cf3dfe9c49846960174405d6e938, type: 2}
   day: {fileID: 11400000, guid: 6491e9f1fb51fe346a71b1d773982247, type: 2}
   sunset: {fileID: 11400000, guid: acfd5aed7c77adb47a9110deb5d43243, type: 2}
