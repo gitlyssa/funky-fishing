@@ -12,6 +12,9 @@ using UnityEngine.UI;
 [RequireComponent(typeof(PauseManager))]
 public class FishingPauseTuningPanel : MonoBehaviour
 {
+    private const string TuningFontResourcePath = "Fonts & Materials/LiberationSans SDF";
+    private static TMP_FontAsset s_tuningFontAsset;
+
     private enum TuningField
     {
         RequireBumperOrTriggerHold,
@@ -913,6 +916,12 @@ public class FishingPauseTuningPanel : MonoBehaviour
         GameObject go = new GameObject(name, typeof(RectTransform), typeof(TextMeshProUGUI));
         go.transform.SetParent(parent, false);
         TextMeshProUGUI tmp = go.GetComponent<TextMeshProUGUI>();
+        if (s_tuningFontAsset == null)
+            s_tuningFontAsset = Resources.Load<TMP_FontAsset>(TuningFontResourcePath);
+
+        if (s_tuningFontAsset != null)
+            tmp.font = s_tuningFontAsset;
+
         tmp.text = text;
         tmp.fontSize = size;
         tmp.fontStyle = style;
