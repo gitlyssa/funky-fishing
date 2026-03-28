@@ -75,7 +75,7 @@ public class RhythmConductor : MonoBehaviour
     public float ringThickness = 0.05f;
 
     public Color perfectZoneColor = new Color(1f, 0.85f, 0f, 0.4f); // Shaded Gold (with alpha!)
-    public Color goodGuidelineColor = new Color(0.2f, 1f, 1f, 1f);   // Bright Cyan
+    public Color RingColour = new Color(0.2f, 1f, 1f, 1f);   //bright white cyan
 
     void Start()
     {
@@ -569,10 +569,9 @@ public class RhythmConductor : MonoBehaviour
     {
         if (RhythmJudge.Instance == null) return;
 
-
-        SpawnStaticRing(hitRingRadius, Color.white, ringThickness * 0.5f, "Ring_AbsoluteCenter");
-
-        float pWindowSecs = RhythmJudge.Instance.PerfectWindow;
+    float ringSizeMult = 6f;
+    SpawnStaticRing(hitRingRadius + ringThickness * ringSizeMult/2, RingColour, ringThickness * ringSizeMult, "Ring_AbsoluteCenter");
+    float pWindowSecs = RhythmJudge.Instance.PerfectWindow;
     
     // t=0.0 at spawn, t=1.0 at target.
     float tStartPerf = 1f - (pWindowSecs / noteTravelTime); // Early Perfect
@@ -589,15 +588,6 @@ public class RhythmConductor : MonoBehaviour
 
     // Spawn the wide, shaded golden ring
     SpawnStaticRing(shadedCenterRadius, perfectZoneColor, shadedThickness, "Zone_Perfect_Shaded");
-
-    // Add a very thin border on the outside of the shaded zone for crispness
-    SpawnStaticRing(rStartPerf, new Color(1f, 0.9f, 0.5f, 0.8f), 0.02f, "Ring_Perfect_Border");
-
-        
-        // float goodTimeOffset = RhythmJudge.Instance.GoodWindow;
-        // float goodT = 1f - (goodTimeOffset / noteTravelTime);
-        // float goodRadius = Mathf.Lerp(spawnRadius, hitRingRadius, noteScaleCurve.Evaluate(goodT));
-        // SpawnStaticRing(goodRadius, goodGuidelineColor, ringThickness, "Ring_Good_Entry");
 
     }
 

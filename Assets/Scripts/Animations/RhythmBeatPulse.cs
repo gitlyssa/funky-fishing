@@ -4,15 +4,7 @@ using System;
 public class RhythmBeatPulse : MonoBehaviour
 {
     public static RhythmBeatPulse Instance;
-
-    [Header("BPM Settings")]
-    public float bpm = 120f;
-
-    public static event Action OnBeat;
-
-    private float _beatInterval;
-    private float _timer;
-    private bool _isBroadcasting;
+    public static event System.Action<float, int[]> OnBeat;
 
     void Awake()
     {
@@ -20,34 +12,9 @@ public class RhythmBeatPulse : MonoBehaviour
         else Destroy(gameObject);
     }
 
-    void Start()
+    public void TriggerBeat(float intensity, int[] groups)
     {
-        _beatInterval = 60f / bpm;
+        OnBeat?.Invoke(intensity, groups);
     }
 
-    void Update()
-    {
-        if (RhythmConductor.Instance == null || RhythmConductor.rhythmMusicPlayer == null) return;
-        
-        UpdateBeatTimer();
-    }
-
-    private void UpdateBeatTimer()
-    {
-        _timer += Time.deltaTime;
-
-        if (_timer >= _beatInterval)
-        {
-            _timer -= _beatInterval;
-            TriggerPulse();
-        }
-    }
-
-    private void TriggerPulse()
-    {
-        OnBeat?.Invoke();
-        // Debug.Log("<color=cyan>BEAT!</color>");
-    }
-
-    public void ResetTimer() => _timer = 0f;
 }

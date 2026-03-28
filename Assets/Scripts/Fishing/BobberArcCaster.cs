@@ -524,6 +524,11 @@ public class BobberArcCaster : MonoBehaviour
         SceneLoading.MigratedFish = null;
         if (SceneLoading.Instance != null)
             SceneLoading.Instance.EndRhythmEncounter();
+        if (VisualConductor.Instance != null)
+        {
+            VisualConductor.Instance.StopAndReset();
+            Debug.Log("Stopped Visual Conductor.zzzz");
+        }
 
         if (CurrentState != State.Idle &&
             CurrentState != State.Retracting &&

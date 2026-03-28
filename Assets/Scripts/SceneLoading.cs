@@ -31,6 +31,7 @@ public class SceneLoading : MonoBehaviour
     private readonly List<GameObject> rhythmRoots = new List<GameObject>();
     private GameObject scoringCircleObject;
     private bool hasLoggedMissingScoringCircle;
+    private bool isWheelAnimating = false;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetStatics()
@@ -161,6 +162,12 @@ public class SceneLoading : MonoBehaviour
             return;
         }
 
+        if (VisualConductor.Instance != null)
+        {
+            VisualConductor.Instance.StopAndReset();
+            Debug.Log("Stopped Visual Conductor.");
+        }
+
         if (isRhythmLoaded)
         {
             StartCoroutine(UnloadRhythm());
@@ -171,8 +178,67 @@ public class SceneLoading : MonoBehaviour
     {
         if (!TryResolveScoringCircle(out GameObject scoringCircle))
             return;
+        TryResolveRhythmCameraRoot(out GameObject cameraRoot);
 
-        scoringCircle.SetActive(false);
+        StartCoroutine(JellyShrinkRoutine(scoringCircle, cameraRoot, 1f)); 
+    }
+
+    private IEnumerator JellyShrinkRoutine(GameObject target, GameObject cameraRoot, float duration)
+    {
+        float elapsed = 0f;
+        isWheelAnimating = true;
+        while (elapsed < duration)
+        {
+            target.SetActive(true);
+            cameraRoot?.SetActive(true);
+            elapsed += Time.deltaTime;
+            float t = elapsed / duration;
+            
+            float easeT = EaseInBack(t);
+            
+            float scale = Mathf.LerpUnclamped(1f, 0f, easeT);
+            
+            target.transform.localScale = new Vector3(scale, scale, scale);
+            
+            yield return null;
+        }
+        // SetRhythmOverlayVisible(false);
+        isWheelAnimating = false;
+        target.transform.localScale = Vector3.zero;
+        target.SetActive(false);
+        if (cameraRoot != null)
+        {
+            cameraRoot.SetActive(false);
+        }
+        
+    }
+
+    private bool TryResolveRhythmCameraRoot(out GameObject cameraRoot)
+    {
+        cameraRoot = null;
+        Scene rhythmScene = SceneManager.GetSceneByName(rhythmSceneName);
+        if (!rhythmScene.IsValid() || !rhythmScene.isLoaded) return false;
+
+        // Ensure we have our cached roots
+        if (rhythmRoots.Count == 0) CacheRhythmRoots(rhythmScene);
+
+        foreach (GameObject root in rhythmRoots)
+        {
+            if (root != null && root.GetComponentInChildren<Camera>(true) != null)
+            {
+                cameraRoot = root;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private float EaseInBack(float x)
+    {
+        float c1 = 1.70158f;
+        float c3 = c1 + 1f;
+        
+        return c3 * x * x * x - c1 * x * x;
     }
 
     private IEnumerator PreloadRhythmOverlay()
@@ -252,6 +318,11 @@ public class SceneLoading : MonoBehaviour
             MigratedFish = null;
         }
         
+        while (isWheelAnimating)
+        {
+            yield return null;
+        }
+        
         AsyncOperation op = UnityEngine.SceneManagement.SceneManager.UnloadSceneAsync(rhythmSceneName);
         if (op != null) yield return op;
 
@@ -268,8 +339,40 @@ public class SceneLoading : MonoBehaviour
         if (!TryResolveScoringCircle(out GameObject scoringCircle))
             return;
 
-        scoringCircle.SetActive(true);
+        StartCoroutine(JellyBounceRoutine(scoringCircle, 2f));
     }
+    private IEnumerator JellyBounceRoutine(GameObject target, float duration)
+    {
+        target.transform.localScale = Vector3.zero;
+        target.SetActive(true);
+
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / duration;
+            
+            float scale = EaseOutElastic(t);
+            target.transform.localScale = new Vector3(scale, scale, scale);
+            
+            yield return null;
+        }
+
+        target.transform.localScale = Vector3.one;
+    }
+
+
+    private float EaseOutElastic(float x)
+    {
+        float c4 = (2f * Mathf.PI) / 3f;
+
+        if (x == 0f) return 0f;
+        if (x == 1f) return 1f;
+        
+        return Mathf.Pow(2f, -10f * x) * Mathf.Sin((x * 10f - 0.75f) * c4) + 1f;
+    }
+
 
     private bool TryResolveScoringCircle(out GameObject scoringCircle)
     {
@@ -387,10 +490,27 @@ public class SceneLoading : MonoBehaviour
         {
             CacheRhythmRoots(rhythmScene);
         }
-
+        GameObject scoringCircle = null;
+        TryResolveScoringCircle(out scoringCircle);
         foreach (GameObject root in rhythmRoots)
         {
+            
             if (root == null) continue;
+
+            bool isScoringCircleRoot = scoringCircle != null && 
+                                      (root == scoringCircle || scoringCircle.transform.IsChildOf(root.transform));
+            
+
+            if (isScoringCircleRoot)
+            {
+
+                if (visible) 
+                {
+                    root.SetActive(true);
+                }
+                continue; 
+            }
+
             if (visible)
             {
                 bool defaultActive = true;
@@ -402,7 +522,6 @@ public class SceneLoading : MonoBehaviour
                 root.SetActive(false);
             }
         }
-
         isRhythmVisible = visible;
     }
 
@@ -478,6 +597,11 @@ public class SceneLoading : MonoBehaviour
         RhythmConductor conductor = FindObjectOfType<RhythmConductor>();
         if (conductor != null)
             conductor.SetBeatmapFile(rhythmProfile.beatmapFile);
+
+        if (VisualConductor.Instance != null)
+        {
+            VisualConductor.Instance.LoadVisualScript(rhythmProfile.visualScriptFile);
+        }
 
         RhythmMusicPlayer musicPlayer = FindObjectOfType<RhythmMusicPlayer>();
         if (musicPlayer != null)

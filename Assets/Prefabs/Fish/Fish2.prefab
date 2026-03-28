@@ -142,6 +142,7 @@ MonoBehaviour:
       Data4: 21482842
     Path: event:/Music/Fish2
   beatmapFile: {fileID: 4900000, guid: 351f536584ebbbf479bc5fa7e44736bc, type: 3}
+  visualScriptFile: {fileID: 4900000, guid: 96b45abb788433e4d82048f87368bb6c, type: 3}
 --- !u!1001 &4692308055997896240
 PrefabInstance:
   m_ObjectHideFlags: 0

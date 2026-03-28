@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a52a96cc05b5afa418ae8dd80da24c51, type: 3}
+  m_Name: Void
+  m_EditorClassIdentifier: Assembly-CSharp::LightingProfile
+  ambientEnabled: 1
+  ambientColor: {r: 0, g: 0, b: 0, a: 1}
+  ambientIntensity: 0
+  fogEnabled: 1
+  fogColor: {r: 0.02641511, g: 0.02641511, b: 0.02641511, a: 1}
+  fogDensity: 0.06
+  skyboxMaterial: {fileID: 2100000, guid: 369b9ebe3a62b904dbc19bd332b44086, type: 2}
+  skyboxExposure: 0
+  skyboxTint: {r: 1, g: 1, b: 1, a: 0}
+  directionalLightColor: {r: 0, g: 0, b: 0, a: 1}
+  directionalLightIntensity: 0
+  directionalLightDirection: {x: 15, y: -30, z: 0}
+  directionalLightShadowStrength: 1
+  localLightColor: {r: 1, g: 1, b: 1, a: 1}
+  localLightIntensity: 0.5
+  localLightRange: 10
+  localLightShadowStrength: 0
+  fireflyBPM: 60
+  fireflyMoveSpeed: 1.5
+  fireflyMoveRange: 0.2
+  volumeProfile: {fileID: 11400000, guid: 0296b5493194a134f8c74d0c7d804962, type: 2}

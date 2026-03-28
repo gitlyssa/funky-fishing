@@ -3,35 +3,40 @@ using UnityEngine;
 public class ObjectPulseResponder : MonoBehaviour
 {
     [Header("Pulse Settings")]
-    public float pulseScaleAmount = 1.1f;
-    public float returnSpeed = 5f;
-    
-    [Header("Visual")]
-    public bool useIntensityMultiplier = true;
-
+    public int groupID; // Assign this in Inspector (e.g., 1 for Ring, 2 for Water)
+    public float pulseScaleAmount = 1.2f;
+    public float returnSpeed = 10f;
     private Vector3 _originalScale;
-    private Vector3 _targetScale;
 
     void Start()
     {
         _originalScale = transform.localScale;
-        _targetScale = _originalScale;
     }
 
-    void OnEnable() => RhythmBeatPulse.OnBeat += Pulse;
-    void OnDisable() => RhythmBeatPulse.OnBeat -= Pulse;
+    private void OnEnable() => RhythmBeatPulse.OnBeat += HandlePulse;
+    private void OnDisable() => RhythmBeatPulse.OnBeat -= HandlePulse;
 
-    private void Pulse()
+    private void HandlePulse(float intensity, int[] groups)
     {
-        float multiplier = 1f;
-        
-        // if (ScoreManager.Instance != null && ScoreManager.Instance.combo > 20) multiplier = 1.5f;
+        // If groups is empty, pulse everyone. Otherwise, check for ID.
+        bool shouldPulse = groups == null || groups.Length == 0;
+        if (!shouldPulse)
+        {
+            foreach (int id in groups) { if (id == groupID) { shouldPulse = true; break; } }
+        }
 
-        transform.localScale = _originalScale * (pulseScaleAmount * multiplier);
+        if (shouldPulse) transform.localScale = _originalScale * (1f + (pulseScaleAmount - 1f) * intensity);
     }
 
     void Update()
     {
-        transform.localScale = Vector3.Lerp(transform.localScale, _originalScale, Time.deltaTime * returnSpeed);
+        if (transform.localScale != _originalScale)
+        {
+            transform.localScale = Vector3.Lerp(
+                transform.localScale, 
+                _originalScale, 
+                Time.deltaTime * returnSpeed
+            );
+        }
     }
 }

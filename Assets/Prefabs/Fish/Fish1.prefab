@@ -142,6 +142,7 @@ MonoBehaviour:
       Data4: -1468407509
     Path: event:/Music/TestMusic
   beatmapFile: {fileID: 4900000, guid: e493b95c1f67d084199d9055aeb3400d, type: 3}
+  visualScriptFile: {fileID: 4900000, guid: ec58a813f3e511b4c84e073c7d09fd95, type: 3}
 --- !u!1001 &4692308055997896240
 PrefabInstance:
   m_ObjectHideFlags: 0
