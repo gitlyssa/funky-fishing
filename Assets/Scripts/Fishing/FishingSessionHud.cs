@@ -41,10 +41,10 @@ public class FishingSessionHud : MonoBehaviour
     [SerializeField] private string pondLevelSceneName = "Pond_Level_1";
     [SerializeField] private bool hideInTutorialLevel = true;
     [SerializeField] private string tutorialSceneName = "Tutorial_Level";
-    [SerializeField] private Vector2 panelSize = new Vector2(430f, 220f);
+    [SerializeField] private Vector2 panelSize = new Vector2(575f, 154f);
     [SerializeField] private Vector2 panelOffset = new Vector2(-24f, -24f);
-    [SerializeField] private int fontSize = 28;
-    [SerializeField] private Color panelColor = new Color(0f, 0f, 0f, 0.55f);
+    [SerializeField] private int fontSize = 45;
+    [SerializeField] private Color panelColor = new Color(0f, 0f, 0f, 0f);
     [SerializeField] private Color textColor = Color.white;
 
     private Canvas canvas;
@@ -223,10 +223,9 @@ public class FishingSessionHud : MonoBehaviour
         string lastResult = lastCatchSucceeded ? "Caught" : "Escaped";
 
         hudText.text =
-            "Fishing Session\n" +
-            $"Session Score: {sessionTotalScore}\n" +
-            $"Highest Catch: {sessionHighScore} pts\n" +
-            $"Last Attempt: {lastCatchScore} pts [{lastResult}]";
+            $"<size=55>Session Score: {sessionTotalScore}</size>\n" +
+            $"<size=31>Highest Catch: {sessionHighScore} pts</size>\n" +
+            $"<size=31>Last Attempt: {lastCatchScore} pts [{lastResult}]</size>";
     }
 
     public void SetHudEnabled(bool enabled)
@@ -356,10 +355,15 @@ public class FishingSessionHud : MonoBehaviour
         if (TMP_Settings.defaultFontAsset != null)
             hudText.font = TMP_Settings.defaultFontAsset;
 
+        hudText.enableAutoSizing = true;
+        hudText.fontSizeMin = Mathf.Max(24, fontSize - 12);
+        hudText.fontSizeMax = fontSize;
         hudText.fontSize = fontSize;
         hudText.color = textColor;
         hudText.alignment = TextAlignmentOptions.TopRight;
         hudText.textWrappingMode = TextWrappingModes.Normal;
+        hudText.overflowMode = TextOverflowModes.Overflow;
+        hudText.lineSpacing = -8f;
         hudText.raycastTarget = false;
     }
 

@@ -19,7 +19,7 @@ public class RhythmPerformanceHud : MonoBehaviour
 
     [Header("Judgement Text")]
     [SerializeField] private Vector2 judgementAnchoredPosition = new Vector2(0f, -120f);
-    [SerializeField] private int judgementFontSize = 56;
+    [SerializeField] private int judgementFontSize = 70;
     [SerializeField] private Sprite perfectJudgementSprite;
     [SerializeField] private Vector2 perfectJudgementImageSize = new Vector2(520f, 130f);
     [SerializeField] private Vector2 perfectJudgementImageOffset = new Vector2(0f, -30f);
@@ -41,11 +41,11 @@ public class RhythmPerformanceHud : MonoBehaviour
     [Header("Combo Counter")]
     [SerializeField] private int comboShowThreshold = 2;
     [SerializeField] private Vector2 comboAnchoredPosition = new Vector2(0f, -200f);
-    [SerializeField] private int comboFontSize = 74;
+    [SerializeField] private int comboFontSize = 88;
     [SerializeField] private Color comboColor = new Color(0.35f, 0.95f, 0.45f, 1f);
     [SerializeField] private string comboSuffix = " COMBO";
-    [SerializeField] private float comboBaseScaleMin = 0.55f;
-    [SerializeField] private float comboBaseScaleMax = 1.38f;
+    [SerializeField] private float comboBaseScaleMin = 0.7f;
+    [SerializeField] private float comboBaseScaleMax = 1.6f;
     [SerializeField] private int comboGrowthMaxCombo = 18;
     [SerializeField] private float comboPulseReturnDuration = 0.14f;
     [SerializeField] private float comboPulseScale = 1.34f;
@@ -53,7 +53,7 @@ public class RhythmPerformanceHud : MonoBehaviour
 
     [Header("Detailed Text")]
     [SerializeField] private Vector2 detailAnchoredPosition = new Vector2(-28f, -28f);
-    [SerializeField] private int detailFontSize = 26;
+    [SerializeField] private int detailFontSize = 34;
 
     [Header("Timing Indicators")]
     [SerializeField] private Vector2 timingIndicatorSize = new Vector2(540f, 180f);
@@ -352,7 +352,7 @@ public class RhythmPerformanceHud : MonoBehaviour
             new Vector2(1f, 1f),
             new Vector2(1f, 1f),
             detailAnchoredPosition,
-            new Vector2(450f, 320f),
+            new Vector2(620f, 420f),
             detailFontSize,
             TextAlignmentOptions.TopRight,
             string.Empty);
@@ -1312,11 +1312,11 @@ public class RhythmPerformanceHud : MonoBehaviour
         float accuracy = totalJudged > 0
             ? ((_perfectCount * 1f) + (_goodCount * 0.7f)) / totalJudged * 100f
             : 0f;
+        int scoreFontSize = detailFontSize * 2;
 
         _detailText.text =
-            $"Score: {_score}\n" +
+            $"<size={scoreFontSize}>Score: {_score}</size>\n" +
             $"Combo: {_combo}\n" +
-            $"Max Combo: {_maxCombo}\n" +
             $"Perfect: {_perfectCount}\n" +
             $"Good: {_goodCount}\n" +
             $"Miss: {_missCount}\n" +

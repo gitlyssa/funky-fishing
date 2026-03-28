@@ -108,7 +108,7 @@ public class RhythmTutorialCoach : MonoBehaviour
     [SerializeField] private int fontSize = 40;
     [SerializeField] private int minFontSize = 24;
     [SerializeField] private Vector2 progressOffset = new Vector2(-24f, -24f);
-    [SerializeField] private int progressFontSize = 30;
+    [SerializeField] private int progressFontSize = 60;
 
     [Header("Direction Tutorial Images")]
     [SerializeField] private Vector2 directionTutorialImageMaxSize = new Vector2(560f, 460f);
@@ -807,7 +807,7 @@ public class RhythmTutorialCoach : MonoBehaviour
         progressRect.anchorMax = new Vector2(1f, 1f);
         progressRect.pivot = new Vector2(1f, 1f);
         progressRect.anchoredPosition = progressOffset;
-        progressRect.sizeDelta = new Vector2(500f, 90f);
+        progressRect.sizeDelta = new Vector2(900f, 160f);
 
         progressText = progressGo.GetComponent<TextMeshProUGUI>();
         if (TMP_Settings.defaultFontAsset != null)

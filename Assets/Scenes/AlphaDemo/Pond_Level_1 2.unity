@@ -4184,10 +4184,10 @@ MonoBehaviour:
   hideDuringRhythmMode: 1
   hideWhenPausedInPondLevel1: 1
   pondLevelSceneName: Pond_Level_1
-  panelSize: {x: 340, y: 320}
+  panelSize: {x: 575, y: 154}
   panelOffset: {x: -24, y: -24}
-  fontSize: 24
-  panelColor: {r: 0, g: 0, b: 0, a: 0.55}
+  fontSize: 45
+  panelColor: {r: 0, g: 0, b: 0, a: 0}
   textColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!4 &1015900472
 Transform:
