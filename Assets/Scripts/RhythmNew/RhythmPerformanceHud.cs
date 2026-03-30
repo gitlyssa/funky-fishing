@@ -132,7 +132,7 @@ public class RhythmPerformanceHud : MonoBehaviour
     [SerializeField] private Color multiplierColor = new Color(1f, 0.8f, 0.2f); // Golden/Orange
     [SerializeField] private string multiplierFormat = "{0:F1}x"; // Displays as 1.1x, 1.2x etc.
     [SerializeField, Min(1f)] private float maxReelMultiplier = 5f;
-    [SerializeField, Range(0.05f, 2f)] private float reelProgressForMaxMultiplier = 0.9f;
+    [SerializeField, Range(0.05f, 2f)] private float reelProgressForMaxMultiplier = 1f;
     [SerializeField, Min(0.1f)] private float reelInputSecondsForMaxMultiplier = 3f;
     [SerializeField, Min(0f)] private float reelMotionThreshold = 90f;
     [SerializeField, Min(0.1f)] private float reelMultiplierGrowthExponent = 1.35f;
