@@ -106,7 +106,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: ab3ef57f42bd3ff4fbd7f84da5294381, type: 3}
       propertyPath: m_Name
-      value: BassBass3
+      value: Bass Bass
       objectReference: {fileID: 0}
     - target: {fileID: 3677871804177914180, guid: ab3ef57f42bd3ff4fbd7f84da5294381, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
@@ -241,10 +241,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RhythmProfile
   musicEvent:
     Guid:
-      Data1: -1233211620
-      Data2: 1195024357
-      Data3: -255170375
-      Data4: -1468407509
-    Path: event:/Music/TestMusic
-  beatmapFile: {fileID: 4900000, guid: 25b757f6b3492014a97aa410cb828ed1, type: 3}
+      Data1: 975855441
+      Data2: 1245270139
+      Data3: 1382679210
+      Data4: 484455495
+    Path: event:/Music/JeremieMusic2
+  beatmapFile: {fileID: 4900000, guid: c66b28d8c65a45644847bfd43de417d8, type: 3}
   visualScriptFile: {fileID: 0}

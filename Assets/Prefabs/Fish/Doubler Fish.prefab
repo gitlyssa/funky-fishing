@@ -136,12 +136,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RhythmProfile
   musicEvent:
     Guid:
-      Data1: -1233211620
-      Data2: 1195024357
-      Data3: -255170375
-      Data4: -1468407509
-    Path: event:/Music/TestMusic
-  beatmapFile: {fileID: 4900000, guid: e493b95c1f67d084199d9055aeb3400d, type: 3}
+      Data1: 958105527
+      Data2: 1235333334
+      Data3: -705264733
+      Data4: -964123362
+    Path: event:/Music/JeremieMusic1
+  beatmapFile: {fileID: 4900000, guid: 0e33ec2e1b2ca8f419fa54502a377da8, type: 3}
   visualScriptFile: {fileID: 4900000, guid: ec58a813f3e511b4c84e073c7d09fd95, type: 3}
 --- !u!1001 &4692308055997896240
 PrefabInstance:
@@ -151,26 +151,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5253308993648966133}
     m_Modifications:
-    - target: {fileID: -5477749408508380018, guid: 2e3bcc850b91d7343bc88565ce863a52, type: 3}
-      propertyPath: m_LocalScale.x
-      value: 40
-      objectReference: {fileID: 0}
-    - target: {fileID: -5477749408508380018, guid: 2e3bcc850b91d7343bc88565ce863a52, type: 3}
-      propertyPath: m_LocalScale.y
-      value: 40
-      objectReference: {fileID: 0}
-    - target: {fileID: -5477749408508380018, guid: 2e3bcc850b91d7343bc88565ce863a52, type: 3}
-      propertyPath: m_LocalScale.z
-      value: 40
-      objectReference: {fileID: 0}
-    - target: {fileID: -5477749408508380018, guid: 2e3bcc850b91d7343bc88565ce863a52, type: 3}
-      propertyPath: m_ConstrainProportionsScale
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: -4683669308469848369, guid: 2e3bcc850b91d7343bc88565ce863a52, type: 3}
-      propertyPath: 'm_Materials.Array.data[0]'
-      value: 
-      objectReference: {fileID: 2100000, guid: 97a50b17389dc2f46b79637859ae6c23, type: 2}
     - target: {fileID: -8679921383154817045, guid: 2dbaa6705f25db845ba409e092e5fdcd, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.78
@@ -243,6 +223,26 @@ PrefabInstance:
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: 194f1b5a6fe93f54282f543b6bbfeb3c, type: 2}
+    - target: {fileID: -5477749408508380018, guid: 2e3bcc850b91d7343bc88565ce863a52, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 40
+      objectReference: {fileID: 0}
+    - target: {fileID: -5477749408508380018, guid: 2e3bcc850b91d7343bc88565ce863a52, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 40
+      objectReference: {fileID: 0}
+    - target: {fileID: -5477749408508380018, guid: 2e3bcc850b91d7343bc88565ce863a52, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 40
+      objectReference: {fileID: 0}
+    - target: {fileID: -5477749408508380018, guid: 2e3bcc850b91d7343bc88565ce863a52, type: 3}
+      propertyPath: m_ConstrainProportionsScale
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -4683669308469848369, guid: 2e3bcc850b91d7343bc88565ce863a52, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 97a50b17389dc2f46b79637859ae6c23, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects:
     - {fileID: 65702495048144492, guid: 2dbaa6705f25db845ba409e092e5fdcd, type: 3}
