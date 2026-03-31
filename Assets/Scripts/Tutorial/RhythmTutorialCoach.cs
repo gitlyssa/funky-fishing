@@ -1143,7 +1143,10 @@ public class RhythmTutorialCoach : MonoBehaviour
             canvasObject.transform,
             useXBoxTutorialUi ? FindTutorialUiAny(canvasObject.transform, "SequenceTutorialXbox", "SequenceTutorialXBox") : FindTutorialUi(canvasObject.transform, "SequenceTutorial"),
             "SequenceTutorial");
-        reelTutorialUi = FindTutorialUi(canvasObject.transform, "ReelTutorial");
+        reelTutorialUi = FindTutorialUiWithFallback(
+            canvasObject.transform,
+            useXBoxTutorialUi ? FindTutorialUiAny(canvasObject.transform, "ReelTutorialXbox", "ReelTutorialXBox") : FindTutorialUi(canvasObject.transform, "ReelTutorial"),
+            "ReelTutorial");
         endTutorialUi = FindTutorialUi(canvasObject.transform, "EndTutorial");
 
         HideAllSceneTutorialUi();
