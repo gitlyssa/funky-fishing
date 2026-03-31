@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!114 &-7736516469385645638
+--- !u!114 &-7696996745162926075
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -10,41 +10,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
-  m_Name: event:/Sfx/ui1
+  m_Name: event:/Music/JeremieMusic2
   m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
-  Path: event:/Sfx/ui1
+  Path: event:/Music/JeremieMusic2
   Guid:
-    Data1: -1104803391
-    Data2: 1309476805
-    Data3: 1467559865
-    Data4: 318537816
-  Banks:
-  - {fileID: -2648038191006552393}
-  IsStream: 0
-  Is3D: 0
-  IsOneShot: 1
-  Parameters: []
-  MinDistance: 1
-  MaxDistance: 20
-  Length: 943
---- !u!114 &-7220261677402820425
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
-  m_Name: event:/Music/JeremieMusic1
-  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
-  Path: event:/Music/JeremieMusic1
-  Guid:
-    Data1: 958105527
-    Data2: 1235333334
-    Data3: -705264733
-    Data4: -964123362
+    Data1: 975855441
+    Data2: 1245270139
+    Data3: 1382679210
+    Data4: 484455495
   Banks:
   - {fileID: -2648038191006552393}
   IsStream: 1
@@ -53,7 +26,7 @@ MonoBehaviour:
   Parameters: []
   MinDistance: 1
   MaxDistance: 20
-  Length: 21535
+  Length: 28500
 --- !u!114 &-5875265738577587281
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -81,7 +54,7 @@ MonoBehaviour:
   MinDistance: 1
   MaxDistance: 20
   Length: 0
---- !u!114 &-3363737237843273750
+--- !u!114 &-4771236543678753329
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -91,14 +64,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
-  m_Name: event:/Sfx/okay
+  m_Name: event:/Sfx/ui1
   m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
-  Path: event:/Sfx/okay
+  Path: event:/Sfx/ui1
   Guid:
-    Data1: 753235439
-    Data2: 1318754189
-    Data3: 242464441
-    Data4: 863583179
+    Data1: -1104803391
+    Data2: 1309476805
+    Data3: 1467559865
+    Data4: 318537816
   Banks:
   - {fileID: -2648038191006552393}
   IsStream: 0
@@ -107,46 +80,8 @@ MonoBehaviour:
   Parameters: []
   MinDistance: 1
   MaxDistance: 20
-  Length: 0
---- !u!114 &-3217896682293650524
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c18180ecb35941f4682ae60107b85b7c, type: 3}
-  m_Name: bank:/Master.strings.bank
-  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorBankRef
-  Path: Assets/FMOD/Desktop/Master.strings.bank
-  Name: Master.strings
-  StudioPath: bank:/Master.strings
-  lastModified: 639105120824501833
-  FileSizes:
-  - Name: 
-    Value: 1324
-  Exists: 1
---- !u!114 &-2648038191006552393
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c18180ecb35941f4682ae60107b85b7c, type: 3}
-  m_Name: bank:/Master.bank
-  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorBankRef
-  Path: Assets/FMOD/Desktop/Master.bank
-  Name: Master
-  StudioPath: bank:/Master
-  lastModified: 639105120824369814
-  FileSizes: []
-  Exists: 1
---- !u!114 &-2567683884387202836
+  Length: 943
+--- !u!114 &-3500653836722971908
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -156,161 +91,16 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
-  m_Name: event:/Music/TutorialMus
+  m_Name: "event:/Music/Cytus II - Heat Ring \u25BA HQ Vers. \u25BA Bass House -
+    James Landino (128k)"
   m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
-  Path: event:/Music/TutorialMus
+  Path: "event:/Music/Cytus II - Heat Ring \u25BA HQ Vers. \u25BA Bass House - James
+    Landino (128k)"
   Guid:
-    Data1: -1955223079
-    Data2: 1075447096
-    Data3: 806467002
-    Data4: -1794960074
-  Banks:
-  - {fileID: -2648038191006552393}
-  IsStream: 1
-  Is3D: 0
-  IsOneShot: 0
-  Parameters: []
-  MinDistance: 1
-  MaxDistance: 20
-  Length: 21818
---- !u!114 &-1338222309852876353
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
-  m_Name: event:/Sfx/reel
-  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
-  Path: event:/Sfx/reel
-  Guid:
-    Data1: -571558819
-    Data2: 1166440785
-    Data3: -44763713
-    Data4: 841467529
-  Banks:
-  - {fileID: -2648038191006552393}
-  IsStream: 0
-  Is3D: 0
-  IsOneShot: 0
-  Parameters: []
-  MinDistance: 1
-  MaxDistance: 20
-  Length: 407
---- !u!114 &-235916971953375120
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
-  m_Name: event:/Sfx/castPH
-  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
-  Path: event:/Sfx/castPH
-  Guid:
-    Data1: -1942076462
-    Data2: 1236770450
-    Data3: -772889160
-    Data4: -1463770133
-  Banks:
-  - {fileID: -2648038191006552393}
-  IsStream: 0
-  Is3D: 0
-  IsOneShot: 1
-  Parameters: []
-  MinDistance: 1
-  MaxDistance: 20
-  Length: 3071
---- !u!114 &11400000
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d32cf7c32a3ed8347bac48ef5ed56d82, type: 3}
-  m_Name: FMODStudioCache
-  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EventCache
-  EditorBanks:
-  - {fileID: -3217896682293650524}
-  - {fileID: -2648038191006552393}
-  EditorEvents:
-  - {fileID: 6326786675623408233}
-  - {fileID: 5354982183835215609}
-  - {fileID: -2567683884387202836}
-  - {fileID: 761730912841408774}
-  - {fileID: 5513842823759619455}
-  - {fileID: 5655505095911503587}
-  - {fileID: 6166468259007007593}
-  - {fileID: -235916971953375120}
-  - {fileID: -3363737237843273750}
-  - {fileID: 612667523792534380}
-  - {fileID: -1338222309852876353}
-  - {fileID: -7736516469385645638}
-  - {fileID: 6622591643614089894}
-  - {fileID: -7220261677402820425}
-  EditorParameters: []
-  MasterBanks:
-  - {fileID: -2648038191006552393}
-  StringsBanks:
-  - {fileID: -3217896682293650524}
-  cacheVersion: 131858
-  cacheTime: 639105120824501833
-  SerializableEventsDict:
-  - key: event:/Music/TestMusic
-    index: 0
-  - key: event:/Sfx/tension
-    index: 1
-  - key: event:/Music/TutorialMus
-    index: 2
-  - key: event:/Sfx/success
-    index: 3
-  - key: event:/Sfx/bite
-    index: 4
-  - key: event:/Sfx/miss
-    index: 5
-  - key: event:/Ambience/amb
-    index: 6
-  - key: event:/Sfx/castPH
-    index: 7
-  - key: event:/Sfx/okay
-    index: 8
-  - key: event:/Music/Fish2
-    index: 9
-  - key: event:/Sfx/reel
-    index: 10
-  - key: event:/Sfx/ui1
-    index: 11
-  - key: event:/Music/JeremieMusic2
-    index: 12
-  - key: event:/Music/JeremieMusic1
-    index: 13
---- !u!114 &612667523792534380
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
-  m_Name: event:/Music/Fish2
-  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
-  Path: event:/Music/Fish2
-  Guid:
-    Data1: 1815795368
-    Data2: 1074115134
-    Data3: -1093406294
-    Data4: 21482842
+    Data1: -430895222
+    Data2: 1254677626
+    Data3: -1412067410
+    Data4: -2072876835
   Banks:
   - {fileID: -2648038191006552393}
   IsStream: 1
@@ -319,116 +109,8 @@ MonoBehaviour:
   Parameters: []
   MinDistance: 1
   MaxDistance: 20
-  Length: 21495
---- !u!114 &761730912841408774
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
-  m_Name: event:/Sfx/success
-  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
-  Path: event:/Sfx/success
-  Guid:
-    Data1: 2007313463
-    Data2: 1189434961
-    Data3: 1175329411
-    Data4: 1377301339
-  Banks:
-  - {fileID: -2648038191006552393}
-  IsStream: 0
-  Is3D: 0
-  IsOneShot: 1
-  Parameters: []
-  MinDistance: 1
-  MaxDistance: 20
-  Length: 0
---- !u!114 &5354982183835215609
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
-  m_Name: event:/Sfx/tension
-  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
-  Path: event:/Sfx/tension
-  Guid:
-    Data1: 1543134618
-    Data2: 1326211156
-    Data3: 1569104060
-    Data4: -1769358581
-  Banks:
-  - {fileID: -2648038191006552393}
-  IsStream: 0
-  Is3D: 0
-  IsOneShot: 1
-  Parameters: []
-  MinDistance: 1
-  MaxDistance: 20
-  Length: 0
---- !u!114 &5513842823759619455
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
-  m_Name: event:/Sfx/bite
-  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
-  Path: event:/Sfx/bite
-  Guid:
-    Data1: 751144783
-    Data2: 1099665842
-    Data3: -1843624020
-    Data4: 2130581998
-  Banks:
-  - {fileID: -2648038191006552393}
-  IsStream: 0
-  Is3D: 0
-  IsOneShot: 1
-  Parameters: []
-  MinDistance: 1
-  MaxDistance: 20
-  Length: 0
---- !u!114 &5655505095911503587
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
-  m_Name: event:/Sfx/miss
-  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
-  Path: event:/Sfx/miss
-  Guid:
-    Data1: 1629115506
-    Data2: 1198902021
-    Data3: 466684056
-    Data4: -1135614962
-  Banks:
-  - {fileID: -2648038191006552393}
-  IsStream: 0
-  Is3D: 0
-  IsOneShot: 1
-  Parameters: []
-  MinDistance: 1
-  MaxDistance: 20
-  Length: 0
---- !u!114 &6166468259007007593
+  Length: 70000
+--- !u!114 &-3399724517478156417
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -455,7 +137,126 @@ MonoBehaviour:
   MinDistance: 1
   MaxDistance: 20
   Length: 38895
---- !u!114 &6326786675623408233
+--- !u!114 &-3217896682293650524
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c18180ecb35941f4682ae60107b85b7c, type: 3}
+  m_Name: bank:/Master.strings.bank
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorBankRef
+  Path: Assets/FMOD/Desktop/Master.strings.bank
+  Name: Master.strings
+  StudioPath: bank:/Master.strings
+  lastModified: 639105295699780640
+  FileSizes:
+  - Name: 
+    Value: 1426
+  Exists: 1
+--- !u!114 &-2648038191006552393
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c18180ecb35941f4682ae60107b85b7c, type: 3}
+  m_Name: bank:/Master.bank
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorBankRef
+  Path: Assets/FMOD/Desktop/Master.bank
+  Name: Master
+  StudioPath: bank:/Master
+  lastModified: 639105295699750617
+  FileSizes: []
+  Exists: 1
+--- !u!114 &-1559524371711356248
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Music/TutorialMus
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Music/TutorialMus
+  Guid:
+    Data1: -1955223079
+    Data2: 1075447096
+    Data3: 806467002
+    Data4: -1794960074
+  Banks:
+  - {fileID: -2648038191006552393}
+  IsStream: 1
+  Is3D: 0
+  IsOneShot: 0
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 21818
+--- !u!114 &-1402763364542984580
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Sfx/okay
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Sfx/okay
+  Guid:
+    Data1: 753235439
+    Data2: 1318754189
+    Data3: 242464441
+    Data4: 863583179
+  Banks:
+  - {fileID: -2648038191006552393}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 0
+--- !u!114 &-1165777483152552092
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Sfx/bite
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Sfx/bite
+  Guid:
+    Data1: 751144783
+    Data2: 1099665842
+    Data3: -1843624020
+    Data4: 2130581998
+  Banks:
+  - {fileID: -2648038191006552393}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 0
+--- !u!114 &-1105637755356387929
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -482,7 +283,77 @@ MonoBehaviour:
   MinDistance: 1
   MaxDistance: 20
   Length: 27260
---- !u!114 &6622591643614089894
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d32cf7c32a3ed8347bac48ef5ed56d82, type: 3}
+  m_Name: FMODStudioCache
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EventCache
+  EditorBanks:
+  - {fileID: -3217896682293650524}
+  - {fileID: -2648038191006552393}
+  EditorEvents:
+  - {fileID: -1105637755356387929}
+  - {fileID: 6099597966864047552}
+  - {fileID: -1165777483152552092}
+  - {fileID: -7696996745162926075}
+  - {fileID: 6290602288170587619}
+  - {fileID: 3606585869158469943}
+  - {fileID: -3500653836722971908}
+  - {fileID: 2856611159224221794}
+  - {fileID: 8829460402076662744}
+  - {fileID: -3399724517478156417}
+  - {fileID: 6025560556261457905}
+  - {fileID: -4771236543678753329}
+  - {fileID: 3118465523613287257}
+  - {fileID: -1559524371711356248}
+  - {fileID: -1402763364542984580}
+  EditorParameters: []
+  MasterBanks:
+  - {fileID: -2648038191006552393}
+  StringsBanks:
+  - {fileID: -3217896682293650524}
+  cacheVersion: 131858
+  cacheTime: 639105295699780640
+  SerializableEventsDict:
+  - key: event:/Music/TestMusic
+    index: 0
+  - key: event:/Sfx/success
+    index: 1
+  - key: event:/Sfx/bite
+    index: 2
+  - key: event:/Music/JeremieMusic2
+    index: 3
+  - key: event:/Sfx/reel
+    index: 4
+  - key: event:/Sfx/miss
+    index: 5
+  - key: "event:/Music/Cytus II - Heat Ring \u25BA HQ Vers. \u25BA Bass House - James
+      Landino (128k)"
+    index: 6
+  - key: event:/Sfx/tension
+    index: 7
+  - key: event:/Music/Fish2
+    index: 8
+  - key: event:/Ambience/amb
+    index: 9
+  - key: event:/Music/JeremieMusic1
+    index: 10
+  - key: event:/Sfx/ui1
+    index: 11
+  - key: event:/Sfx/castPH
+    index: 12
+  - key: event:/Music/TutorialMus
+    index: 13
+  - key: event:/Sfx/okay
+    index: 14
+--- !u!114 &2856611159224221794
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -492,14 +363,95 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
-  m_Name: event:/Music/JeremieMusic2
+  m_Name: event:/Sfx/tension
   m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
-  Path: event:/Music/JeremieMusic2
+  Path: event:/Sfx/tension
   Guid:
-    Data1: 975855441
-    Data2: 1245270139
-    Data3: 1382679210
-    Data4: 484455495
+    Data1: 1543134618
+    Data2: 1326211156
+    Data3: 1569104060
+    Data4: -1769358581
+  Banks:
+  - {fileID: -2648038191006552393}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 0
+--- !u!114 &3118465523613287257
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Sfx/castPH
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Sfx/castPH
+  Guid:
+    Data1: -1942076462
+    Data2: 1236770450
+    Data3: -772889160
+    Data4: -1463770133
+  Banks:
+  - {fileID: -2648038191006552393}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 3071
+--- !u!114 &3606585869158469943
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Sfx/miss
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Sfx/miss
+  Guid:
+    Data1: 1629115506
+    Data2: 1198902021
+    Data3: 466684056
+    Data4: -1135614962
+  Banks:
+  - {fileID: -2648038191006552393}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 0
+--- !u!114 &6025560556261457905
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Music/JeremieMusic1
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Music/JeremieMusic1
+  Guid:
+    Data1: 958105527
+    Data2: 1235333334
+    Data3: -705264733
+    Data4: -964123362
   Banks:
   - {fileID: -2648038191006552393}
   IsStream: 1
@@ -508,4 +460,85 @@ MonoBehaviour:
   Parameters: []
   MinDistance: 1
   MaxDistance: 20
-  Length: 28233
+  Length: 21535
+--- !u!114 &6099597966864047552
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Sfx/success
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Sfx/success
+  Guid:
+    Data1: 2007313463
+    Data2: 1189434961
+    Data3: 1175329411
+    Data4: 1377301339
+  Banks:
+  - {fileID: -2648038191006552393}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 0
+--- !u!114 &6290602288170587619
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Sfx/reel
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Sfx/reel
+  Guid:
+    Data1: -571558819
+    Data2: 1166440785
+    Data3: -44763713
+    Data4: 841467529
+  Banks:
+  - {fileID: -2648038191006552393}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 0
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 407
+--- !u!114 &8829460402076662744
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Music/Fish2
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Music/Fish2
+  Guid:
+    Data1: 1815795368
+    Data2: 1074115134
+    Data3: -1093406294
+    Data4: 21482842
+  Banks:
+  - {fileID: -2648038191006552393}
+  IsStream: 1
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 21495
