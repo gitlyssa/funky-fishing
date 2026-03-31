@@ -1,0 +1,21 @@
+BPM: 100
+Timestamp,Command,Params
+0,Profile,Sunset 2
+3.75,Glitch,0.3 0.3
+3.75,FireflyPulse,5 0.5
+4.95,Glitch,0.3 0.3
+4.95,FireflyPulse,5 0.5
+8.583958333333333,Glitch,0.3 0.3
+8.583958333333333,FireflyPulse,5 0.5
+9.783958333333333,Glitch,0.3 0.3
+9.783958333333333,FireflyPulse,5 0.5
+13.383958333333334,Glitch,0.3 0.3
+13.383958333333334,FireflyPulse,5 0.5
+14.583958333333333,Glitch,0.3 0.3
+14.583958333333333,FireflyPulse,5 0.5
+18.183958333333333,Glitch,0.3 0.3
+18.183958333333333,FireflyPulse,5 0.5
+19,Profile,Tropical 10
+19.383958333333332,Glitch,0.3 0.3
+19.383958333333332,FireflyPulse,5 0.5
+28,Profile,Sunset 1

@@ -142,7 +142,7 @@ MonoBehaviour:
       Data4: -964123362
     Path: event:/Music/JeremieMusic1
   beatmapFile: {fileID: 4900000, guid: 0e33ec2e1b2ca8f419fa54502a377da8, type: 3}
-  visualScriptFile: {fileID: 4900000, guid: ec58a813f3e511b4c84e073c7d09fd95, type: 3}
+  visualScriptFile: {fileID: 4900000, guid: edb9d3f5eac439843996a7761af013ae, type: 3}
 --- !u!1001 &4692308055997896240
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -151,6 +151,34 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5253308993648966133}
     m_Modifications:
+    - target: {fileID: -3658592028782763165, guid: dfa5375f407c0ba4a8a0673df0fdba0b, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 302.92563
+      objectReference: {fileID: 0}
+    - target: {fileID: 3677871804177914180, guid: dfa5375f407c0ba4a8a0673df0fdba0b, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 194f1b5a6fe93f54282f543b6bbfeb3c, type: 2}
+    - target: {fileID: -5477749408508380018, guid: 2e3bcc850b91d7343bc88565ce863a52, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 40
+      objectReference: {fileID: 0}
+    - target: {fileID: -5477749408508380018, guid: 2e3bcc850b91d7343bc88565ce863a52, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 40
+      objectReference: {fileID: 0}
+    - target: {fileID: -5477749408508380018, guid: 2e3bcc850b91d7343bc88565ce863a52, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 40
+      objectReference: {fileID: 0}
+    - target: {fileID: -5477749408508380018, guid: 2e3bcc850b91d7343bc88565ce863a52, type: 3}
+      propertyPath: m_ConstrainProportionsScale
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -4683669308469848369, guid: 2e3bcc850b91d7343bc88565ce863a52, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 97a50b17389dc2f46b79637859ae6c23, type: 2}
     - target: {fileID: -8679921383154817045, guid: 2dbaa6705f25db845ba409e092e5fdcd, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.78
@@ -215,34 +243,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: doublefish
       objectReference: {fileID: 0}
-    - target: {fileID: -3658592028782763165, guid: dfa5375f407c0ba4a8a0673df0fdba0b, type: 3}
-      propertyPath: m_LocalScale.z
-      value: 302.92563
-      objectReference: {fileID: 0}
-    - target: {fileID: 3677871804177914180, guid: dfa5375f407c0ba4a8a0673df0fdba0b, type: 3}
-      propertyPath: 'm_Materials.Array.data[0]'
-      value: 
-      objectReference: {fileID: 2100000, guid: 194f1b5a6fe93f54282f543b6bbfeb3c, type: 2}
-    - target: {fileID: -5477749408508380018, guid: 2e3bcc850b91d7343bc88565ce863a52, type: 3}
-      propertyPath: m_LocalScale.x
-      value: 40
-      objectReference: {fileID: 0}
-    - target: {fileID: -5477749408508380018, guid: 2e3bcc850b91d7343bc88565ce863a52, type: 3}
-      propertyPath: m_LocalScale.y
-      value: 40
-      objectReference: {fileID: 0}
-    - target: {fileID: -5477749408508380018, guid: 2e3bcc850b91d7343bc88565ce863a52, type: 3}
-      propertyPath: m_LocalScale.z
-      value: 40
-      objectReference: {fileID: 0}
-    - target: {fileID: -5477749408508380018, guid: 2e3bcc850b91d7343bc88565ce863a52, type: 3}
-      propertyPath: m_ConstrainProportionsScale
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: -4683669308469848369, guid: 2e3bcc850b91d7343bc88565ce863a52, type: 3}
-      propertyPath: 'm_Materials.Array.data[0]'
-      value: 
-      objectReference: {fileID: 2100000, guid: 97a50b17389dc2f46b79637859ae6c23, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects:
     - {fileID: 65702495048144492, guid: 2dbaa6705f25db845ba409e092e5fdcd, type: 3}

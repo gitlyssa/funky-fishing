@@ -247,4 +247,4 @@ MonoBehaviour:
       Data4: 484455495
     Path: event:/Music/JeremieMusic2
   beatmapFile: {fileID: 4900000, guid: c66b28d8c65a45644847bfd43de417d8, type: 3}
-  visualScriptFile: {fileID: 0}
+  visualScriptFile: {fileID: 4900000, guid: 81dda62e34251fa4ebb4051d8368334f, type: 3}

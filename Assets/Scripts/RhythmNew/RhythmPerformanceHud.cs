@@ -140,6 +140,7 @@ public class RhythmPerformanceHud : MonoBehaviour
 
     [Header("Reel Progress Circle")]
     public GameObject timingRingPrefab; 
+    public GameObject ScoringWheel;
     public float reelArcThickness = 0.05f;
 
     [SerializeField] private Color reelArcColor = new Color(0.4f, 0.95f, 1f, 0.5f); // Transparent Sapphire
@@ -1667,7 +1668,8 @@ public class RhythmPerformanceHud : MonoBehaviour
             {
                 _reelArcObj = Instantiate(timingRingPrefab, _conductor.transform);
                 _reelArcObj.name = "World_Reel_Progress_Arc";
-                
+            
+                // _reelArcObj.transform.SetParent(ScoringWheel.transform, false);
                 _reelArcObj.transform.localPosition = new Vector3(0, 0, 0.02f);
                 _reelArcObj.transform.localRotation = Quaternion.Euler(0, 0, 90f); // Start at top
                 _reelArcObj.layer = _conductor.gameObject.layer;
@@ -1678,20 +1680,7 @@ public class RhythmPerformanceHud : MonoBehaviour
                 if (ren != null) ren.material.color = reelArcColor;
             }
 
-            if (_currentReelArc != null)
-            {
-                // 1. Move to the OUTSIDE
-                // Radius = Hit Ring + half thickness + small gap for visibility
-                float radius = _conductor.hitRingRadius + (reelArcThickness / 2f) + 0.15f;
-                
-                // 2. Calculate Clockwise Progress Angle
-                float progressAngle = 360f * (Mathf.Clamp01(activeReel.Progress / 2f));
-                
-
-                _reelArcObj.transform.localRotation = Quaternion.Euler(0, 0, -progressAngle / 2f);
-                
-                _currentReelArc.Redraw(radius, reelArcThickness, progressAngle, 64);
-            }
+            
 
             Color c = Color.white;
             c.a = 1f;
@@ -1717,6 +1706,21 @@ public class RhythmPerformanceHud : MonoBehaviour
             float currentMultiplier = Mathf.Lerp(1f, maxReelMultiplier, normalizedMultiplierProgress);
             currentMultiplier = Mathf.Min(currentMultiplier, maxReelMultiplier); 
 
+            if (_currentReelArc != null)
+            {
+                // 1. Move to the OUTSIDE
+                // Radius = Hit Ring + half thickness + small gap for visibility
+                float radius = _conductor.hitRingRadius + (reelArcThickness / 2f) + 0.15f;
+                
+                // 2. Calculate Clockwise Progress Angle
+                float progressAngle = 360f * normalizedMultiplierProgress;
+                
+
+                _reelArcObj.transform.localRotation = Quaternion.Euler(0, 0, -progressAngle / 2f);
+                
+                _currentReelArc.Redraw(radius, reelArcThickness, progressAngle, 64);
+            }
+
             if(_lastFiredMultiplier < maxReelMultiplier)
             {
                 if (currentMultiplier >= _lastFiredMultiplier + 0.099f || currentMultiplier >= maxReelMultiplier)
@@ -1739,7 +1743,10 @@ public class RhythmPerformanceHud : MonoBehaviour
             else if (_lastFiredMultiplier >= maxReelMultiplier)
             {
                 _maxPowerTimer += Time.deltaTime;
-                if (_maxPowerTimer >= maxPowerFlashInterval)
+                
+                float fastFlashInterval = maxPowerFlashInterval * 0.5f; 
+                
+                if (_maxPowerTimer >= fastFlashInterval)
                 {
                     _maxPowerTimer = 0f;
                     TriggerMultiplierPop(maxReelMultiplier);

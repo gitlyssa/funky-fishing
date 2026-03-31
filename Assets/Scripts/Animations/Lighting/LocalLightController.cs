@@ -30,6 +30,7 @@ public class LocalLightController : MonoBehaviour
     private float _realLightProb = 0.02f; // 2% chance to have a real light for fun
 
     [SerializeField] private bool _realLightForce = false; 
+    [SerializeField] private bool _stationary = false;
 
     private float _currentBPM;
     private float _currentMoveSpeed;
@@ -61,13 +62,17 @@ public class LocalLightController : MonoBehaviour
     {
         if (GlobalLightingManager.Instance.currentProfile == null) return;
 
+        
         Vector3 movement = new Vector3(
             Mathf.Sin(Time.time * _currentMoveSpeed * _agitateSpeedMult + _moveOffset),
             Mathf.Cos(Time.time * _currentMoveSpeed * 0.8f * _agitateSpeedMult + _moveOffset),
             Mathf.Sin(Time.time * _currentMoveSpeed * 1.2f * _agitateSpeedMult + _moveOffset)
         ) * _currentMoveRange * _agitateRangeMult;
 
-        transform.position = _startPos + movement;
+        if (!_stationary)
+        {
+            transform.position = _startPos + movement;
+        }
         // _body.localPosition = movement;
         // _glowRing.localPosition = movement;
         if (_isBlackedOut)

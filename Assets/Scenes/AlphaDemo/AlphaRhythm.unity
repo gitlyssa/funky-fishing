@@ -14708,7 +14708,13 @@ MonoBehaviour:
   reelPulseAmount: 0.15
   multiplierColor: {r: 1, g: 0.8, b: 0.2, a: 1}
   multiplierFormat: '{0:F1}x'
+  maxReelMultiplier: 5
+  reelProgressForMaxMultiplier: 1
+  reelInputSecondsForMaxMultiplier: 3
+  reelMotionThreshold: 90
+  reelMultiplierGrowthExponent: 1.35
   timingRingPrefab: {fileID: 4049253082992044910, guid: 867701417344e234cac41290000804e4, type: 3}
+  ScoringWheel: {fileID: 1173819258}
   reelArcThickness: 0.8
   reelArcColor: {r: 0.8166701, g: 0.83396226, b: 0, a: 0.6862745}
 --- !u!4 &2115724248
