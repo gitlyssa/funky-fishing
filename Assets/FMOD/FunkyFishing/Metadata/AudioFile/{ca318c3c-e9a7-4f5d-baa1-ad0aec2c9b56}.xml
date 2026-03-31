@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.03.00">
+	<object class="AudioFile" id="{ca318c3c-e9a7-4f5d-baa1-ad0aec2c9b56}">
+		<property name="assetPath">
+			<value>Funk Fish 2_140BPM_D Minor.wav</value>
+		</property>
+		<property name="isStreaming">
+			<value>true</value>
+		</property>
+		<property name="frequencyInKHz">
+			<value>48</value>
+		</property>
+		<property name="channelCount">
+			<value>2</value>
+		</property>
+		<property name="length">
+			<value>25.714270833333334</value>
+		</property>
+		<relationship name="masterAssetFolder">
+			<destination>{ba2a1a69-d313-4fe5-983c-906aed850381}</destination>
+		</relationship>
+	</object>
+</objects>
