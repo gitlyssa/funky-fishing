@@ -136,13 +136,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RhythmProfile
   musicEvent:
     Guid:
-      Data1: 1815795368
-      Data2: 1074115134
-      Data3: -1093406294
-      Data4: 21482842
-    Path: event:/Music/Fish2
-  beatmapFile: {fileID: 4900000, guid: 351f536584ebbbf479bc5fa7e44736bc, type: 3}
-  visualScriptFile: {fileID: 4900000, guid: 96b45abb788433e4d82048f87368bb6c, type: 3}
+      Data1: -1233211620
+      Data2: 1195024357
+      Data3: -255170375
+      Data4: -1468407509
+    Path: event:/Music/TestMusic
+  beatmapFile: {fileID: 4900000, guid: 25b757f6b3492014a97aa410cb828ed1, type: 3}
+  visualScriptFile: {fileID: 4900000, guid: ec58a813f3e511b4c84e073c7d09fd95, type: 3}
 --- !u!1001 &4692308055997896240
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -151,6 +151,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5253308993648966133}
     m_Modifications:
+    - target: {fileID: -3658592028782763165, guid: dfa5375f407c0ba4a8a0673df0fdba0b, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 302.92563
+      objectReference: {fileID: 0}
+    - target: {fileID: 3677871804177914180, guid: dfa5375f407c0ba4a8a0673df0fdba0b, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 194f1b5a6fe93f54282f543b6bbfeb3c, type: 2}
     - target: {fileID: -5477749408508380018, guid: 2e3bcc850b91d7343bc88565ce863a52, type: 3}
       propertyPath: m_LocalScale.x
       value: 40
@@ -255,14 +263,6 @@ PrefabInstance:
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: 181302ee635520b4c86737277bbc63c7, type: 2}
-    - target: {fileID: -3658592028782763165, guid: dfa5375f407c0ba4a8a0673df0fdba0b, type: 3}
-      propertyPath: m_LocalScale.z
-      value: 302.92563
-      objectReference: {fileID: 0}
-    - target: {fileID: 3677871804177914180, guid: dfa5375f407c0ba4a8a0673df0fdba0b, type: 3}
-      propertyPath: 'm_Materials.Array.data[0]'
-      value: 
-      objectReference: {fileID: 2100000, guid: 194f1b5a6fe93f54282f543b6bbfeb3c, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects:
     - {fileID: 65702495048144492, guid: f9e800e93797a8c428030e2ce4dfaa3e, type: 3}

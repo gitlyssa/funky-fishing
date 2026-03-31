@@ -145,19 +145,19 @@ public class PondManager : MonoBehaviour
     {
         // check for input key r to spawn random fish at random position in pond
 
-        if (Input.GetKeyDown(KeyCode.R))
-        {
-            SpawnFish(GetRandomSpawnPrefab(), GetRandomSpawnPosition());
-        }
+        // if (Input.GetKeyDown(KeyCode.R))
+        // {
+        //     SpawnFish(GetRandomSpawnPrefab(), GetRandomSpawnPosition());
+        // }
 
-        if (Input.GetKeyDown(KeyCode.T))
-        {
-            if (fishList.Count > 0)
-            {
-                int randomIndex = Random.Range(0, fishList.Count);
-                RemoveFish(randomIndex);
-            }
-        }
+        // if (Input.GetKeyDown(KeyCode.T))
+        // {
+        //     if (fishList.Count > 0)
+        //     {
+        //         int randomIndex = Random.Range(0, fishList.Count);
+        //         RemoveFish(randomIndex);
+        //     }
+        // }
 
         if (enableKeyboardCatchAttempt && Input.GetKeyDown(catchAttemptKey))
         {
