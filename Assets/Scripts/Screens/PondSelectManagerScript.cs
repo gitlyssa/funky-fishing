@@ -6,6 +6,7 @@ public class PondSelectManagerScript : MonoBehaviour
     public void FunkPondSelected()
     {
         FunkyAudioSettings.PlayUiConfirm();
+        FishingSessionHud.ResetSessionForFreshPlay();
         Debug.Log("Funk Pond Selected");
         SceneTransitionManager.LoadSceneWithLoading("Pond_Level_1");
     }
@@ -13,7 +14,8 @@ public class PondSelectManagerScript : MonoBehaviour
     public void TutorialSelected()
     {
         FunkyAudioSettings.PlayUiConfirm();
+        FishingSessionHud.ResetSessionForFreshPlay();
         Debug.Log("Tutorial Selected");
         SceneTransitionManager.LoadSceneWithLoading("Tutorial_Level");
     }
-} 
+}

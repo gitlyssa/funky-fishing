@@ -158,6 +158,7 @@ public class PauseManager : MonoBehaviour
     public void GoToMainMenu()
     {
         FunkyAudioSettings.PlayUiConfirm();
+        FishingSessionHud.ResetSessionForFreshPlay();
         // Prevent the same confirm press from reaching gameplay input on this frame.
         XboxFishingInput.BlockGameplayInputForRealtimeSeconds(Mathf.Max(menuExitInputBlockSeconds, resumeInputBlockSeconds));
         Time.timeScale = 1f;

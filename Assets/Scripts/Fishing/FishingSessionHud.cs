@@ -113,6 +113,11 @@ public class FishingSessionHud : MonoBehaviour
 
     public static void ResetSessionForLevelRestart()
     {
+        ResetSessionForFreshPlay();
+    }
+
+    public static void ResetSessionForFreshPlay()
+    {
         ResetSessionStats();
     }
 

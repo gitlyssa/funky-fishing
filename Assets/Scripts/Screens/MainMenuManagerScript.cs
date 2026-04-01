@@ -6,6 +6,7 @@ public class MainMenuManagerScript : MonoBehaviour
     public void StartGame()
     {
         FunkyAudioSettings.PlayUiConfirm();
+        FishingSessionHud.ResetSessionForFreshPlay();
         Debug.Log("Start Game");
         SceneTransitionManager.LoadSceneWithLoading("Pond_Level_1");
     }
@@ -13,6 +14,7 @@ public class MainMenuManagerScript : MonoBehaviour
     public void TutorialSelected()
     {
         FunkyAudioSettings.PlayUiConfirm();
+        FishingSessionHud.ResetSessionForFreshPlay();
         Debug.Log("Tutorial Selected");
         SceneTransitionManager.LoadSceneWithLoading("Tutorial_Level");
     }
