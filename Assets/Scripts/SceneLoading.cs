@@ -17,6 +17,8 @@ public class SceneLoading : MonoBehaviour
     [Header("Tension Overlay Trigger")]
     public bool driveOverlayFromBobberTension = false;
     public BobberArcCaster tensionSource;
+    [Header("Debug")]
+    public bool enableDebugKeyboardShortcuts = false;
     [Header("Rhythm UI Targets")]
     public string scoringCircleObjectName = "ScoringCircle";
 
@@ -55,21 +57,17 @@ public class SceneLoading : MonoBehaviour
 
     void Update()
     {
-        // press 1 to reload the scene, might break everything not sure
-        if (Keyboard.current.digit1Key.wasPressedThisFrame)
+        Keyboard keyboard = Keyboard.current;
+        if (enableDebugKeyboardShortcuts && keyboard != null)
         {
-            UnityEngine.SceneManagement.SceneManager.LoadScene(fishingSceneName);
-        }
+            if (keyboard.digit1Key.wasPressedThisFrame)
+                UnityEngine.SceneManagement.SceneManager.LoadScene(fishingSceneName);
 
-        // 3 to load overlay, 4 to unload
-        if (Keyboard.current.digit3Key.wasPressedThisFrame && !isRhythmVisible)
-        {
-            StartRhythmEncounter(ResolveFishForRhythmEncounter());
-        }
-        
-        if (Keyboard.current.digit4Key.wasPressedThisFrame && isRhythmVisible)
-        {
-            EndRhythmEncounter();
+            if (keyboard.digit3Key.wasPressedThisFrame && !isRhythmVisible)
+                StartRhythmEncounter(ResolveFishForRhythmEncounter());
+
+            if (keyboard.digit4Key.wasPressedThisFrame && isRhythmVisible)
+                EndRhythmEncounter();
         }
 
         UpdateTensionDrivenOverlay();

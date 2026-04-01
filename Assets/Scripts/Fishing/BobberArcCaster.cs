@@ -192,6 +192,7 @@ public class BobberArcCaster : MonoBehaviour
     public void Cast()
     {
         if (!rodTip || !bobber || !targetMarker) return;
+        if (FishingGameplayInputGate.IsBlocked()) return;
 
         if (FishCatchAnimation.IsAnyCatchScreenActive)
             return;
@@ -226,6 +227,7 @@ public class BobberArcCaster : MonoBehaviour
     public void Yank()
     {
         if (!rodTip || !bobber) return;
+        if (FishingGameplayInputGate.IsBlocked()) return;
 
         if (!TutorialStartGate.IsYankAllowedByTutorial())
             return;
@@ -634,6 +636,9 @@ public class BobberArcCaster : MonoBehaviour
 
     public void RequestTensionToggleFromInput()
     {
+        if (FishingGameplayInputGate.IsBlocked())
+            return;
+
         if (!allowManualTensionEntry)
         {
             Debug.Log("Manual tension toggle disabled: hook a fish to enter, song end exits.");
@@ -1558,6 +1563,12 @@ public class BobberArcCaster : MonoBehaviour
 
     private void UpdateDirectionalSwingInput()
     {
+        if (FishingGameplayInputGate.IsBlocked())
+        {
+            ClearDirectionalSwingInputState();
+            return;
+        }
+
         if (!directionalSwingEnabled)
         {
             _activeSwingDirection = SwingDirection.None;

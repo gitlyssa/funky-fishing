@@ -30,27 +30,30 @@ public class KeyboardRhythmProvider : MonoBehaviour, IRhythmInputT
     {
         if (Time.timeScale <= 0f)
         {
-            _currentSpinVelocity = 0f;
-            _hasTriggeredFlick = false;
-            _virtualStick = Vector2.zero;
-            _lastVirtualStick = Vector2.zero;
-            _virtualReelStick = Vector2.zero;
+            ResetFrameState();
             return;
         }
 
-        HandleVirtualStick();
-        HandleKeyboardSpin();
+        Keyboard keyboard = Keyboard.current;
+        if (keyboard == null)
+        {
+            ResetFrameState();
+            return;
+        }
+
+        HandleVirtualStick(keyboard);
+        HandleKeyboardSpin(keyboard);
         HandleButtons();
     }
 
-    private void HandleVirtualStick()
+    private void HandleVirtualStick(Keyboard keyboard)
     {
         Vector2 targetInput = Vector2.zero;
 
-        if (Keyboard.current.wKey.isPressed) targetInput.y += 1;
-        if (Keyboard.current.sKey.isPressed) targetInput.y -= 1;
-        if (Keyboard.current.aKey.isPressed) targetInput.x -= 1;
-        if (Keyboard.current.dKey.isPressed) targetInput.x += 1;
+        if (keyboard.wKey.isPressed) targetInput.y += 1;
+        if (keyboard.sKey.isPressed) targetInput.y -= 1;
+        if (keyboard.aKey.isPressed) targetInput.x -= 1;
+        if (keyboard.dKey.isPressed) targetInput.x += 1;
 
         _virtualStick = targetInput;
 
@@ -75,13 +78,13 @@ public class KeyboardRhythmProvider : MonoBehaviour, IRhythmInputT
         _lastVirtualStick = _virtualStick;
     }
 
-    private void HandleKeyboardSpin()
+    private void HandleKeyboardSpin(Keyboard keyboard)
     {
         Vector2 spinInput = Vector2.zero;
-        if (Keyboard.current.leftArrowKey.isPressed) spinInput.x -= 1;
-        if (Keyboard.current.rightArrowKey.isPressed) spinInput.x += 1;
-        if (Keyboard.current.upArrowKey.isPressed) spinInput.y += 1;
-        if (Keyboard.current.downArrowKey.isPressed) spinInput.y -= 1;
+        if (keyboard.leftArrowKey.isPressed) spinInput.x -= 1;
+        if (keyboard.rightArrowKey.isPressed) spinInput.x += 1;
+        if (keyboard.upArrowKey.isPressed) spinInput.y += 1;
+        if (keyboard.downArrowKey.isPressed) spinInput.y -= 1;
 
 
         _virtualReelStick = Vector2.Lerp(_virtualReelStick, spinInput.normalized, Time.deltaTime * reelLerpSpeed);
@@ -126,6 +129,15 @@ public class KeyboardRhythmProvider : MonoBehaviour, IRhythmInputT
     {
         if (index == 0) return Input.GetKey(KeyCode.Space);
         return false;
+    }
+
+    private void ResetFrameState()
+    {
+        _currentSpinVelocity = 0f;
+        _hasTriggeredFlick = false;
+        _virtualStick = Vector2.zero;
+        _lastVirtualStick = Vector2.zero;
+        _virtualReelStick = Vector2.zero;
     }
 
     // Helpers

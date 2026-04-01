@@ -125,6 +125,12 @@ public class JoyConGestureDetector : MonoBehaviour
             Connect();
         }
 
+        if (FishingGameplayInputGate.IsBlocked())
+        {
+            ResetTransientGestureState();
+            return;
+        }
+
         SyncStateWithCaster();
 
         if (Time.time < _cooldownUntil) return;
@@ -175,6 +181,15 @@ public class JoyConGestureDetector : MonoBehaviour
             Connect();
             _nextReconnectTime = Time.time + Mathf.Max(0.1f, reconnectInterval);
         }
+    }
+
+    private void ResetTransientGestureState()
+    {
+        _state = State.Idle;
+        _castTime = -999f;
+        _cooldownUntil = -999f;
+        _castPolarity = 1;
+        _filtersByHandle.Clear();
     }
 
     private bool ProcessHandle(int handle, float dt)
