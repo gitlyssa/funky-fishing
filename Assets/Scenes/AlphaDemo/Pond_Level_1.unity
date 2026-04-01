@@ -1691,13 +1691,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2fea3711038989249b35b522fb478172, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FishCatchAnimation
-  overlayPanel: {fileID: 0}
+  overlayPanel: {fileID: 1301915735}
   judgementText: {fileID: 128711327}
   fishNameText: {fileID: 795617615}
   clickText: {fileID: 1901057087}
   perfectJudgementImage: {fileID: 1049730857}
   greatJudgementImage: {fileID: 1828602081}
   goodJudgementImage: {fileID: 354371062}
+  gradeS: {fileID: 21300000, guid: cb51ca6c7ba43e646be603851bcc063c, type: 3}
+  gradeA: {fileID: 21300000, guid: dd34b56d6c7b3f84f9cf779034e87f88, type: 3}
+  gradeB: {fileID: 21300000, guid: e6a3da7bf45f84749a9534f475c90a6d, type: 3}
+  gradeC: {fileID: 21300000, guid: 7c4a471ec122c384e8e18c6ff005d8fc, type: 3}
+  gradeD: {fileID: 21300000, guid: 79a7ceba258379f4bb35b43670e51fbf, type: 3}
+  gradeF: {fileID: 21300000, guid: 382b16f296cfdbb4fbd31469814b6513, type: 3}
   flyToCameraDuration: 0.4
   distanceFromCamera: 3
   verticalOffset: -0.2

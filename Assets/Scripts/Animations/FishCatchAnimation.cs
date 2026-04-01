@@ -39,6 +39,14 @@ public class FishCatchAnimation : MonoBehaviour
     private static readonly Vector2 LetterGradeLabelPosition = new Vector2(0f, 92f);
     private static readonly Vector2 LetterGradeImagePosition = new Vector2(0f, -8f);
 
+    [Header("Letter Grade Sprites")]
+    public Sprite gradeS;
+    public Sprite gradeA;
+    public Sprite gradeB;
+    public Sprite gradeC;
+    public Sprite gradeD;
+    public Sprite gradeF;
+
 
     [Header("Positioning")]
     public float flyToCameraDuration = 2.6f;
@@ -345,58 +353,15 @@ public class FishCatchAnimation : MonoBehaviour
 
     private Sprite GetLetterGradeSprite(float accuracy)
     {
-        string gradeKey = GetLetterGradeKey(accuracy);
-        if (string.IsNullOrEmpty(gradeKey))
-            return null;
-
-        if (_letterGradeSprites.TryGetValue(gradeKey, out Sprite cachedSprite))
-            return cachedSprite;
-
-        Sprite sprite = LoadLetterGradeSprite(gradeKey);
-        _letterGradeSprites[gradeKey] = sprite;
-        return sprite;
-    }
-
-    private static string GetLetterGradeKey(float accuracy)
-    {
         float clampedAccuracy = Mathf.Clamp(accuracy, 0f, 100f);
-        if (clampedAccuracy >= 99.95f) return "s";
-        if (clampedAccuracy >= 80f) return "a";
-        if (clampedAccuracy >= 70f) return "b";
-        if (clampedAccuracy >= 60f) return "c";
-        if (clampedAccuracy >= 50f) return "d";
-        return "f";
+        if (clampedAccuracy >= 99.95f) return gradeS;
+        if (clampedAccuracy >= 80f) return gradeA;
+        if (clampedAccuracy >= 70f) return gradeB;
+        if (clampedAccuracy >= 60f) return gradeC;
+        if (clampedAccuracy >= 50f) return gradeD;
+        return gradeF;
     }
 
-    private static Sprite LoadLetterGradeSprite(string gradeKey)
-    {
-        string resourcePath = $"{LetterGradeResourceFolder}/grade_{gradeKey}";
-        Sprite sprite = Resources.Load<Sprite>(resourcePath);
-        if (sprite != null)
-            return sprite;
-
-#if UNITY_EDITOR
-        string editorAssetPath = $"Assets/Images/letter_grades/grade_{gradeKey}.png";
-        sprite = AssetDatabase.LoadAssetAtPath<Sprite>(editorAssetPath);
-        if (sprite != null)
-            return sprite;
-#endif
-
-        string absolutePath = Path.Combine(Application.dataPath, "Images", "letter_grades", $"grade_{gradeKey}.png");
-        if (!File.Exists(absolutePath))
-            return null;
-
-        byte[] fileBytes = File.ReadAllBytes(absolutePath);
-        Texture2D texture = new Texture2D(2, 2, TextureFormat.ARGB32, false);
-        if (!texture.LoadImage(fileBytes))
-            return null;
-
-        texture.name = $"grade_{gradeKey}_texture";
-        return Sprite.Create(
-            texture,
-            new Rect(0f, 0f, texture.width, texture.height),
-            new Vector2(0.5f, 0.5f),
-            100f);
-    }
+    
 }
 

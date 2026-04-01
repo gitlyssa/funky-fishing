@@ -204,6 +204,7 @@ MonoBehaviour:
   nibbleBobberPullDownSpeed: 18
   nibbleBobberReturnSpeed: 10
   pondManager: {fileID: 0}
+  nibbleSpriteAsset: {fileID: 21300000, guid: e66b51dfa690d82449c4a62f7050ca9e, type: 3}
 --- !u!136 &-819829424105272448
 CapsuleCollider:
   m_ObjectHideFlags: 0

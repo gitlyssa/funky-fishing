@@ -58,6 +58,9 @@ public class FishMovement : MonoBehaviour
     private const float NibbleIndicatorWorldOffsetY = 0.4f;
     private const float NibbleIndicatorSize = 72f;
 
+    [Header("UI Assets")] 
+    [SerializeField] private Sprite nibbleSpriteAsset; 
+
     private Rigidbody rb;
     private Collider fishCollider;
     private Transform bobber;
@@ -112,6 +115,11 @@ public class FishMovement : MonoBehaviour
 
         rb.useGravity = false;
         rb.constraints = RigidbodyConstraints.FreezeRotation | RigidbodyConstraints.FreezePositionY;
+
+        if (s_nibbleIndicatorSprite == null && nibbleSpriteAsset != null)
+        {
+            s_nibbleIndicatorSprite = nibbleSpriteAsset;
+        }
     }
 
     private void Start()
@@ -836,14 +844,9 @@ public class FishMovement : MonoBehaviour
         if (s_nibbleIndicatorImage != null && s_nibbleIndicatorRect != null)
             return true;
 
-        if (s_nibbleIndicatorSprite == null)
-            s_nibbleIndicatorSprite = LoadNibbleIndicatorSprite();
 
         if (s_nibbleIndicatorSprite == null)
         {
-            Debug.LogWarning(
-                "Could not load nibble indicator sprite. " +
-                "Expected exclamation image at Assets/Images/exclamation.png or Resources/Fishing/exclamation.");
             return false;
         }
 
@@ -880,34 +883,7 @@ public class FishMovement : MonoBehaviour
         return true;
     }
 
-    private static Sprite LoadNibbleIndicatorSprite()
-    {
-        Sprite sprite = Resources.Load<Sprite>(NibbleIndicatorResourcePath);
-        if (sprite != null)
-            return sprite;
 
-#if UNITY_EDITOR
-        sprite = AssetDatabase.LoadAssetAtPath<Sprite>(NibbleIndicatorAssetPath);
-        if (sprite != null)
-            return sprite;
-#endif
-
-        string absolutePath = Path.Combine(Application.dataPath, "Images", "exclamation.png");
-        if (!File.Exists(absolutePath))
-            return null;
-
-        byte[] fileBytes = File.ReadAllBytes(absolutePath);
-        Texture2D texture = new Texture2D(2, 2, TextureFormat.ARGB32, false);
-        if (!texture.LoadImage(fileBytes))
-            return null;
-
-        texture.name = "FishNibbleIndicatorTexture";
-        return Sprite.Create(
-            texture,
-            new Rect(0f, 0f, texture.width, texture.height),
-            new Vector2(0.5f, 0.5f),
-            100f);
-    }
 
     private void OnCollisionEnter(Collision collision)
     {
