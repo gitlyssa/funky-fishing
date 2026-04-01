@@ -67,7 +67,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 0}
+  - {fileID: 2100000, guid: 76119ddccc1a087458edc1d04768931a, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -291,6 +291,8 @@ MonoBehaviour:
   _glowRing: {fileID: 3021224443056920397}
   _body: {fileID: 4003231350483395692}
   _light: {fileID: 428063648691855229}
+  _realLightForce: 0
+  _stationary: 0
 --- !u!1 &7914452997022254992
 GameObject:
   m_ObjectHideFlags: 0
