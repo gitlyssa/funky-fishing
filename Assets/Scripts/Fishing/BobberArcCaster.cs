@@ -678,6 +678,19 @@ public class BobberArcCaster : MonoBehaviour
         return null;
     }
 
+    public void ForceRetractBobber()
+    {
+    
+        if (CurrentState == State.Idle || _isPreparingYank) return;
+
+        _hookedFish = null;
+        ClearHookedFishLockState();
+        if (pondManager != null)
+            pondManager.RestoreFishAfterTension();
+
+        StartYank();
+    }
+
     private bool TryFindHookableFish(out GameObject fish)
     {
         fish = null;

@@ -1505,6 +1505,7 @@ GameObject:
   - component: {fileID: 204412467}
   - component: {fileID: 204412466}
   - component: {fileID: 204412465}
+  - component: {fileID: 204412471}
   - component: {fileID: 204412464}
   - component: {fileID: 204412469}
   - component: {fileID: 204412468}
@@ -1708,6 +1709,28 @@ MonoBehaviour:
   distanceFromCamera: 3
   verticalOffset: -0.2
   spinSpeed: 140
+--- !u!114 &204412471
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 204412463}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0a51f798d79c69d4babfc59931155240, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::IdleModeManager
+  idleThreshold: 3
+  titleCardSprite: {fileID: 21300000, guid: e3782b261bbb20041b8baec448336d6b, type: 3}
+  titleCardSize: {x: 1000, y: 500}
+  titleCardPosition: {x: 0, y: 100}
+  floatSpeed: 2
+  floatAmplitude: 15
+  idleTimeSpeed: 0.1
+  arcCaster: {fileID: 1405675315}
+  pondManager: {fileID: 1761183080}
+  fishingSessionHud: {fileID: 1015900471}
 --- !u!4 &214218021 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8783306491909106419, guid: f02116c209ecd9e488fc4d2cd8996133, type: 3}
@@ -11798,6 +11821,7 @@ MonoBehaviour:
   keepRhythmOverlayLoaded: 1
   driveOverlayFromBobberTension: 1
   tensionSource: {fileID: 1405675315}
+  enableDebugKeyboardShortcuts: 0
   scoringCircleObjectName: ScoringCircle
 --- !u!4 &1703477167
 Transform:
@@ -15397,7 +15421,7 @@ MonoBehaviour:
   volumeB: {fileID: 1442347459}
   effectVolume: {fileID: 621884616}
   enableScreenEffects: 1
-  isAutoCycling: 0
+  isAutoCycling: 1
   timeSpeed: 0.005
   dawn: {fileID: 11400000, guid: c583cf3dfe9c49846960174405d6e938, type: 2}
   day: {fileID: 11400000, guid: 6491e9f1fb51fe346a71b1d773982247, type: 2}

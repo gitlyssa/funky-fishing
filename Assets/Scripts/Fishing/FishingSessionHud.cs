@@ -107,8 +107,14 @@ public class FishingSessionHud : MonoBehaviour
         lastCatchSucceeded = false;
         pendingCatchOutcomeRegistered = false;
         pendingCatchSucceeded = false;
-        activeInstance = null;
+        // activeInstance = null;
         minimumSuccessfulCatchGradeRank = (int)CatchGradeRank.C;
+        // update ui to zero
+            
+        if (activeInstance != null)
+            {
+                activeInstance.RefreshHudText();
+            }
     }
 
     public static void ResetSessionForLevelRestart()

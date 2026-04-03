@@ -21,6 +21,8 @@ public class IdleModeManager : MonoBehaviour
 
     [Header("References")]
     public BobberArcCaster arcCaster;
+    public PondManager pondManager;
+    public FishingSessionHud fishingSessionHud;
 
     private Vector3 _lastMousePos;
     
@@ -28,6 +30,8 @@ public class IdleModeManager : MonoBehaviour
     private Canvas _idleCanvas;
     private Image _titleCardImage;
     private RectTransform _titleCardRect;
+
+    
 
     void Start()
     {
@@ -208,11 +212,19 @@ public class IdleModeManager : MonoBehaviour
             _originalTimeSpeed = GlobalLightingManager.Instance.timeSpeed;
             GlobalLightingManager.Instance.timeSpeed = idleTimeSpeed;
         }
+
+        if (pondManager != null)
+        {
+            pondManager.ResetPondToDefault();
+        }
+        FishingSessionHud.ResetSessionForFreshPlay();
+    
         
         if (arcCaster != null && arcCaster.CurrentState == BobberArcCaster.State.Landed)
         {
-            arcCaster.Yank(); 
+           arcCaster.ForceRetractBobber();
         }
+        
     }
 
     private void ExitIdleMode()

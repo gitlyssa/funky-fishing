@@ -137,11 +137,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RhythmProfile
   musicEvent:
     Guid:
-      Data1: -1233211620
-      Data2: 1195024357
-      Data3: -255170375
-      Data4: -1468407509
-    Path: event:/Music/TestMusic
+      Data1: 958105527
+      Data2: 1235333334
+      Data3: -705264733
+      Data4: -964123362
+    Path: event:/Music/JeremieMusic1
   beatmapFile: {fileID: 4900000, guid: 0e33ec2e1b2ca8f419fa54502a377da8, type: 3}
   visualScriptFile: {fileID: 4900000, guid: edb9d3f5eac439843996a7761af013ae, type: 3}
 --- !u!1001 &4692308055997896240

@@ -468,4 +468,30 @@ public GameObject GetClosestFish(GameObject bobber)
             Debug.Log("No fish caught.");
         }
     }
+
+    public void ResetPondToDefault()
+    {
+        for (int i = fishList.Count - 1; i >= 0; i--)
+        {
+            if (fishList[i] != null) 
+            {
+                Destroy(fishList[i]);
+            }
+        }
+        
+        fishList.Clear();
+        hiddenFishDuringTension.Clear();
+        
+
+        _bossWaveSpawned = false;
+
+        bool usedSpawnPlan = SpawnInitialFishFromPlan();
+        if (!usedSpawnPlan)
+        {
+            for (int i = 0; i < initialFishCount; i++)
+                SpawnFish(GetRandomSpawnPrefab(), GetRandomSpawnPosition());
+        }
+
+        ApplyFishFishCollisionSetting();
+    }
 }
