@@ -1,0 +1,68 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &7829849302181139331
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6960093558851284425}
+  - component: {fileID: 5315928142562120379}
+  m_Layer: 0
+  m_Name: FishingControlHints
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6960093558851284425
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7829849302181139331}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5315928142562120379
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7829849302181139331}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1d7e56d76e0d45678fd1a94d0c4bf7d1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  pondLevelSceneName: Pond_Level_1
+  moveHintTexture: {fileID: 2800000, guid: 429c08197e7124c8eb1105be21491638, type: 3}
+  castHintTexture: {fileID: 2800000, guid: ffe507063637d44bdba975e9621863f6, type: 3}
+  yankHintTexture: {fileID: 2800000, guid: ec248a71273b54082860a71e5a69a114, type: 3}
+  directionLeftHintSprite: {fileID: 21300000, guid: d3477b14c7cc152409cff1d9d060645d, type: 3}
+  directionUpHintSprite: {fileID: 21300000, guid: c4bd6af051a30a54aaa17374220e1605, type: 3}
+  directionRightHintSprite: {fileID: 21300000, guid: 814c3892531320b40a41a4d156d2586b, type: 3}
+  reelHintSprite: {fileID: 21300000, guid: 981730facb622f542b1d5a77d21b2da6, type: 3}
+  sortingOrder: 95
+  panelOffset: {x: 44, y: 44}
+  panelPadding: 14
+  imageSpacing: 14
+  pondHintMaxSize: {x: 210, y: 168}
+  directionHintMaxSize: {x: 172, y: 128}
+  reelHintMaxSize: {x: 204, y: 204}
+  panelColor: {r: 0, g: 0, b: 0, a: 0.3}
+  pulseSpeed: 3.2
+  pulseScaleAmount: 0.08
+  minAlpha: 0.72
+  maxAlpha: 1
+  fadeSpeed: 7
+  rhythmDirectionHintDuration: 4.5
