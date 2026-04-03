@@ -1721,7 +1721,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0a51f798d79c69d4babfc59931155240, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::IdleModeManager
-  idleThreshold: 3
+  idleThreshold: 180
   titleCardSprite: {fileID: 21300000, guid: e3782b261bbb20041b8baec448336d6b, type: 3}
   titleCardSize: {x: 1000, y: 500}
   titleCardPosition: {x: 0, y: 100}
@@ -3140,7 +3140,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 6.805176, y: -9.420654}
+  m_AnchoredPosition: {x: 6.805176, y: -9.4206085}
   m_SizeDelta: {x: -414.079, y: -140.7615}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &399801840
@@ -3793,7 +3793,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 6.805176, y: -9.420654}
+  m_AnchoredPosition: {x: 6.805176, y: -9.4206085}
   m_SizeDelta: {x: -414.079, y: -140.7615}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &514799891

@@ -257,6 +257,11 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 16e6d02eb97e5f0429b6fd60b376d44a, type: 3}
   m_PrefabInstance: {fileID: 4692308055997896240}
   m_PrefabAsset: {fileID: 0}
+--- !u!23 &9087752521072771327 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: -4683669308469848369, guid: 16e6d02eb97e5f0429b6fd60b376d44a, type: 3}
+  m_PrefabInstance: {fileID: 4692308055997896240}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &6673704634133135170
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -269,6 +274,10 @@ PrefabInstance:
       propertyPath: _stationary
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 229637320168417459, guid: f140a0d218f47e24c820ddc5eed93e97, type: 3}
+      propertyPath: _bodyRenderer
+      value: 
+      objectReference: {fileID: 9087752521072771327}
     - target: {fileID: 229637320168417459, guid: f140a0d218f47e24c820ddc5eed93e97, type: 3}
       propertyPath: _realLightForce
       value: 1
