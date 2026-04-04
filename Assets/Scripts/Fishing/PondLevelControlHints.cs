@@ -40,7 +40,7 @@ public class PondLevelControlHints : MonoBehaviour
     [SerializeField] private Color panelColor = new Color(0f, 0f, 0f, 0.3f);
 
     [Header("Pulse")]
-    [SerializeField, Min(0.1f)] private float pulseSpeed = 3.2f;
+    [SerializeField, Min(0.1f)] private float pulseSpeed = 2.0f;
     [SerializeField, Range(0f, 0.5f)] private float pulseScaleAmount = 0.08f;
     [SerializeField, Range(0f, 1f)] private float minAlpha = 0.72f;
     [SerializeField, Range(0f, 1f)] private float maxAlpha = 1f;
@@ -236,7 +236,7 @@ public class PondLevelControlHints : MonoBehaviour
         _panelRect = panelGo.GetComponent<RectTransform>();
         _panelRect.anchorMin = Vector2.zero;
         _panelRect.anchorMax = Vector2.zero;
-        _panelRect.pivot = Vector2.zero;
+        _panelRect.pivot = new Vector2(0.5f, 0.5f);
         _panelRect.anchoredPosition = panelOffset;
 
         Image panelImage = panelGo.GetComponent<Image>();
@@ -420,6 +420,16 @@ public class PondLevelControlHints : MonoBehaviour
             default:
                 ApplySprites(Vector2.zero);
                 break;
+        }
+        if (_panelRect != null)
+        {
+            
+            LayoutRebuilder.ForceRebuildLayoutImmediate(_panelRect);
+
+            _panelRect.anchoredPosition = new Vector2(
+                panelOffset.x + (_panelRect.rect.width * 0.5f),
+                panelOffset.y + (_panelRect.rect.height * 0.5f)
+            );
         }
     }
 
