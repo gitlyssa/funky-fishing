@@ -47,12 +47,16 @@ public class FishCatchAnimation : MonoBehaviour
     public Sprite gradeD;
     public Sprite gradeF;
 
-
     [Header("Positioning")]
     public float flyToCameraDuration = 2.6f;
     public float distanceFromCamera = 1.2f;
     public float verticalOffset = -0.1f;
     public float spinSpeed = 150f;
+
+    [Header("Special Fish Settings")]
+    public List<string> verticalSpinFish = new List<string> { "DJ Ray" };
+    public Vector3 verticalRotationOffset = new Vector3(90f, 0f, 0f);
+
     private bool _continuePressed = false;
     private bool _continueInputReady = true;
     private bool _isCatchScreenActive = false;
@@ -61,7 +65,6 @@ public class FishCatchAnimation : MonoBehaviour
 
     private void Awake()
     {
-        // Ensure everything is hidden at start
         if (overlayPanel != null) overlayPanel.SetActive(false);
         if (clickText != null) clickText.gameObject.SetActive(false);
         if (clickText != null) _defaultClickText = clickText.text;
@@ -96,6 +99,7 @@ public class FishCatchAnimation : MonoBehaviour
             _continueInputReady = false;
         }
     }
+
     private void HideAllJudgements()
     {
         if (perfectJudgementImage != null) perfectJudgementImage.gameObject.SetActive(false);
@@ -133,6 +137,7 @@ public class FishCatchAnimation : MonoBehaviour
         while (!_continuePressed)
             yield return null;
     }
+
     public IEnumerator TrophyRoutine(GameObject fish)
     {
         Camera cam = Camera.main;
@@ -145,10 +150,11 @@ public class FishCatchAnimation : MonoBehaviour
 
         // disable all scripts on fish
         MonoBehaviour[] scripts = fish.GetComponents<MonoBehaviour>();
-
-        foreach (var script in scripts)        {
+        foreach (var script in scripts)        
+        {
             if (script != this) script.enabled = false;
         }
+        
         if (fish.TryGetComponent(out Rigidbody rb)) 
         {
             rb.isKinematic = true;
@@ -156,6 +162,18 @@ public class FishCatchAnimation : MonoBehaviour
             rb.angularVelocity = Vector3.zero;
         }
         if (fish.TryGetComponent(out Collider col)) col.enabled = false;
+
+        // Check if this fish should be flipped vertically based on its name
+        string lowercaseName = fish.name.ToLower();
+        foreach (string nameMatch in verticalSpinFish)
+        {
+            if (lowercaseName.Contains(nameMatch.ToLower()))
+            {
+                // Apply the 90-degree pitch so it stands up before the spin loop starts
+                fishXform.Rotate(verticalRotationOffset, Space.Self);
+                break;
+            }
+        }
 
         // DARKEN BACKGROUND
         if (overlayPanel != null) overlayPanel.SetActive(true);
@@ -169,6 +187,7 @@ public class FishCatchAnimation : MonoBehaviour
             elapsed += Time.deltaTime;
             float t = elapsed / flyToCameraDuration;
 
+            // Spin horizontally around the world's up axis
             fishXform.Rotate(Vector3.up, spinSpeed * Time.deltaTime, Space.World);
             
             fishXform.position = Vector3.Lerp(startPos, targetPos, t);
@@ -182,8 +201,6 @@ public class FishCatchAnimation : MonoBehaviour
         if (judgementText != null)
         {
             judgementText.text = GetJudgementString(accuracy);
-            
-            // judgementText.gameObject.SetActive(true);
             judgementText.transform.localScale = Vector3.zero; 
         }
 
@@ -203,7 +220,6 @@ public class FishCatchAnimation : MonoBehaviour
             _letterGradeContainer.localScale = Vector3.zero;
         }
 
-        
         if (fishNameText != null)
         {
             fishNameText.text = $"{fish.name.Replace("(Clone)", "")} caught!";
@@ -220,7 +236,6 @@ public class FishCatchAnimation : MonoBehaviour
             textElapsed += Time.deltaTime;
             float t = textElapsed / textGrowDuration;
             
-
             float bounceScale = Mathf.Lerp(0f, 1f, t); 
 
             if (_activeJudgementImage != null) _activeJudgementImage.rectTransform.localScale = Vector3.one * _imageSize * bounceScale;
@@ -361,7 +376,4 @@ public class FishCatchAnimation : MonoBehaviour
         if (clampedAccuracy >= 50f) return gradeD;
         return gradeF;
     }
-
-    
 }
-

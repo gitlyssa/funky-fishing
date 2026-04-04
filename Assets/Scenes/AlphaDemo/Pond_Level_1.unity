@@ -1709,6 +1709,9 @@ MonoBehaviour:
   distanceFromCamera: 3
   verticalOffset: -0.2
   spinSpeed: 140
+  verticalSpinFish:
+  - DJ Ray
+  verticalRotationOffset: {x: 45, y: 0, z: 0}
 --- !u!114 &204412471
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3140,7 +3143,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 6.805176, y: -9.4206085}
+  m_AnchoredPosition: {x: 6.805176, y: -9.420593}
   m_SizeDelta: {x: -414.079, y: -140.7615}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &399801840
@@ -3793,7 +3796,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 6.805176, y: -9.4206085}
+  m_AnchoredPosition: {x: 6.805176, y: -9.420593}
   m_SizeDelta: {x: -414.079, y: -140.7615}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &514799891
