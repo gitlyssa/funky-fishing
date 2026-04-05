@@ -25,6 +25,8 @@ public class IdleModeManager : MonoBehaviour
     public FishingSessionHud fishingSessionHud;
 
     private Vector3 _lastMousePos;
+    private Vector3 _lastTargetMarkerPos;
+    private BobberArcCaster.State _lastBobberState;
     
     // Dynamic UI References
     private Canvas _idleCanvas;
@@ -41,7 +43,8 @@ public class IdleModeManager : MonoBehaviour
 
     void Update()
     {
-        if (HasAnyInput())
+        // Use our new drift-proof activity checker
+        if (HasGameplayActivity())
         {
             _idleTimer = 0f;
             _lastMousePos = Input.mousePosition;
@@ -55,6 +58,7 @@ public class IdleModeManager : MonoBehaviour
         {
             if (!IsIdling)
             {
+                // This correctly pauses the timer if they are in the rhythm/tension section!
                 if (CanEnterIdleMode())
                 {
                     _idleTimer += Time.deltaTime;
@@ -73,6 +77,44 @@ public class IdleModeManager : MonoBehaviour
                 AnimateTitleCard();
             }
         }
+    }
+
+    private bool HasGameplayActivity()
+    {
+        bool activity = false;
+
+        if (Input.anyKey || Input.mousePosition != _lastMousePos || Input.GetAxis("Mouse ScrollWheel") != 0f)
+            activity = true;
+
+        for (int i = 0; i < 4; i++)
+        {
+            if (JSL.JslStillConnected(i))
+            {
+                JSL.JOY_SHOCK_STATE state = JSL.JslGetSimpleState(i);
+                if (state.buttons != 0) activity = true;
+            }
+        }
+
+        if (arcCaster != null)
+        {
+        
+            if (arcCaster.targetMarker != null)
+            {
+                if (Vector3.Distance(_lastTargetMarkerPos, arcCaster.targetMarker.position) > 0.001f)
+                {
+                    activity = true;
+                }
+                _lastTargetMarkerPos = arcCaster.targetMarker.position;
+            }
+
+            if (arcCaster.CurrentState != _lastBobberState)
+            {
+                activity = true;
+            }
+            _lastBobberState = arcCaster.CurrentState;
+        }
+
+        return activity;
     }
 
     private void EnsureUi()
