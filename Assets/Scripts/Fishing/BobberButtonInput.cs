@@ -13,6 +13,7 @@ public class BobberButtonInput : MonoBehaviour
     void Update()
     {
         if (!caster) return;
+        if (FishingGameplayInputGate.IsBlocked()) return;
 
         if (Input.GetKeyDown(castKey)) caster.Cast();
         if (Input.GetKeyDown(yankKey)) caster.Yank();

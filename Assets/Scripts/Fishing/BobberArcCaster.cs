@@ -29,6 +29,21 @@ public class BobberArcCaster : MonoBehaviour
     [Header("Yank / Retract")]
     public float yankDuration = 0.25f;
     public AnimationCurve yankEase = AnimationCurve.EaseInOut(0, 0, 1, 1);
+
+    [Header("Cast / Yank Rod Motion")]
+    public bool actionRodMotionEnabled = true;
+    [Min(0.01f)] public float castRodMotionDuration = 0.72f;
+    [Range(0.05f, 0.95f)] public float castRodWindupPortion = 0.4f;
+    [Range(-80f, 80f)] public float castRodWindupPitch = -38f;
+    [Range(-80f, 80f)] public float castRodReleasePitch = 62f;
+    public Vector3 castRodWindupLocalOffset = new Vector3(0f, -0.16f, 0.28f);
+    public Vector3 castRodReleaseLocalOffset = new Vector3(0f, 0.14f, -0.32f);
+    public Vector3 castBobberWindupLocalOffset = new Vector3(0f, 0.16f, 0.34f);
+    [Min(0.01f)] public float yankRodMotionDuration = 0.42f;
+    [Range(-80f, 80f)] public float yankRodJerkPitch = -58f;
+    public Vector3 yankRodJerkLocalOffset = new Vector3(0f, -0.22f, -0.05f);
+    [Min(0.01f)] public float rodActionPoseSpeed = 14f;
+    [Min(0.01f)] public float rodActionReturnSpeed = 10f;
     [Header("Hook Detection")]
     public bool useNibbleBasedHooking = true;
     public bool allowRadiusHookFallback = false;
@@ -86,6 +101,7 @@ public class BobberArcCaster : MonoBehaviour
     public State CurrentState { get; private set; } = State.Idle;
 
     private enum SwingDirection { None, Up, Left, Right }
+    private enum RodActionMotion { None, Cast, Yank }
 
     private Coroutine _moveRoutine;
     private Coroutine _preYankRoutine;
@@ -121,6 +137,10 @@ public class BobberArcCaster : MonoBehaviour
     private Vector3 _stableRodBasePos;
     private Quaternion _stableRodBaseRot;
     private Vector3 _stableSwingPivotLocalOffsetFromRoot;
+    private RodActionMotion _activeRodActionMotion = RodActionMotion.None;
+    private float _rodActionMotionStartTime = -1f;
+    private float _rodActionMotionDuration;
+    private bool _rodActionWasDriving;
     private GameObject _hookedFish;
     private bool _hookedFishLockedToBobber;
     private float _hookedFishFrontDistance = 0.25f;
@@ -130,6 +150,7 @@ public class BobberArcCaster : MonoBehaviour
     private Vector3 _hookedFishCenterTarget;
     private bool _hookedFishMovingToCenter;
     private float _hookedFishSwimSeed;
+    private bool _isSuccessSequenceActive;
 
     [Header("Success Requirements")]
     public int minimumAccuracyForCatch = 65;
@@ -142,6 +163,7 @@ public class BobberArcCaster : MonoBehaviour
         CurrentState == State.Tension &&
         _hookedFish != null;
     public GameObject HookedFish => _hookedFish;
+    public bool IsSuccessSequenceActive => _isSuccessSequenceActive;
 
     void Start()
     {
@@ -170,6 +192,10 @@ public class BobberArcCaster : MonoBehaviour
     public void Cast()
     {
         if (!rodTip || !bobber || !targetMarker) return;
+        if (FishingGameplayInputGate.IsBlocked()) return;
+
+        if (FishCatchAnimation.IsAnyCatchScreenActive)
+            return;
 
         if (!TutorialStartGate.IsCastAllowedByTutorial())
             return;
@@ -182,12 +208,18 @@ public class BobberArcCaster : MonoBehaviour
             pondManager.RestoreFishAfterTension();
         FishMovement.ClearBobberNibbleVerticalOverride(bobber);
 
-        Vector3 from = bobber.position;            // launch from current (hanging) position
         Vector3 to = targetMarker.position + Vector3.up * castTargetYOffset;
 
-        FMODUnity.RuntimeManager.PlayOneShot("event:/Sfx/castPH");
+        FunkyAudioSettings.PlayOneShot("event:/Sfx/castPH", transform.position, FunkyAudioCategory.Sfx);
 
-        StartArcMove(from, to, castDuration, arcHeight, arcEase);
+        BeginRodActionMotion(RodActionMotion.Cast, castDuration);
+        StartArcMove(
+            bobber.position,
+            to,
+            castDuration,
+            arcHeight,
+            arcEase,
+            GetCastReleaseLeadTime());
         CurrentState = State.InFlight;
     }
 
@@ -195,6 +227,7 @@ public class BobberArcCaster : MonoBehaviour
     public void Yank()
     {
         if (!rodTip || !bobber) return;
+        if (FishingGameplayInputGate.IsBlocked()) return;
 
         if (!TutorialStartGate.IsYankAllowedByTutorial())
             return;
@@ -210,6 +243,12 @@ public class BobberArcCaster : MonoBehaviour
         if (!bobberInWater)
             return;
 
+        // don't allow yanking if rhythm encounter is still active in overtine
+        if (RhythmConductor.Instance != null && 
+        (RhythmConductor.Instance.activeReel != null || RhythmConductor.Instance.activeNotes.Count > 0))
+        {
+            return; 
+        }
         // If rod is displaced by tension feedback, let it settle before retracting bobber.
         if (CurrentState == State.Tension && IsBeatmapPlaying())
         {
@@ -228,6 +267,7 @@ public class BobberArcCaster : MonoBehaviour
             if (TryFindHookableFish(out GameObject fish))
             {
                 _hookedFish = fish;
+                ClearRodActionMotionState();
                 Debug.Log("Fish hooked! Entering tension state.");
                 ToggleTension(); // enter tension state
                 return;
@@ -271,38 +311,50 @@ public class BobberArcCaster : MonoBehaviour
     public void CompleteRhythmEncounter()
     {
         float accuracy = FishingSessionHud.GetCurrentRunAccuracyOrLast();
-        string grade = FishingSessionHud.GetLetterGradeForAccuracy(accuracy);
         GameObject fishToResolve = ResolveFishForEncounter();
         bool catchSucceeded = FishingSessionHud.IsSuccessfulCatchAccuracy(accuracy) && fishToResolve != null;
         FishingSessionHud.RegisterCatchOutcome(catchSucceeded);
 
         if (catchSucceeded)
         {
-            GameObject fishToShow = fishToResolve;
-            GameObject migratedFish = SceneLoading.MigratedFish;
-
-            // driveOverlayFromBobberTension can end rhythm as soon as we leave Tension.
-            // Clear SceneLoading's migrated reference so overlay teardown won't destroy
-            // the fish before the trophy animation consumes it.
-            if (fishToShow != null && fishToShow == migratedFish)
-                SceneLoading.MigratedFish = null;
-
-            if (SceneLoading.Instance != null)
-                SceneLoading.Instance.HideScoringCircleForCatchSequence();
-
-            BeginRodReturnForSuccessSequence();
-
-            _hookedFish = null; // Remove reference so Consume/Restore doesn't touch it
-
-            StartCoroutine(ExecuteSuccessSequence(fishToShow));
+            _isSuccessSequenceActive = true;
+            StartCoroutine(ExecuteVictorySequence(fishToResolve));
         }
         else
         {
+            string grade = FishingSessionHud.GetLetterGradeForAccuracy(accuracy);
             Debug.Log($"Catch failed ({grade}, {accuracy:F1}%). The fish got away.");
             ShowFailedCatchPopup();
             HandleFailedCatch(fishToResolve);
             FinishTensionState();
         }
+    }   
+
+    private IEnumerator ExecuteVictorySequence(GameObject fish = null)
+    {
+        RhythmConductor conductor = RhythmConductor.Instance;
+        if (conductor != null)
+        {
+            // Keep the hooked fish in tension until the victory reel is finished.
+            conductor.StartOvertime();
+            conductor.SpawnFinalPlaytestReel();
+
+            while (conductor.activeReel != null)
+                yield return null;
+        }
+
+        // Prepare the scene once the finale reel is actually done.
+        if (SceneLoading.Instance != null)
+            SceneLoading.Instance.HideScoringCircleForCatchSequence();
+
+        // Clear migration refs so the teardown doesn't destroy our fish early
+        if (fish != null && fish == SceneLoading.MigratedFish)
+            SceneLoading.MigratedFish = null;
+
+        BeginRodReturnForSuccessSequence();
+        _hookedFish = null; // Remove reference so Consume/Restore doesn't touch it
+
+        yield return StartCoroutine(ExecuteSuccessSequence(fish));
     }
 
     private void ShowFailedCatchPopup()
@@ -452,6 +504,8 @@ public class BobberArcCaster : MonoBehaviour
         }
         else if (TryResolveCatchAnimation())
         {
+            if (pondManager != null)
+                pondManager.UnregisterFish(fish);
             yield return StartCoroutine(catchAnimation.TrophyRoutine(fish));
         }
         else
@@ -468,9 +522,15 @@ public class BobberArcCaster : MonoBehaviour
 
     private void FinishTensionState()
     {
+        _isSuccessSequenceActive = false;
         SceneLoading.MigratedFish = null;
         if (SceneLoading.Instance != null)
             SceneLoading.Instance.EndRhythmEncounter();
+        if (VisualConductor.Instance != null)
+        {
+            VisualConductor.Instance.StopAndReset();
+            Debug.Log("Stopped Visual Conductor.zzzz");
+        }
 
         if (CurrentState != State.Idle &&
             CurrentState != State.Retracting &&
@@ -576,6 +636,9 @@ public class BobberArcCaster : MonoBehaviour
 
     public void RequestTensionToggleFromInput()
     {
+        if (FishingGameplayInputGate.IsBlocked())
+            return;
+
         if (!allowManualTensionEntry)
         {
             Debug.Log("Manual tension toggle disabled: hook a fish to enter, song end exits.");
@@ -613,6 +676,19 @@ public class BobberArcCaster : MonoBehaviour
             return pondManager.playerBobber;
 
         return null;
+    }
+
+    public void ForceRetractBobber()
+    {
+    
+        if (CurrentState == State.Idle || _isPreparingYank) return;
+
+        _hookedFish = null;
+        ClearHookedFishLockState();
+        if (pondManager != null)
+            pondManager.RestoreFishAfterTension();
+
+        StartYank();
     }
 
     private bool TryFindHookableFish(out GameObject fish)
@@ -675,6 +751,7 @@ public class BobberArcCaster : MonoBehaviour
         FishMovement.ClearBobberNibbleVerticalOverride(bobber);
 
         Vector3 to = bobberHangPoint ? bobberHangPoint.position : rodTip.position;
+        BeginRodActionMotion(RodActionMotion.Yank, yankDuration);
         StartLinearMove(bobber.position, to, yankDuration, yankEase);
         CurrentState = State.Retracting;
     }
@@ -725,10 +802,16 @@ public class BobberArcCaster : MonoBehaviour
         return posDone && rotDone && bendDone && poseDone && swingDone && !_isRestoringFromTension;
     }
 
-    private void StartArcMove(Vector3 from, Vector3 to, float duration, float height, AnimationCurve ease)
+    private void StartArcMove(
+        Vector3 from,
+        Vector3 to,
+        float duration,
+        float height,
+        AnimationCurve ease,
+        float startDelay = 0f)
     {
         if (_moveRoutine != null) StopCoroutine(_moveRoutine);
-        _moveRoutine = StartCoroutine(ArcMove(from, to, duration, height, ease));
+        _moveRoutine = StartCoroutine(ArcMove(from, to, duration, height, ease, startDelay));
     }
 
     private void StartLinearMove(Vector3 from, Vector3 to, float duration, AnimationCurve ease)
@@ -737,8 +820,38 @@ public class BobberArcCaster : MonoBehaviour
         _moveRoutine = StartCoroutine(LinearMove(from, to, duration, ease));
     }
 
-    private IEnumerator ArcMove(Vector3 from, Vector3 to, float duration, float height, AnimationCurve ease)
+    private IEnumerator ArcMove(
+        Vector3 from,
+        Vector3 to,
+        float duration,
+        float height,
+        AnimationCurve ease,
+        float startDelay)
     {
+        float delayRemaining = Mathf.Max(0f, startDelay);
+        while (delayRemaining > 0f)
+        {
+            if (bobber != null)
+            {
+                Transform hangAnchor = bobberHangPoint != null ? bobberHangPoint : rodTip;
+                if (hangAnchor != null)
+                {
+                    float progress = 1f - Mathf.Clamp01(delayRemaining / Mathf.Max(0.0001f, startDelay));
+                    Vector3 localBobberOffset = Vector3.LerpUnclamped(
+                        Vector3.zero,
+                        castBobberWindupLocalOffset,
+                        EaseOutCubic(progress));
+                    bobber.position = hangAnchor.position + GetCastBobberWindupWorldOffset(hangAnchor, localBobberOffset);
+                }
+            }
+
+            delayRemaining -= Time.deltaTime;
+            yield return null;
+        }
+
+        if (bobber != null)
+            from = bobber.position;
+
         duration = Mathf.Max(0.01f, duration);
         float t = 0f;
 
@@ -979,8 +1092,9 @@ public class BobberArcCaster : MonoBehaviour
             return;
 
         bool inTension = CurrentState == State.Tension;
+        bool actionMotionActive = IsRodActionMotionActive();
 
-        if (!inTension && !_wasInTension && !_isRestoringFromTension)
+        if (!inTension && !_wasInTension && !_isRestoringFromTension && !actionMotionActive && !_rodActionWasDriving)
             CacheStableRodBasePose();
 
         if (inTension && !_wasInTension)
@@ -990,9 +1104,13 @@ public class BobberArcCaster : MonoBehaviour
         {
             ApplyTensionRodPose();
         }
-        else
+        else if (_isRestoringFromTension || _wasInTension)
         {
             RestoreFromTension();
+        }
+        else
+        {
+            ApplyActionRodPoseOrRestore();
         }
 
         _wasInTension = inTension;
@@ -1051,7 +1169,211 @@ public class BobberArcCaster : MonoBehaviour
         _tensionSeedA = Random.Range(0f, 100f);
         _tensionSeedB = Random.Range(0f, 100f);
 
+        ClearRodActionMotionState();
         ResetDirectionalSwingState();
+    }
+
+    private void BeginRodActionMotion(RodActionMotion motion, float linkedBobberDuration)
+    {
+        if (!actionRodMotionEnabled)
+            return;
+
+        if (rodRoot == null && rodTip != null)
+            rodRoot = rodTip.parent;
+        if (rodRoot == null)
+            return;
+
+        if (!_hasStableRodBasePose)
+            CacheStableRodBasePose();
+        if (!_hasStableRodBasePose)
+            return;
+
+        _activeRodActionMotion = motion;
+        _rodActionMotionStartTime = Time.time;
+
+        float configuredDuration = motion == RodActionMotion.Cast
+            ? castRodMotionDuration
+            : yankRodMotionDuration;
+        _rodActionMotionDuration = Mathf.Clamp(
+            configuredDuration,
+            0.01f,
+            Mathf.Max(0.01f, linkedBobberDuration));
+        _rodActionWasDriving = true;
+    }
+
+    private bool IsRodActionMotionActive()
+    {
+        return _activeRodActionMotion != RodActionMotion.None &&
+               (Time.time - _rodActionMotionStartTime) < _rodActionMotionDuration;
+    }
+
+    private void ApplyActionRodPoseOrRestore()
+    {
+        if (rodRoot == null)
+            return;
+
+        if (!_hasStableRodBasePose)
+            CacheStableRodBasePose();
+        if (!_hasStableRodBasePose)
+            return;
+
+        bool actionActive = IsRodActionMotionActive();
+        float pitchAngle = 0f;
+        Vector3 localOffset = Vector3.zero;
+
+        if (actionActive)
+        {
+            float normalized = Mathf.Clamp01((Time.time - _rodActionMotionStartTime) / Mathf.Max(0.01f, _rodActionMotionDuration));
+            EvaluateRodActionMotion(normalized, out pitchAngle, out localOffset);
+        }
+        else
+        {
+            _activeRodActionMotion = RodActionMotion.None;
+        }
+
+        Vector3 desiredBasePos = _stableRodBasePos + (_stableRodBaseRot * localOffset);
+        Quaternion desiredRot =
+            Quaternion.AngleAxis(pitchAngle, _stableRodBaseRot * Vector3.right) *
+            _stableRodBaseRot;
+
+        Vector3 desiredRootPos = desiredBasePos;
+        if (rodSwingPivot != null)
+        {
+            Vector3 desiredPivotPos = desiredBasePos + (_stableRodBaseRot * _stableSwingPivotLocalOffsetFromRoot);
+            desiredRootPos = desiredPivotPos - (desiredRot * _stableSwingPivotLocalOffsetFromRoot);
+        }
+
+        float followSpeed = actionActive ? rodActionPoseSpeed : rodActionReturnSpeed;
+        float k = 1f - Mathf.Exp(-Mathf.Max(0.01f, followSpeed) * Mathf.Max(Time.deltaTime, 0.0001f));
+        rodRoot.position = Vector3.Lerp(rodRoot.position, desiredRootPos, k);
+        rodRoot.rotation = Quaternion.Slerp(rodRoot.rotation, desiredRot, k);
+
+        if (!actionActive && IsRodAtStablePose())
+        {
+            rodRoot.position = _stableRodBasePos;
+            rodRoot.rotation = _stableRodBaseRot;
+            _rodActionWasDriving = false;
+            CacheStableRodBasePose();
+        }
+    }
+
+    private void EvaluateRodActionMotion(float normalizedTime, out float pitchAngle, out Vector3 localOffset)
+    {
+        pitchAngle = 0f;
+        localOffset = Vector3.zero;
+
+        if (_activeRodActionMotion == RodActionMotion.Cast)
+        {
+            float windupPortion = Mathf.Clamp01(castRodWindupPortion);
+            if (normalizedTime < windupPortion)
+            {
+                float t = EaseOutCubic(normalizedTime / Mathf.Max(0.001f, windupPortion));
+                pitchAngle = Mathf.LerpUnclamped(0f, castRodWindupPitch, t);
+                localOffset = Vector3.LerpUnclamped(Vector3.zero, castRodWindupLocalOffset, t);
+                return;
+            }
+
+            const float releasePortion = 0.76f;
+            if (normalizedTime < releasePortion)
+            {
+                float t = EaseInCubic((normalizedTime - windupPortion) / Mathf.Max(0.001f, releasePortion - windupPortion));
+                pitchAngle = Mathf.LerpUnclamped(castRodWindupPitch, castRodReleasePitch, t);
+                localOffset = Vector3.LerpUnclamped(castRodWindupLocalOffset, castRodReleaseLocalOffset, t);
+                return;
+            }
+
+            float returnT = EaseOutCubic((normalizedTime - releasePortion) / Mathf.Max(0.001f, 1f - releasePortion));
+            pitchAngle = Mathf.LerpUnclamped(castRodReleasePitch, 0f, returnT);
+            localOffset = Vector3.LerpUnclamped(castRodReleaseLocalOffset, Vector3.zero, returnT);
+            return;
+        }
+
+        if (_activeRodActionMotion == RodActionMotion.Yank)
+        {
+            const float jerkPortion = 0.58f;
+            if (normalizedTime < jerkPortion)
+            {
+                float t = EaseOutCubic(normalizedTime / jerkPortion);
+                pitchAngle = Mathf.LerpUnclamped(0f, yankRodJerkPitch, t);
+                localOffset = Vector3.LerpUnclamped(Vector3.zero, yankRodJerkLocalOffset, t);
+                return;
+            }
+
+            float returnT = EaseOutCubic((normalizedTime - jerkPortion) / Mathf.Max(0.001f, 1f - jerkPortion));
+            pitchAngle = Mathf.LerpUnclamped(yankRodJerkPitch, 0f, returnT);
+            localOffset = Vector3.LerpUnclamped(yankRodJerkLocalOffset, Vector3.zero, returnT);
+        }
+    }
+
+    private bool IsRodAtStablePose()
+    {
+        if (rodRoot == null || !_hasStableRodBasePose)
+            return true;
+
+        bool posDone = (rodRoot.position - _stableRodBasePos).sqrMagnitude <= 0.000004f;
+        bool rotDone = Quaternion.Angle(rodRoot.rotation, _stableRodBaseRot) <= 0.15f;
+        return posDone && rotDone;
+    }
+
+    private void ClearRodActionMotionState()
+    {
+        _activeRodActionMotion = RodActionMotion.None;
+        _rodActionMotionStartTime = -1f;
+        _rodActionMotionDuration = 0f;
+        _rodActionWasDriving = false;
+    }
+
+    private static float EaseOutCubic(float t)
+    {
+        t = Mathf.Clamp01(t);
+        float inv = 1f - t;
+        return 1f - (inv * inv * inv);
+    }
+
+    private static float EaseInCubic(float t)
+    {
+        t = Mathf.Clamp01(t);
+        return t * t * t;
+    }
+
+    private float GetCastReleaseLeadTime()
+    {
+        if (!actionRodMotionEnabled)
+            return 0f;
+
+        float motionDuration = Mathf.Max(0.01f, castRodMotionDuration);
+        return motionDuration * Mathf.Clamp01(castRodWindupPortion);
+    }
+
+    private Vector3 GetCastBobberWindupWorldOffset(Transform hangAnchor, Vector3 localOffset)
+    {
+        if (hangAnchor == null)
+            return localOffset;
+
+        Vector3 alongRod = Vector3.zero;
+        if (rodRoot != null)
+            alongRod = rodRoot.position - hangAnchor.position;
+        else if (rodTip != null && rodTip != hangAnchor)
+            alongRod = rodTip.position - hangAnchor.position;
+
+        if (alongRod.sqrMagnitude < 0.0001f)
+            alongRod = -hangAnchor.forward;
+        alongRod.Normalize();
+
+        Vector3 upAxis = Vector3.ProjectOnPlane(hangAnchor.up, alongRod);
+        if (upAxis.sqrMagnitude < 0.0001f)
+            upAxis = Vector3.up;
+        upAxis.Normalize();
+
+        Vector3 lateralAxis = Vector3.Cross(upAxis, alongRod);
+        if (lateralAxis.sqrMagnitude < 0.0001f)
+            lateralAxis = hangAnchor.right;
+        lateralAxis.Normalize();
+
+        return
+            (lateralAxis * localOffset.x) +
+            (upAxis * localOffset.y) +
+            (alongRod * localOffset.z);
     }
 
     private void ApplyTensionRodPose()
@@ -1254,6 +1576,12 @@ public class BobberArcCaster : MonoBehaviour
 
     private void UpdateDirectionalSwingInput()
     {
+        if (FishingGameplayInputGate.IsBlocked())
+        {
+            ClearDirectionalSwingInputState();
+            return;
+        }
+
         if (!directionalSwingEnabled)
         {
             _activeSwingDirection = SwingDirection.None;

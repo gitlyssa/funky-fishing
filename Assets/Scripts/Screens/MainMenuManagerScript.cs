@@ -5,18 +5,30 @@ public class MainMenuManagerScript : MonoBehaviour
 {
     public void StartGame()
     {
+        FunkyAudioSettings.PlayUiConfirm();
+        FishingSessionHud.ResetSessionForFreshPlay();
         Debug.Log("Start Game");
-        SceneManager.LoadScene("PondSelect");
+        SceneTransitionManager.LoadSceneWithLoading("Pond_Level_1");
+    }
+
+    public void TutorialSelected()
+    {
+        FunkyAudioSettings.PlayUiConfirm();
+        FishingSessionHud.ResetSessionForFreshPlay();
+        Debug.Log("Tutorial Selected");
+        SceneTransitionManager.LoadSceneWithLoading("Tutorial_Level");
     }
 
     public void ControllerMenu()
     {
+        FunkyAudioSettings.PlayUiConfirm();
         Debug.Log("Controller Menu");
         SceneManager.LoadScene("ControllerMenu");
     }
 
     public void QuitGame()
     {
+        FunkyAudioSettings.PlayUiConfirm();
         Debug.Log("Quit Game");
 #if UNITY_EDITOR
         UnityEditor.EditorApplication.isPlaying = false;

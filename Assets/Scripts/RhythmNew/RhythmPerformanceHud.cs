@@ -2,12 +2,15 @@ using System.Collections.Generic;
 using FMOD.Studio;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 public class RhythmPerformanceHud : MonoBehaviour
 {
     [Header("HUD Toggle")]
     [SerializeField] private bool hudEnabled = true;
+    [SerializeField] private bool judgementFeedbackOnlyEnabled = false;
 
     [Header("Points")]
     [SerializeField] private int perfectPoints = 100;
@@ -16,7 +19,7 @@ public class RhythmPerformanceHud : MonoBehaviour
 
     [Header("Judgement Text")]
     [SerializeField] private Vector2 judgementAnchoredPosition = new Vector2(0f, -120f);
-    [SerializeField] private int judgementFontSize = 56;
+    [SerializeField] private int judgementFontSize = 70;
     [SerializeField] private Sprite perfectJudgementSprite;
     [SerializeField] private Vector2 perfectJudgementImageSize = new Vector2(520f, 130f);
     [SerializeField] private Vector2 perfectJudgementImageOffset = new Vector2(0f, -30f);
@@ -38,11 +41,11 @@ public class RhythmPerformanceHud : MonoBehaviour
     [Header("Combo Counter")]
     [SerializeField] private int comboShowThreshold = 2;
     [SerializeField] private Vector2 comboAnchoredPosition = new Vector2(0f, -200f);
-    [SerializeField] private int comboFontSize = 74;
+    [SerializeField] private int comboFontSize = 88;
     [SerializeField] private Color comboColor = new Color(0.35f, 0.95f, 0.45f, 1f);
     [SerializeField] private string comboSuffix = " COMBO";
-    [SerializeField] private float comboBaseScaleMin = 0.55f;
-    [SerializeField] private float comboBaseScaleMax = 1.38f;
+    [SerializeField] private float comboBaseScaleMin = 0.7f;
+    [SerializeField] private float comboBaseScaleMax = 1.6f;
     [SerializeField] private int comboGrowthMaxCombo = 18;
     [SerializeField] private float comboPulseReturnDuration = 0.14f;
     [SerializeField] private float comboPulseScale = 1.34f;
@@ -50,7 +53,31 @@ public class RhythmPerformanceHud : MonoBehaviour
 
     [Header("Detailed Text")]
     [SerializeField] private Vector2 detailAnchoredPosition = new Vector2(-28f, -28f);
-    [SerializeField] private int detailFontSize = 26;
+    [SerializeField] private int detailFontSize = 34;
+
+    [Header("Timing Indicators")]
+    [SerializeField] private Vector2 timingIndicatorSize = new Vector2(540f, 180f);
+    [SerializeField] private int timingIndicatorFontSize = 88;
+    [SerializeField] private Sprite earlyTimingIndicatorSprite;
+    [SerializeField] private Rect earlyTimingIndicatorUvRect = new Rect(0.336f, 0.522f, 0.306f, 0.077f);
+    [SerializeField] private Sprite lateTimingIndicatorSprite;
+    [SerializeField] private Rect lateTimingIndicatorUvRect = new Rect(0.337f, 0.522f, 0.266f, 0.079f);
+    [SerializeField] private Color timingIndicatorImageColor = Color.white;
+    [SerializeField] private float timingIndicatorImageHeight = 75f;
+    [SerializeField] private float timingIndicatorImageMaxWidth = 640f;
+    [SerializeField] private float timingIndicatorImageUpInwardNudge = 60f;
+    [SerializeField] private float timingIndicatorImageSideInwardNudge = 85f;
+    [FormerlySerializedAs("timingIndicatorRadiusOffset")]
+    [SerializeField] private float timingIndicatorScreenOffset = -42f;
+    [SerializeField] private float timingIndicatorSideScreenOffset = -36f;
+    [SerializeField] private float timingIndicatorScreenMargin = 24f;
+    [SerializeField] private Color earlyTimingIndicatorColor = new Color(0.45f, 0.95f, 1f, 1f);
+    [SerializeField] private Color lateTimingIndicatorColor = new Color(1f, 0.78f, 0.35f, 1f);
+    [SerializeField] private float timingIndicatorVisibleDuration = 0.42f;
+    [SerializeField] private float timingIndicatorFadeDuration = 0.45f;
+    [SerializeField] private float timingIndicatorPopReturnDuration = 0.16f;
+    [SerializeField] private float timingIndicatorPopScale = 1.12f;
+    [SerializeField] private float timingIndicatorRiseDistance = 10f;
 
     private RhythmConductor _conductor;
     private RhythmJudge _judge;
@@ -88,6 +115,41 @@ public class RhythmPerformanceHud : MonoBehaviour
     private int _combo;
     private int _maxCombo;
     private int _score;
+    private int _baseScore;
+    private float _lastFiredMultiplier = 1f;
+    private float _maxPowerTimer = 0f; // New timer for the visual loop
+    private float _activeReelInputTime = 0f;
+    [SerializeField] private float maxPowerFlashInterval = 0.5f;
+
+    [Header("Reel Status (Pulsing)")]
+    [SerializeField] private Sprite reelStatusSprite;
+    [SerializeField] private Vector2 reelStatusPosition = new Vector2(0f, 250f); // Higher up
+    [SerializeField] private Vector2 reelStatusSize = new Vector2(300f, 100f);
+    [SerializeField] private float reelPulseSpeed = 12f;
+    [SerializeField] private float reelPulseAmount = 0.15f;
+
+    [Header("Reel Judgement (Multiplier)")]
+    [SerializeField] private Color multiplierColor = new Color(1f, 0.8f, 0.2f); // Golden/Orange
+    [SerializeField] private string multiplierFormat = "{0:F1}x"; // Displays as 1.1x, 1.2x etc.
+    [SerializeField, Min(1f)] private float maxReelMultiplier = 5f;
+    [SerializeField, Range(0.05f, 2f)] private float reelProgressForMaxMultiplier = 1f;
+    [SerializeField, Min(0.1f)] private float reelInputSecondsForMaxMultiplier = 3f;
+    [SerializeField, Min(0f)] private float reelMotionThreshold = 90f;
+    [SerializeField, Min(0.1f)] private float reelMultiplierGrowthExponent = 1.35f;
+
+
+    [Header("Reel Progress Circle")]
+    public GameObject timingRingPrefab; 
+    public GameObject ScoringWheel;
+    public float reelArcThickness = 0.05f;
+
+    [SerializeField] private Color reelArcColor = new Color(0.4f, 0.95f, 1f, 0.5f); // Transparent Sapphire
+    private DynamicArc _currentReelArc;
+    private GameObject _reelArcObj;
+
+
+    private Image _reelStatusImage;
+    private RectTransform _reelStatusRect;
 
     public int CurrentScore => _score;
     public float CurrentAccuracy {
@@ -96,6 +158,12 @@ public class RhythmPerformanceHud : MonoBehaviour
             return totalJudged > 0 ? ((_perfectCount * 1f) + (_goodCount * 0.7f)) / totalJudged * 100f : 0f;
         }
     }
+
+    public int CurrentCombo => _combo;
+    public int PerfectCount => _perfectCount;
+    public int GoodCount => _goodCount;
+    public int MissCount => _missCount;
+    public int MaxCombo => _maxCombo;
 
     private enum ResultType
     {
@@ -112,6 +180,26 @@ public class RhythmPerformanceHud : MonoBehaviour
         MissImage
     }
 
+    private sealed class TimingIndicatorState
+    {
+        public TextMeshProUGUI Text;
+        public RectTransform TextRect;
+        public RawImage Image;
+        public RectTransform ImageRect;
+        public Vector2 BasePosition;
+        public Color BaseColor;
+        public float AnimTime = -1f;
+        public bool UsingImage;
+    }
+
+    private readonly Dictionary<FlickDirection, TimingIndicatorState> _timingIndicators =
+        new Dictionary<FlickDirection, TimingIndicatorState>
+        {
+            { FlickDirection.Left, new TimingIndicatorState() },
+            { FlickDirection.Right, new TimingIndicatorState() },
+            { FlickDirection.Up, new TimingIndicatorState() }
+        };
+
     private void Awake()
     {
         EnsureReferences();
@@ -119,6 +207,16 @@ public class RhythmPerformanceHud : MonoBehaviour
         ResetRunStats();
         RefreshDetailText();
         ApplyHudVisibility();
+    }
+
+    private void OnEnable()
+    {
+        RhythmJudge.OnDetailedNoteJudged += HandleDetailedNoteJudged;
+    }
+
+    private void OnDisable()
+    {
+        RhythmJudge.OnDetailedNoteJudged -= HandleDetailedNoteJudged;
     }
 
     private void OnValidate()
@@ -131,25 +229,31 @@ public class RhythmPerformanceHud : MonoBehaviour
         EnsureReferences();
         EnsureUi();
 
-        if (!hudEnabled)
+        if (!hudEnabled && !judgementFeedbackOnlyEnabled)
         {
             _wasPlaybackActive = false;
             _trackedNotes.Clear();
             HideJudgementImmediate();
             HideComboImmediate();
+            HideAllTimingIndicatorsImmediate();
             return;
         }
 
         if (_conductor == null || _judge == null)
             return;
 
+        RefreshTimingIndicatorBasePositions();
+
         bool playbackActive = IsRhythmPlaybackActive();
+        bool isReeling = _conductor != null && _conductor.activeReel != null;
 
         if (playbackActive && !_wasPlaybackActive)
         {
             ResetRunStats();
-            SyncTrackedNotesToCurrent();
-            ShowReadyJudgement();
+            if (hudEnabled)
+                ShowReadyJudgement();
+            else
+                HideJudgementImmediate();
             RefreshDetailText();
         }
 
@@ -161,13 +265,14 @@ public class RhythmPerformanceHud : MonoBehaviour
 
         _wasPlaybackActive = playbackActive;
 
-        if (!playbackActive)
+        bool hasActiveFeedback = _judgementAnimTime >= 0f || _comboPulseTime >= 0f || HasActiveTimingIndicatorAnimation();
+        if (!playbackActive && !isReeling && !hasActiveFeedback)
             return;
 
-        CollectNewNotes();
-        ResolveRemovedNotes();
         TickJudgementAnimation();
+        TickTimingIndicatorAnimations();
         TickComboPulseAnimation();
+        TickReelVisuals();
     }
 
     private void EnsureReferences()
@@ -182,7 +287,13 @@ public class RhythmPerformanceHud : MonoBehaviour
 
     private void EnsureUi()
     {
-        if (_judgementText != null && _detailText != null && _comboText != null && _missJudgementImage != null && _perfectJudgementImage != null && _goodJudgementImage != null)
+        if (_judgementText != null &&
+            _detailText != null &&
+            _comboText != null &&
+            _missJudgementImage != null &&
+            _perfectJudgementImage != null &&
+            _goodJudgementImage != null &&
+            TimingIndicatorsReady())
             return;
 
         _canvas = GetOrCreateHudCanvas();
@@ -248,10 +359,28 @@ public class RhythmPerformanceHud : MonoBehaviour
             new Vector2(1f, 1f),
             new Vector2(1f, 1f),
             detailAnchoredPosition,
-            new Vector2(450f, 320f),
+            new Vector2(620f, 420f),
             detailFontSize,
             TextAlignmentOptions.TopRight,
             string.Empty);
+
+        EnsureTimingIndicator(FlickDirection.Left, "LeftTimingIndicator");
+        EnsureTimingIndicator(FlickDirection.Right, "RightTimingIndicator");
+        EnsureTimingIndicator(FlickDirection.Up, "UpTimingIndicator");
+
+        _reelStatusImage = CreateImage(
+        "ReelStatusImage",
+        _canvas.transform,
+        new Vector2(0.5f, 0.5f),
+        new Vector2(0.5f, 0.5f),
+        new Vector2(0.5f, 0.5f),
+        reelStatusPosition,
+        reelStatusSize,
+        reelStatusSprite);
+
+        _reelStatusRect = _reelStatusImage.rectTransform;
+        _reelStatusImage.color = new Color(1, 1, 1, 0);
+            
 
         _comboText.gameObject.layer = _canvas.gameObject.layer;
         _judgementText.gameObject.layer = _canvas.gameObject.layer;
@@ -290,8 +419,10 @@ public class RhythmPerformanceHud : MonoBehaviour
         imageColor.a = 0f;
         _missJudgementImage.color = imageColor;
 
+        RefreshTimingIndicatorBasePositions(true);
         HideComboImmediate();
         HideJudgementImmediate();
+        HideAllTimingIndicatorsImmediate();
 
         ApplyHudVisibility();
     }
@@ -408,6 +539,347 @@ public class RhythmPerformanceHud : MonoBehaviour
         return image;
     }
 
+    private RawImage CreateRawImage(
+        string objectName,
+        Transform parent,
+        Vector2 anchorMin,
+        Vector2 anchorMax,
+        Vector2 pivot,
+        Vector2 anchoredPosition,
+        Vector2 size,
+        Texture texture,
+        Rect uvRect)
+    {
+        Transform existing = parent.Find(objectName);
+        if (existing != null)
+        {
+            RawImage existingImage = existing.GetComponent<RawImage>();
+            if (existingImage != null)
+                return existingImage;
+        }
+
+        GameObject go = new GameObject(objectName, typeof(RectTransform), typeof(RawImage));
+        go.transform.SetParent(parent, false);
+
+        RectTransform rect = go.GetComponent<RectTransform>();
+        rect.anchorMin = anchorMin;
+        rect.anchorMax = anchorMax;
+        rect.pivot = pivot;
+        rect.anchoredPosition = anchoredPosition;
+        rect.sizeDelta = size;
+
+        RawImage image = go.GetComponent<RawImage>();
+        image.texture = texture;
+        image.uvRect = uvRect;
+        image.raycastTarget = false;
+
+        return image;
+    }
+
+    private bool TimingIndicatorsReady()
+    {
+        foreach (TimingIndicatorState state in _timingIndicators.Values)
+        {
+            if (state.Text == null || state.TextRect == null || state.Image == null || state.ImageRect == null)
+                return false;
+        }
+
+        return true;
+    }
+
+    private void EnsureTimingIndicator(FlickDirection direction, string objectName)
+    {
+        if (!_timingIndicators.TryGetValue(direction, out TimingIndicatorState state))
+            return;
+
+        state.Text = CreateText(
+            objectName,
+            _canvas.transform,
+            new Vector2(0.5f, 0.5f),
+            new Vector2(0.5f, 0.5f),
+            GetTimingIndicatorPivot(direction),
+            Vector2.zero,
+            timingIndicatorSize,
+            timingIndicatorFontSize,
+            GetTimingIndicatorAlignment(direction),
+            string.Empty);
+        state.TextRect = state.Text.rectTransform;
+        state.Text.alignment = GetTimingIndicatorAlignment(direction);
+        state.Text.gameObject.layer = _canvas.gameObject.layer;
+        Color color = state.Text.color;
+        color.a = 0f;
+        state.Text.color = color;
+
+        state.Image = CreateRawImage(
+            objectName + "Image",
+            _canvas.transform,
+            new Vector2(0.5f, 0.5f),
+            new Vector2(0.5f, 0.5f),
+            GetTimingIndicatorPivot(direction),
+            Vector2.zero,
+            new Vector2(timingIndicatorImageMaxWidth, timingIndicatorImageHeight),
+            GetDefaultTimingIndicatorTexture(),
+            new Rect(0f, 0f, 1f, 1f));
+        state.ImageRect = state.Image.rectTransform;
+        state.Image.gameObject.layer = _canvas.gameObject.layer;
+        Color imageColor = state.Image.color;
+        imageColor.a = 0f;
+        state.Image.color = imageColor;
+        state.UsingImage = false;
+    }
+
+    private void RefreshTimingIndicatorBasePositions(bool snapToBase = false)
+    {
+        foreach (KeyValuePair<FlickDirection, TimingIndicatorState> entry in _timingIndicators)
+        {
+            TimingIndicatorState state = entry.Value;
+            RectTransform activeRect = GetTimingIndicatorRect(state);
+            if (activeRect == null)
+                continue;
+
+            if (!TryGetTimingIndicatorAnchoredPosition(entry.Key, activeRect, out Vector2 anchoredPosition))
+                continue;
+
+            anchoredPosition = ApplyTimingIndicatorImageInwardNudge(entry.Key, state, anchoredPosition);
+            state.BasePosition = anchoredPosition;
+            if (snapToBase || state.AnimTime < 0f)
+                ApplyTimingIndicatorPosition(state, anchoredPosition);
+        }
+    }
+
+    private bool TryGetTimingIndicatorAnchoredPosition(
+        FlickDirection direction,
+        RectTransform indicatorRect,
+        out Vector2 anchoredPosition)
+    {
+        anchoredPosition = Vector2.zero;
+        if (_canvas == null || _conductor == null || indicatorRect == null)
+            return false;
+
+        RectTransform canvasRect = _canvas.transform as RectTransform;
+        if (canvasRect == null)
+            return false;
+
+        Camera projectionCamera = GetProjectionCamera();
+        if (projectionCamera == null)
+            return false;
+
+        Camera canvasCamera = _canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : projectionCamera;
+        Vector3 centerWorldPosition = _conductor.transform.position;
+        Vector3 hitWorldPosition = centerWorldPosition +
+            (Vector3)(GetDirectionVector(direction) * _conductor.hitRingRadius);
+        Vector2 centerScreenPoint = RectTransformUtility.WorldToScreenPoint(projectionCamera, centerWorldPosition);
+        Vector2 hitScreenPoint = RectTransformUtility.WorldToScreenPoint(projectionCamera, hitWorldPosition);
+        Vector2 screenDirection = hitScreenPoint - centerScreenPoint;
+        if (screenDirection.sqrMagnitude < 0.001f)
+            screenDirection = GetDirectionVector(direction);
+        else
+            screenDirection.Normalize();
+
+        float directionalScreenOffset = GetTimingIndicatorDirectionalScreenOffset(direction);
+        Vector2 indicatorScreenPoint = hitScreenPoint + (screenDirection * directionalScreenOffset);
+        if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
+            canvasRect,
+            indicatorScreenPoint,
+            canvasCamera,
+            out anchoredPosition))
+        {
+            return false;
+        }
+
+        anchoredPosition = ClampTimingIndicatorPosition(canvasRect, indicatorRect, anchoredPosition);
+        return true;
+    }
+
+    private Camera GetProjectionCamera()
+    {
+        if (_canvas != null && _canvas.worldCamera != null)
+            return _canvas.worldCamera;
+
+        Camera sceneCamera = FindCameraInScene(GetReferenceScene());
+        if (sceneCamera != null)
+            return sceneCamera;
+
+        return Camera.main;
+    }
+
+    private Scene GetReferenceScene()
+    {
+        if (_conductor != null)
+            return _conductor.gameObject.scene;
+
+        return gameObject.scene;
+    }
+
+    private static Camera FindCameraInScene(Scene scene)
+    {
+        if (!scene.IsValid() || !scene.isLoaded)
+            return null;
+
+        GameObject[] roots = scene.GetRootGameObjects();
+        for (int i = 0; i < roots.Length; i++)
+        {
+            if (roots[i] == null)
+                continue;
+
+            Camera[] cameras = roots[i].GetComponentsInChildren<Camera>(true);
+            for (int j = 0; j < cameras.Length; j++)
+            {
+                Camera camera = cameras[j];
+                if (camera != null && camera.isActiveAndEnabled)
+                    return camera;
+            }
+        }
+
+        return null;
+    }
+
+    private float GetTimingIndicatorDirectionalScreenOffset(FlickDirection direction)
+    {
+        if (direction != FlickDirection.Left && direction != FlickDirection.Right)
+            return timingIndicatorScreenOffset;
+
+        return timingIndicatorSideScreenOffset;
+    }
+
+    private Vector2 GetTimingIndicatorPivot(FlickDirection direction)
+    {
+        return direction switch
+        {
+            FlickDirection.Left => new Vector2(1f, 0.5f),
+            FlickDirection.Right => new Vector2(0f, 0.5f),
+            FlickDirection.Up => new Vector2(0.5f, 0f),
+            _ => new Vector2(0.5f, 0.5f)
+        };
+    }
+
+    private TextAlignmentOptions GetTimingIndicatorAlignment(FlickDirection direction)
+    {
+        return direction switch
+        {
+            FlickDirection.Left => TextAlignmentOptions.MidlineRight,
+            FlickDirection.Right => TextAlignmentOptions.MidlineLeft,
+            FlickDirection.Up => TextAlignmentOptions.Center,
+            _ => TextAlignmentOptions.Center
+        };
+    }
+
+    private Texture GetDefaultTimingIndicatorTexture()
+    {
+        if (earlyTimingIndicatorSprite != null)
+            return earlyTimingIndicatorSprite.texture;
+
+        if (lateTimingIndicatorSprite != null)
+            return lateTimingIndicatorSprite.texture;
+
+        return Texture2D.whiteTexture;
+    }
+
+    private bool TryGetTimingIndicatorSpriteData(bool isEarly, out Texture texture, out Rect uvRect)
+    {
+        Sprite sprite = isEarly ? earlyTimingIndicatorSprite : lateTimingIndicatorSprite;
+        if (sprite == null)
+        {
+            texture = null;
+            uvRect = new Rect(0f, 0f, 1f, 1f);
+            return false;
+        }
+
+        texture = sprite.texture;
+        uvRect = isEarly ? earlyTimingIndicatorUvRect : lateTimingIndicatorUvRect;
+        if (uvRect.width <= 0f || uvRect.height <= 0f)
+            uvRect = new Rect(0f, 0f, 1f, 1f);
+
+        return true;
+    }
+
+    private Vector2 GetTimingIndicatorImageSize(Rect uvRect)
+    {
+        float safeHeight = Mathf.Max(1f, timingIndicatorImageHeight);
+        float width = safeHeight;
+        if (uvRect.height > 0.0001f)
+            width = safeHeight * (uvRect.width / uvRect.height);
+
+        width = Mathf.Min(width, Mathf.Max(1f, timingIndicatorImageMaxWidth));
+        return new Vector2(width, safeHeight);
+    }
+
+    private RectTransform GetTimingIndicatorRect(TimingIndicatorState state)
+    {
+        if (state == null)
+            return null;
+
+        if (state.UsingImage && state.ImageRect != null)
+            return state.ImageRect;
+
+        if (state.TextRect != null)
+            return state.TextRect;
+
+        return state.ImageRect;
+    }
+
+    private Vector2 ApplyTimingIndicatorImageInwardNudge(
+        FlickDirection direction,
+        TimingIndicatorState state,
+        Vector2 anchoredPosition)
+    {
+        if (state == null || !state.UsingImage)
+            return anchoredPosition;
+
+        float inwardNudge = direction == FlickDirection.Up
+            ? timingIndicatorImageUpInwardNudge
+            : timingIndicatorImageSideInwardNudge;
+        return anchoredPosition - (GetDirectionVector(direction) * inwardNudge);
+    }
+
+    private void ApplyTimingIndicatorPosition(TimingIndicatorState state, Vector2 anchoredPosition)
+    {
+        if (state.TextRect != null)
+            state.TextRect.anchoredPosition = anchoredPosition;
+        if (state.ImageRect != null)
+            state.ImageRect.anchoredPosition = anchoredPosition;
+    }
+
+    private void ApplyTimingIndicatorScale(TimingIndicatorState state, float scale)
+    {
+        Vector3 scaleVector = Vector3.one * scale;
+        if (state.TextRect != null)
+            state.TextRect.localScale = scaleVector;
+        if (state.ImageRect != null)
+            state.ImageRect.localScale = scaleVector;
+    }
+
+    private Vector2 ClampTimingIndicatorPosition(
+        RectTransform canvasRect,
+        RectTransform indicatorRect,
+        Vector2 anchoredPosition)
+    {
+        Rect canvasBounds = canvasRect.rect;
+        Vector2 size = indicatorRect.sizeDelta;
+        Vector2 pivot = indicatorRect.pivot;
+
+        float minX = canvasBounds.xMin + (size.x * pivot.x) + timingIndicatorScreenMargin;
+        float maxX = canvasBounds.xMax - (size.x * (1f - pivot.x)) - timingIndicatorScreenMargin;
+        float minY = canvasBounds.yMin + (size.y * pivot.y) + timingIndicatorScreenMargin;
+        float maxY = canvasBounds.yMax - (size.y * (1f - pivot.y)) - timingIndicatorScreenMargin;
+
+        anchoredPosition.x = Mathf.Clamp(anchoredPosition.x, minX, maxX);
+        anchoredPosition.y = Mathf.Clamp(anchoredPosition.y, minY, maxY);
+        return anchoredPosition;
+    }
+
+    private Vector2 GetDirectionVector(FlickDirection direction)
+    {
+        return direction switch
+        {
+            FlickDirection.Left => Vector2.left,
+            FlickDirection.Right => Vector2.right,
+            FlickDirection.Up => Vector2.up,
+            FlickDirection.Down => Vector2.down,
+            _ => Vector2.zero
+        };
+    }
+
     private bool IsRhythmPlaybackActive()
     {
         if (_musicPlayer == null || !_musicPlayer.musicInstance.isValid())
@@ -499,6 +971,35 @@ public class RhythmPerformanceHud : MonoBehaviour
         ApplyResult(result);
     }
 
+    private void HandleDetailedNoteJudged(
+        RhythmJudge.JudgeRating rating,
+        RhythmArcNote.NoteType noteType,
+        FlickDirection direction,
+        float timingDelta)
+    {
+        if (!hudEnabled && !judgementFeedbackOnlyEnabled)
+            return;
+
+        ResultType result;
+        switch (rating)
+        {
+            case RhythmJudge.JudgeRating.Perfect:
+                result = ResultType.Perfect;
+                break;
+            case RhythmJudge.JudgeRating.Good:
+                result = ResultType.Good;
+                break;
+            default:
+                result = ResultType.Miss;
+                break;
+        }
+
+        ApplyResult(result);
+
+        if (result != ResultType.Perfect)
+            ShowTimingIndicator(direction, timingDelta);
+    }
+
     private void ApplyResult(ResultType result)
     {
         switch (result)
@@ -506,7 +1007,8 @@ public class RhythmPerformanceHud : MonoBehaviour
             case ResultType.Perfect:
                 _perfectCount++;
                 _combo++;
-                _score += perfectPoints;
+                _baseScore += perfectPoints;
+                _score = _baseScore;
                 ShowComboPulseIfEligible();
                 ShowPerfectJudgement();
                 break;
@@ -514,7 +1016,8 @@ public class RhythmPerformanceHud : MonoBehaviour
             case ResultType.Good:
                 _goodCount++;
                 _combo++;
-                _score += goodPoints;
+                _baseScore += goodPoints;
+                _score = _baseScore;
                 ShowComboPulseIfEligible();
                 ShowGoodJudgement();
                 break;
@@ -522,7 +1025,8 @@ public class RhythmPerformanceHud : MonoBehaviour
             default:
                 _missCount++;
                 _combo = 0;
-                _score += missPoints;
+                _baseScore += missPoints;
+                _score = _baseScore;
                 HideComboImmediate();
                 ShowMissJudgement();
                 break;
@@ -728,10 +1232,54 @@ public class RhythmPerformanceHud : MonoBehaviour
         _judgementText.color = c;
     }
 
+    private void ShowTimingIndicator(FlickDirection direction, float timingDelta)
+    {
+        if (!_timingIndicators.TryGetValue(direction, out TimingIndicatorState state))
+            return;
+
+        bool isEarly = timingDelta < 0f;
+        if (state.Image != null && TryGetTimingIndicatorSpriteData(isEarly, out Texture texture, out Rect uvRect))
+        {
+            state.UsingImage = true;
+            state.Image.texture = texture;
+            state.Image.uvRect = uvRect;
+            state.Image.rectTransform.sizeDelta = GetTimingIndicatorImageSize(uvRect);
+            state.BaseColor = timingIndicatorImageColor;
+            if (state.Text != null)
+            {
+                Color textColor = state.Text.color;
+                textColor.a = 0f;
+                state.Text.color = textColor;
+            }
+        }
+        else
+        {
+            if (state.Text == null)
+                return;
+
+            state.UsingImage = false;
+            state.Text.text = isEarly ? "Early!" : "Late!";
+            state.BaseColor = isEarly ? earlyTimingIndicatorColor : lateTimingIndicatorColor;
+        }
+
+        state.AnimTime = 0f;
+        RectTransform activeRect = GetTimingIndicatorRect(state);
+        if (TryGetTimingIndicatorAnchoredPosition(direction, activeRect, out Vector2 anchoredPosition))
+            state.BasePosition = ApplyTimingIndicatorImageInwardNudge(direction, state, anchoredPosition);
+
+        ApplyTimingIndicatorAnimation(state, 0f);
+    }
+
     private void ShowComboPulseIfEligible()
     {
         if (_comboText == null || _comboRect == null)
             return;
+
+        if (!hudEnabled)
+        {
+            HideComboImmediate();
+            return;
+        }
 
         if (_combo < Mathf.Max(1, comboShowThreshold))
         {
@@ -761,15 +1309,21 @@ public class RhythmPerformanceHud : MonoBehaviour
         if (_detailText == null)
             return;
 
+        if (!hudEnabled)
+        {
+            _detailText.text = string.Empty;
+            return;
+        }
+
         int totalJudged = _perfectCount + _goodCount + _missCount;
         float accuracy = totalJudged > 0
             ? ((_perfectCount * 1f) + (_goodCount * 0.7f)) / totalJudged * 100f
             : 0f;
+        int scoreFontSize = detailFontSize * 2;
 
         _detailText.text =
-            $"Score: {_score}\n" +
+            $"<size={scoreFontSize}>Score: {_score}</size>\n" +
             $"Combo: {_combo}\n" +
-            $"Max Combo: {_maxCombo}\n" +
             $"Perfect: {_perfectCount}\n" +
             $"Good: {_goodCount}\n" +
             $"Miss: {_missCount}\n" +
@@ -784,7 +1338,10 @@ public class RhythmPerformanceHud : MonoBehaviour
         _combo = 0;
         _maxCombo = 0;
         _score = 0;
+        _baseScore = 0;
+        _lastFiredMultiplier = 1f;
         HideComboImmediate();
+        HideAllTimingIndicatorsImmediate();
     }
 
     public void SetHudEnabled(bool enabled)
@@ -793,10 +1350,31 @@ public class RhythmPerformanceHud : MonoBehaviour
         ApplyHudVisibility();
     }
 
+    public void SetJudgementFeedbackOnlyEnabled(bool enabled)
+    {
+        judgementFeedbackOnlyEnabled = enabled;
+        ApplyHudVisibility();
+    }
+
     private void ApplyHudVisibility()
     {
         if (_canvas != null)
-            _canvas.enabled = hudEnabled;
+            _canvas.enabled = hudEnabled || judgementFeedbackOnlyEnabled;
+
+        if (_comboText != null)
+            _comboText.enabled = hudEnabled;
+
+        if (_detailText != null)
+            _detailText.enabled = hudEnabled;
+
+        bool feedbackVisible = hudEnabled || judgementFeedbackOnlyEnabled;
+        foreach (TimingIndicatorState state in _timingIndicators.Values)
+        {
+            if (state.Text != null)
+                state.Text.enabled = feedbackVisible && !state.UsingImage;
+            if (state.Image != null)
+                state.Image.enabled = feedbackVisible && state.UsingImage;
+        }
     }
 
     private void TickJudgementAnimation()
@@ -812,6 +1390,35 @@ public class RhythmPerformanceHud : MonoBehaviour
         if (_judgementAnimTime >= totalDuration)
         {
             HideJudgementImmediate();
+        }
+    }
+
+    private bool HasActiveTimingIndicatorAnimation()
+    {
+        foreach (TimingIndicatorState state in _timingIndicators.Values)
+        {
+            if (state.AnimTime >= 0f)
+                return true;
+        }
+
+        return false;
+    }
+
+    private void TickTimingIndicatorAnimations()
+    {
+        float totalDuration = Mathf.Max(0.01f, timingIndicatorVisibleDuration + timingIndicatorFadeDuration);
+
+        foreach (TimingIndicatorState state in _timingIndicators.Values)
+        {
+            if (GetTimingIndicatorRect(state) == null || state.AnimTime < 0f)
+                continue;
+
+            state.AnimTime += Time.unscaledDeltaTime;
+            float normalized = Mathf.Clamp01(state.AnimTime / totalDuration);
+            ApplyTimingIndicatorAnimation(state, normalized);
+
+            if (state.AnimTime >= totalDuration)
+                HideTimingIndicatorImmediate(state);
         }
     }
 
@@ -961,6 +1568,77 @@ public class RhythmPerformanceHud : MonoBehaviour
         }
     }
 
+    private void ApplyTimingIndicatorAnimation(TimingIndicatorState state, float normalized)
+    {
+        RectTransform activeRect = GetTimingIndicatorRect(state);
+        if (activeRect == null)
+            return;
+
+        float returnDuration = Mathf.Max(0.01f, timingIndicatorPopReturnDuration);
+        float popT = Mathf.Clamp01(state.AnimTime / returnDuration);
+        float scale = Mathf.Lerp(timingIndicatorPopScale, 1f, popT);
+
+        float alpha = 1f;
+        if (state.AnimTime > timingIndicatorVisibleDuration)
+        {
+            float fadeT = (state.AnimTime - timingIndicatorVisibleDuration) / Mathf.Max(0.01f, timingIndicatorFadeDuration);
+            alpha = 1f - Mathf.Clamp01(fadeT);
+        }
+
+        Vector2 riseOffset = Vector2.up * (timingIndicatorRiseDistance * normalized);
+        ApplyTimingIndicatorScale(state, scale);
+        ApplyTimingIndicatorPosition(state, state.BasePosition + riseOffset);
+
+        Color c = state.BaseColor;
+        c.a = alpha;
+        if (state.Text != null)
+        {
+            Color textColor = state.Text.color;
+            textColor.a = state.UsingImage ? 0f : alpha;
+            state.Text.color = state.UsingImage ? textColor : c;
+            state.Text.enabled = !state.UsingImage;
+        }
+        if (state.Image != null)
+        {
+            Color imageColor = state.UsingImage ? c : state.Image.color;
+            imageColor.a = state.UsingImage ? alpha : 0f;
+            state.Image.color = imageColor;
+            state.Image.enabled = state.UsingImage;
+        }
+    }
+
+    private void HideAllTimingIndicatorsImmediate()
+    {
+        foreach (TimingIndicatorState state in _timingIndicators.Values)
+            HideTimingIndicatorImmediate(state);
+    }
+
+    private void HideTimingIndicatorImmediate(TimingIndicatorState state)
+    {
+        if (state == null)
+            return;
+
+        state.AnimTime = -1f;
+        ApplyTimingIndicatorScale(state, 1f);
+        ApplyTimingIndicatorPosition(state, state.BasePosition);
+
+        if (state.Text != null)
+        {
+            Color textColor = state.Text.color;
+            textColor.a = 0f;
+            state.Text.color = textColor;
+            state.Text.enabled = false;
+        }
+        if (state.Image != null)
+        {
+            Color imageColor = state.Image.color;
+            imageColor.a = 0f;
+            state.Image.color = imageColor;
+            state.Image.enabled = false;
+        }
+        state.UsingImage = false;
+    }
+
     private void HideComboImmediate()
     {
         if (_comboText == null || _comboRect == null)
@@ -975,6 +1653,131 @@ public class RhythmPerformanceHud : MonoBehaviour
         Color c = _comboText.color;
         c.a = 0f;
         _comboText.color = c;
+    }
+
+    private void TickReelVisuals()
+    {
+        if (_conductor == null || _reelStatusImage == null) return;
+
+        RhythmReelNote activeReel = _conductor.activeReel;
+        bool isReeling = activeReel != null;
+          
+        if (isReeling)   
+        {
+            if (_reelArcObj == null)
+            {
+                _reelArcObj = Instantiate(timingRingPrefab, _conductor.transform);
+                _reelArcObj.name = "World_Reel_Progress_Arc";
+            
+                // _reelArcObj.transform.SetParent(ScoringWheel.transform, false);
+                _reelArcObj.transform.localPosition = new Vector3(0, 0, 0.02f);
+                _reelArcObj.transform.localRotation = Quaternion.Euler(0, 0, 90f); // Start at top
+                _reelArcObj.layer = _conductor.gameObject.layer;
+                _currentReelArc = _reelArcObj.GetComponent<DynamicArc>();
+                if (_currentReelArc != null) _currentReelArc.Setup(64);
+
+                MeshRenderer ren = _reelArcObj.GetComponent<MeshRenderer>();
+                if (ren != null) ren.material.color = reelArcColor;
+            }
+
+            
+
+            Color c = Color.white;
+            c.a = 1f;
+            _reelStatusImage.color = c;
+
+            float pulse = 1f + Mathf.Sin(Time.time * reelPulseSpeed) * reelPulseAmount;
+            _reelStatusRect.localScale = Vector3.one * pulse;
+
+
+            float spinVelocity = 0f;
+            if (_judge != null && _judge.processor != null)
+                spinVelocity = Mathf.Abs(_judge.processor.GetSmoothedSpinVelocity());
+
+            if (spinVelocity >= reelMotionThreshold)
+                _activeReelInputTime += Time.deltaTime;
+
+            float normalizedSpinProgress = Mathf.Clamp01(activeReel.Progress / Mathf.Max(0.01f, reelProgressForMaxMultiplier));
+            float normalizedInputTimeProgress = Mathf.Clamp01(_activeReelInputTime / Mathf.Max(0.01f, reelInputSecondsForMaxMultiplier));
+            float normalizedMultiplierProgress = Mathf.Min(
+                normalizedInputTimeProgress,
+                normalizedSpinProgress);
+            normalizedMultiplierProgress = Mathf.Pow(normalizedMultiplierProgress, reelMultiplierGrowthExponent);
+            float currentMultiplier = Mathf.Lerp(1f, maxReelMultiplier, normalizedMultiplierProgress);
+            currentMultiplier = Mathf.Min(currentMultiplier, maxReelMultiplier); 
+
+            if (_currentReelArc != null)
+            {
+                // 1. Move to the OUTSIDE
+                // Radius = Hit Ring + half thickness + small gap for visibility
+                float radius = _conductor.hitRingRadius + (reelArcThickness / 2f) + 0.15f;
+                
+                // 2. Calculate Clockwise Progress Angle
+                float progressAngle = 360f * normalizedMultiplierProgress;
+                
+
+                _reelArcObj.transform.localRotation = Quaternion.Euler(0, 0, -progressAngle / 2f);
+                
+                _currentReelArc.Redraw(radius, reelArcThickness, progressAngle, 64);
+            }
+
+            if(_lastFiredMultiplier < maxReelMultiplier)
+            {
+                if (currentMultiplier >= _lastFiredMultiplier + 0.099f || currentMultiplier >= maxReelMultiplier)
+                {
+                    _lastFiredMultiplier = (currentMultiplier >= maxReelMultiplier)
+                        ? maxReelMultiplier
+                        : Mathf.Floor(currentMultiplier * 10f) / 10f;
+
+                    _score = Mathf.RoundToInt(_baseScore * _lastFiredMultiplier);
+                    RefreshDetailText();
+
+                    // Trigger the Judgement Popup (e.g., "2.0x")
+                    string multText = string.Format(multiplierFormat, _lastFiredMultiplier);
+                    
+                    // Color shift to Red/Neon when Max is reached
+                    Color displayColor = (_lastFiredMultiplier >= maxReelMultiplier) ? Color.red : multiplierColor;
+                    ShowJudgement(multText, displayColor);
+                }
+            }
+            else if (_lastFiredMultiplier >= maxReelMultiplier)
+            {
+                _maxPowerTimer += Time.deltaTime;
+                
+                float fastFlashInterval = maxPowerFlashInterval * 0.5f; 
+                
+                if (_maxPowerTimer >= fastFlashInterval)
+                {
+                    _maxPowerTimer = 0f;
+                    TriggerMultiplierPop(maxReelMultiplier);
+                }
+            }
+        }
+        else
+        {
+            Color c = _reelStatusImage.color;
+            c.a = 0f;
+            _reelStatusImage.color = c;
+            _lastFiredMultiplier = 1f;
+            _maxPowerTimer = 0f;
+            _activeReelInputTime = 0f;
+
+            if (_reelArcObj != null)
+            {
+                Destroy(_reelArcObj);
+                _reelArcObj = null;
+                _currentReelArc = null;
+            }
+
+        }
+    }
+
+    private void TriggerMultiplierPop(float multValue)
+    {
+        string multText = string.Format(multiplierFormat, multValue);
+        Color displayColor = (multValue >= maxReelMultiplier) ? Color.red : multiplierColor;
+        
+        ShowJudgement(multText, displayColor);
     }
 
     private static class ListPool

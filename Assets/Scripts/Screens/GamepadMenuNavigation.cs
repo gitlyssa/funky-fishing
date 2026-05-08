@@ -8,6 +8,9 @@ using UnityEngine.UI;
 
 public class GamepadMenuNavigation : MonoBehaviour
 {
+    private const string IndicatorFontResourcePath = "Fonts & Materials/LiberationSans SDF";
+    private static TMP_FontAsset s_indicatorFontAsset;
+
     [Header("Enabled Scenes")]
     [SerializeField] private string[] enabledSceneNames =
     {
@@ -185,6 +188,9 @@ public class GamepadMenuNavigation : MonoBehaviour
 
     private static bool IsTutorialGateBlockingUiNavigation()
     {
+        if (PauseManager.IsAnyPauseUiOpen())
+            return false;
+
         return TutorialStartGate.IsOverlayGateActive() || RhythmTutorialCoach.IsOverlayGateActive();
     }
 
@@ -504,6 +510,12 @@ public class GamepadMenuNavigation : MonoBehaviour
         indicatorRect.sizeDelta = new Vector2(40f, 40f);
 
         indicatorText = dotGo.AddComponent<TextMeshProUGUI>();
+        if (s_indicatorFontAsset == null)
+            s_indicatorFontAsset = Resources.Load<TMP_FontAsset>(IndicatorFontResourcePath);
+
+        if (s_indicatorFontAsset != null)
+            indicatorText.font = s_indicatorFontAsset;
+
         indicatorText.text = indicatorSymbol;
         indicatorText.fontSize = indicatorFontSize;
         indicatorText.color = indicatorColor;

@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Rendering;
 
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
@@ -29,6 +30,15 @@ public class CursorCastTargeting : MonoBehaviour
     public bool startAtPondCenter = true;
     public float markerSurfaceOffset = 0.02f;
 
+    [Header("Cast Marker Visual")]
+    [Min(1f)] public float markerSizeMultiplier = 1.35f;
+    [Min(0f)] public float markerPulseScale = 0.42f;
+    [Min(0f)] public float markerPulseSpeed = 0.42f;
+    public Color markerHighlightColor = new Color(0.82f, 0.08f, 0.08f, 1f);
+    public Color markerFlashColor = new Color(1f, 0.1f, 0.1f, 1f);
+    [Min(0f)] public float markerGlowMinIntensity = 0.02f;
+    [Min(0f)] public float markerGlowMaxIntensity = 0.18f;
+
     public Vector3 CurrentTargetPoint { get; private set; }
     public bool HasTarget { get; private set; }
 
@@ -41,6 +51,10 @@ public class CursorCastTargeting : MonoBehaviour
     private bool _hasLastTarget;
     private Vector2 _externalStick;
     private float _externalStickExpiresAt = -1f;
+    private Transform _configuredMarker;
+    private Transform _markerVisualTransform;
+    private Vector3 _markerVisualBaseLocalScale = Vector3.one;
+    private Material[] _markerVisualMaterials = new Material[0];
 
     void Reset()
     {
@@ -52,6 +66,8 @@ public class CursorCastTargeting : MonoBehaviour
         if (!cam) cam = Camera.main;
         if (bobberArcCaster == null)
             bobberArcCaster = FindObjectOfType<BobberArcCaster>();
+
+        EnsureMarkerVisual();
 
         // start centered
         CursorPixel = new Vector2(Screen.width * 0.5f, Screen.height * 0.5f);
@@ -74,7 +90,7 @@ public class CursorCastTargeting : MonoBehaviour
 
         if (bobberArcCaster != null && bobberArcCaster.CurrentState != BobberArcCaster.State.Idle)
         {
-            if (castMarker) castMarker.gameObject.SetActive(false);
+            SetCastMarkerVisible(false);
             if (HasTarget)
             {
                 _lastTargetPoint = CurrentTargetPoint;
@@ -90,11 +106,7 @@ public class CursorCastTargeting : MonoBehaviour
             {
                 CurrentTargetPoint = _lastTargetPoint;
                 HasTarget = true;
-                if (castMarker)
-                {
-                    castMarker.gameObject.SetActive(true);
-                    castMarker.position = CurrentTargetPoint + Vector3.up * markerSurfaceOffset;
-                }
+                SetCastMarkerPosition(CurrentTargetPoint);
             }
             else
             {
@@ -117,6 +129,8 @@ public class CursorCastTargeting : MonoBehaviour
         {
             UpdateTargetFromStick(stick);
         }
+
+        UpdateMarkerVisual();
     }
 
     bool UpdateCursorPixel()
@@ -155,12 +169,7 @@ public class CursorCastTargeting : MonoBehaviour
         {
             HasTarget = true;
             CurrentTargetPoint = hit.point;
-
-            if (castMarker)
-            {
-                castMarker.gameObject.SetActive(true);
-                castMarker.position = hit.point + Vector3.up * markerSurfaceOffset; // tiny lift
-            }
+            SetCastMarkerPosition(hit.point);
         }
         else
         {
@@ -168,16 +177,12 @@ public class CursorCastTargeting : MonoBehaviour
             {
                 HasTarget = true;
                 CurrentTargetPoint = clampedPoint;
-                if (castMarker)
-                {
-                    castMarker.gameObject.SetActive(true);
-                    castMarker.position = clampedPoint + Vector3.up * markerSurfaceOffset; // tiny lift
-                }
+                SetCastMarkerPosition(clampedPoint);
             }
             else
             {
                 HasTarget = false;
-                if (castMarker) castMarker.gameObject.SetActive(false);
+                SetCastMarkerVisible(false);
             }
         }
     }
@@ -288,12 +293,7 @@ public class CursorCastTargeting : MonoBehaviour
         );
 
         CurrentTargetPoint = newPoint;
-
-        if (castMarker)
-        {
-            castMarker.gameObject.SetActive(true);
-            castMarker.position = newPoint + Vector3.up * markerSurfaceOffset;
-        }
+        SetCastMarkerPosition(newPoint);
     }
 
     void InitializeTargetOnWater()
@@ -305,12 +305,7 @@ public class CursorCastTargeting : MonoBehaviour
         HasTarget = true;
         _lastTargetPoint = CurrentTargetPoint;
         _hasLastTarget = true;
-
-        if (castMarker)
-        {
-            castMarker.gameObject.SetActive(true);
-            castMarker.position = CurrentTargetPoint + Vector3.up * markerSurfaceOffset;
-        }
+        SetCastMarkerPosition(CurrentTargetPoint);
 
         if (cam != null)
         {
@@ -373,4 +368,124 @@ public class CursorCastTargeting : MonoBehaviour
     //         ""
     //     );
     // }
+
+    void SetCastMarkerPosition(Vector3 worldPoint)
+    {
+        if (!castMarker)
+            return;
+
+        EnsureMarkerVisual();
+        SetCastMarkerVisible(true);
+        castMarker.position = worldPoint + Vector3.up * markerSurfaceOffset;
+        UpdateMarkerVisual();
+    }
+
+    void SetCastMarkerVisible(bool visible)
+    {
+        if (!castMarker)
+            return;
+
+        EnsureMarkerVisual();
+        if (castMarker.gameObject.activeSelf != visible)
+            castMarker.gameObject.SetActive(visible);
+    }
+
+    void EnsureMarkerVisual()
+    {
+        if (!castMarker)
+            return;
+
+        if (_configuredMarker == castMarker && _markerVisualTransform != null)
+            return;
+
+        _configuredMarker = castMarker;
+        _markerVisualTransform = castMarker;
+        _markerVisualBaseLocalScale = castMarker.localScale * markerSizeMultiplier;
+        _markerVisualMaterials = new Material[0];
+
+        MeshFilter sourceFilter = castMarker.GetComponent<MeshFilter>();
+        MeshRenderer sourceRenderer = castMarker.GetComponent<MeshRenderer>();
+        if (sourceFilter != null && sourceRenderer != null)
+        {
+            const string runtimeVisualName = "CastMarkerVisualRuntime";
+            Transform visualTransform = castMarker.Find(runtimeVisualName);
+            if (visualTransform == null)
+            {
+                GameObject visual = new GameObject(runtimeVisualName, typeof(MeshFilter), typeof(MeshRenderer));
+                visualTransform = visual.transform;
+                visualTransform.SetParent(castMarker, false);
+            }
+
+            visualTransform.localPosition = Vector3.zero;
+            visualTransform.localRotation = Quaternion.identity;
+            visualTransform.localScale = Vector3.one * markerSizeMultiplier;
+
+            MeshFilter visualFilter = visualTransform.GetComponent<MeshFilter>();
+            visualFilter.sharedMesh = sourceFilter.sharedMesh;
+
+            MeshRenderer visualRenderer = visualTransform.GetComponent<MeshRenderer>();
+            visualRenderer.sharedMaterials = sourceRenderer.sharedMaterials;
+            visualRenderer.shadowCastingMode = ShadowCastingMode.Off;
+            visualRenderer.receiveShadows = false;
+            visualRenderer.lightProbeUsage = sourceRenderer.lightProbeUsage;
+            visualRenderer.reflectionProbeUsage = sourceRenderer.reflectionProbeUsage;
+            visualRenderer.renderingLayerMask = sourceRenderer.renderingLayerMask;
+            visualRenderer.allowOcclusionWhenDynamic = sourceRenderer.allowOcclusionWhenDynamic;
+
+            sourceRenderer.enabled = false;
+
+            _markerVisualTransform = visualTransform;
+            _markerVisualBaseLocalScale = Vector3.one * markerSizeMultiplier;
+            _markerVisualMaterials = visualRenderer.materials;
+            return;
+        }
+
+        Renderer fallbackRenderer = castMarker.GetComponentInChildren<Renderer>(true);
+        if (fallbackRenderer != null)
+        {
+            _markerVisualTransform = fallbackRenderer.transform;
+            _markerVisualBaseLocalScale = fallbackRenderer.transform.localScale * markerSizeMultiplier;
+            _markerVisualMaterials = fallbackRenderer.materials;
+        }
+    }
+
+    void UpdateMarkerVisual()
+    {
+        if (!castMarker)
+            return;
+
+        EnsureMarkerVisual();
+
+        if (_markerVisualTransform == null || !castMarker.gameObject.activeInHierarchy)
+            return;
+
+        float pulse = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * markerPulseSpeed * Mathf.PI * 2f);
+        float pulseScale = 1f + markerPulseScale * pulse;
+        _markerVisualTransform.localScale = _markerVisualBaseLocalScale * pulseScale;
+
+        if (_markerVisualMaterials == null || _markerVisualMaterials.Length == 0)
+            return;
+
+        Color litColor = Color.Lerp(markerHighlightColor * 0.92f, markerHighlightColor, pulse);
+        litColor.a = 1f;
+        Color emissionColor = markerFlashColor * Mathf.Lerp(markerGlowMinIntensity, markerGlowMaxIntensity, pulse);
+        emissionColor.a = 1f;
+
+        for (int i = 0; i < _markerVisualMaterials.Length; i++)
+        {
+            Material material = _markerVisualMaterials[i];
+            if (material == null)
+                continue;
+
+            if (material.HasProperty("_BaseColor"))
+                material.SetColor("_BaseColor", litColor);
+            if (material.HasProperty("_Color"))
+                material.SetColor("_Color", litColor);
+            if (material.HasProperty("_EmissionColor"))
+            {
+                material.EnableKeyword("_EMISSION");
+                material.SetColor("_EmissionColor", emissionColor);
+            }
+        }
+    }
 }

@@ -1,9 +1,13 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System;
+using FMOD.Studio;
+using FMODUnity;
 
 public class RhythmJudge : MonoBehaviour
 {
+    private const string ReelLoopEventPath = "event:/Sfx/reel";
+
     /*
     This is where all the note hitting logic happens. It listens to the processor for the player input
     and has a reference to the conductor to get the position of all the acitve notes
@@ -27,8 +31,17 @@ public class RhythmJudge : MonoBehaviour
     [SerializeField] private bool logNoteResolutions = false;
     [SerializeField] private bool logReelOutcome = false;
 
+    [Header("Reel Audio")]
+    [SerializeField] private float reelAudioSpinThreshold = 90f;
+    [SerializeField] private float reelAudioStopDelay = 0.08f;
+
     public static event Action<JudgeRating> OnNoteJudged;
-    public static event Action<JudgeRating, RhythmArcNote.NoteType, FlickDirection> OnDetailedNoteJudged;
+    public static event Action<JudgeRating, RhythmArcNote.NoteType, FlickDirection, float> OnDetailedNoteJudged;
+    public static event Action<bool> OnReelResolved;
+
+    private EventInstance _reelLoopInstance;
+    private bool _isReelLoopPlaying;
+    private float _lastReelMotionTime = float.NegativeInfinity;
 
     void Start()
     {
@@ -46,12 +59,22 @@ public class RhythmJudge : MonoBehaviour
     {
         if (processor != null)
             processor.OnValidFlick -= HandleFlick;
+
+        StopAndReleaseReelLoop();
+    }
+
+    void OnDisable()
+    {
+        StopAndReleaseReelLoop();
     }
 
     void Update()
     {
         if (Time.timeScale <= 0f)
+        {
+            UpdateReelLoopAudio(false, false);
             return;
+        }
 
         // Flick notes are handled through on flick events, separate to the update loop
         //Anything under the update loop is essentially a state check, for continuous notes
@@ -63,71 +86,79 @@ public class RhythmJudge : MonoBehaviour
         CheckAutoMiss();
         // Process reels, which are done over a time frame
         CheckReelNotes();
+        bool isReelSectionActive = IsReelSectionActive();
+        bool isReelMotionActive = isReelSectionActive && IsReelMotionActive();
+        UpdateReelLoopAudio(isReelSectionActive, isReelMotionActive);
     }
 
     private void HandleFlick(FlickDirection dir)
-{
-    RhythmArcNote target = null;
-    float oldestHitTime = float.MaxValue;
-
-    foreach (var note in conductor.activeNotes)
     {
-        // 1. flick or first slide note 
-        if (note.Direction == dir)
-        {
-            float songTime = conductor.songTime;
-            float diff = songTime - note.TargetHitTime; // Negative = Early, Positive = Late
+        RhythmArcNote target = null;
+        float oldestHitTime = float.MaxValue;
 
-            // 2. Is this note within the judging window (-0.5s to +0.5s)?
-            if (Mathf.Abs(diff) <= badWindow)
+        foreach (var note in conductor.activeNotes)
+        {
+            // 1. flick or first slide note
+            if (note.Direction == dir)
             {
-                // 3. PRIORITY: Is this the oldest note we've found so far?
-                // By checking 'targetHitTime' instead of 'Abs(diff)', we ensure 
-                // we always try to hit the note that's been on screen the longest.
-                if (note.TargetHitTime < oldestHitTime)
+                float songTime = conductor.songTime;
+                float diff = songTime - note.TargetHitTime; // Negative = Early, Positive = Late
+
+                // 2. Is this note within the judging window (-0.5s to +0.5s)?
+                if (Mathf.Abs(diff) <= badWindow)
                 {
-                    target = note;
-                    oldestHitTime = note.TargetHitTime;
+                    // 3. PRIORITY: Is this the oldest note we've found so far?
+                    // By checking 'targetHitTime' instead of 'Abs(diff)', we ensure
+                    // we always try to hit the note that's been on screen the longest.
+                    if (note.TargetHitTime < oldestHitTime)
+                    {
+                        target = note;
+                        oldestHitTime = note.TargetHitTime;
+                    }
                 }
             }
         }
+
+        if (target != null)
+        {
+            float timingDelta = conductor.songTime - target.TargetHitTime;
+            JudgeRating rating = GetRating(Mathf.Abs(timingDelta));
+
+            if (rating == JudgeRating.Bad || rating == JudgeRating.Miss)
+                TryRecordMiss(true, timingDelta);
+            else
+                TryRecordHit(rating, timingDelta);
+
+            ResolveNote(target, rating, timingDelta);
+        }
     }
-
-    if (target != null)
-    {
-        float finalDiff = Mathf.Abs(conductor.songTime - target.TargetHitTime);
-        JudgeRating rating = GetRating(finalDiff);
-
-        if (rating == JudgeRating.Bad || rating == JudgeRating.Miss)
-            TryRecordMiss(true, finalDiff); // Input was provided, but late/early
-        else
-            TryRecordHit(rating, finalDiff);
-
-        ResolveNote(target, rating);
-    }
-}
 
     private void CheckSlideNotes()
-{
-    for (int i = conductor.activeNotes.Count - 1; i >= 0; i--)
     {
-        var note = conductor.activeNotes[i];
-        if (note.Type == RhythmArcNote.NoteType.Slide)
+        for (int i = conductor.activeNotes.Count - 1; i >= 0; i--)
         {
-            float songTime = conductor.songTime;
-            float rawDiff = songTime - note.TargetHitTime; // Negative = Early, Positive = Late
-            // For slides, we want to allow the player to hit early and then hold through the perfect window.
-            if (rawDiff >= 0 && rawDiff <= badWindow)
+            var note = conductor.activeNotes[i];
+            if (note.Type == RhythmArcNote.NoteType.Slide)
             {
-                if (processor.IsHoldingDirection(note.Direction))
+                float songTime = conductor.songTime;
+                float rawDiff = songTime - note.TargetHitTime; // Negative = Early, Positive = Late
+                // For slides, we want to allow the player to hit early and then hold through the perfect window.
+                if (rawDiff >= 0 && rawDiff <= badWindow)
                 {
-                    JudgeRating rating = GetRating(Mathf.Abs(rawDiff));
-                    ResolveNote(note, rating);
+                    if (processor.IsHoldingDirection(note.Direction))
+                    {
+                        JudgeRating rating = GetRating(Mathf.Abs(rawDiff));
+                        if (rating == JudgeRating.Bad || rating == JudgeRating.Miss)
+                            TryRecordMiss(true, rawDiff);
+                        else
+                            TryRecordHit(rating, rawDiff);
+
+                        ResolveNote(note, rating, rawDiff);
+                    }
                 }
             }
         }
     }
-}
 
     private void CheckAutoMiss()
     {
@@ -138,8 +169,9 @@ public class RhythmJudge : MonoBehaviour
             // If the current time is beyond the bad window on the LATE side
             if (conductor.songTime > note.TargetHitTime + badWindow)
             {
-                TryRecordMiss(false);
-                ResolveNote(note, JudgeRating.Miss);
+                float timingDelta = conductor.songTime - note.TargetHitTime;
+                TryRecordMiss(false, timingDelta);
+                ResolveNote(note, JudgeRating.Miss, timingDelta);
             }
         }
     }
@@ -163,7 +195,7 @@ public class RhythmJudge : MonoBehaviour
         return JudgeRating.Bad; // If it's within 0.5 but past 0.3
     }
 
-    private void ResolveNote(RhythmArcNote note, JudgeRating rating)
+    private void ResolveNote(RhythmArcNote note, JudgeRating rating, float timingDelta)
     {
         RhythmArcNote.NoteType noteType = note.Type;
         FlickDirection direction = note.Direction;
@@ -189,7 +221,7 @@ public class RhythmJudge : MonoBehaviour
         }
 
         OnNoteJudged?.Invoke(rating);
-        OnDetailedNoteJudged?.Invoke(rating, noteType, direction);
+        OnDetailedNoteJudged?.Invoke(rating, noteType, direction, timingDelta);
     }
 
     private void CheckReelNotes()
@@ -210,7 +242,6 @@ public class RhythmJudge : MonoBehaviour
 
         if (songTime >= endTime)
         {
-            
             float finalProgress = reel.Progress;
 
             if (finalProgress >= 1.0f)
@@ -219,22 +250,120 @@ public class RhythmJudge : MonoBehaviour
                     Debug.Log("<color=green>REEL CLEARED!</color>");
                 if (finalProgress > 1.0f)
                 {
-                    float bonus = Mathf.Min(finalProgress - 1.0f, 1.0f); 
+                    float bonus = Mathf.Min(finalProgress - 1.0f, 1.0f);
 
                     if (logReelOutcome)
                         Debug.Log($"<color=gold>BONUS REACHED: {bonus * 100:F0}%</color>");
                 }
 
                 reel.OnClear();
+                OnReelResolved?.Invoke(true);
             }
             else
             {
                 Debug.Log("<color=red>REEL FAILED!</color>");
                 reel.OnFail();
+                OnReelResolved?.Invoke(false);
             }
 
             // Clear the reference in the conductor so visuals stop
             conductor.activeReel = null;
+            StopReelLoopImmediately();
         }
+    }
+
+    private bool IsReelSectionActive()
+    {
+        if (conductor == null)
+            return false;
+
+        RhythmReelNote reel = conductor.activeReel;
+        return reel != null && reel.CurrentPhase == ReelPhase.Active;
+    }
+
+    private bool IsReelMotionActive()
+    {
+        if (processor == null)
+            return false;
+
+        return Mathf.Abs(processor.GetSmoothedSpinVelocity()) >= reelAudioSpinThreshold;
+    }
+
+    private void UpdateReelLoopAudio(bool isReelSectionActive, bool isReelMotionActive)
+    {
+        if (!isReelSectionActive)
+        {
+            StopReelLoopImmediately();
+            return;
+        }
+
+        if (isReelMotionActive)
+        {
+            _lastReelMotionTime = Time.unscaledTime;
+            EnsureReelLoopInstance();
+            if (!_reelLoopInstance.isValid())
+                return;
+
+            UpdateReelLoopAttributes();
+            FunkyAudioSettings.ApplyCategoryVolume(_reelLoopInstance, FunkyAudioCategory.Sfx);
+
+            if (!_isReelLoopPlaying)
+            {
+                _reelLoopInstance.start();
+                _isReelLoopPlaying = true;
+            }
+
+            return;
+        }
+
+        if (!_isReelLoopPlaying)
+            return;
+
+        if (Time.unscaledTime - _lastReelMotionTime < reelAudioStopDelay)
+            return;
+
+        StopReelLoopImmediately();
+    }
+
+    private void EnsureReelLoopInstance()
+    {
+        if (_reelLoopInstance.isValid())
+            return;
+
+        _reelLoopInstance = RuntimeManager.CreateInstance(ReelLoopEventPath);
+        UpdateReelLoopAttributes();
+        FunkyAudioSettings.ApplyCategoryVolume(_reelLoopInstance, FunkyAudioCategory.Sfx);
+    }
+
+    private void UpdateReelLoopAttributes()
+    {
+        if (!_reelLoopInstance.isValid())
+            return;
+
+        Vector3 position = Camera.main != null ? Camera.main.transform.position : transform.position;
+        _reelLoopInstance.set3DAttributes(RuntimeUtils.To3DAttributes(position));
+    }
+
+    private void StopAndReleaseReelLoop()
+    {
+        if (!_reelLoopInstance.isValid())
+            return;
+
+        StopReelLoopImmediately();
+        _reelLoopInstance.release();
+    }
+
+    private void StopReelLoopImmediately()
+    {
+        if (!_reelLoopInstance.isValid())
+        {
+            _isReelLoopPlaying = false;
+            _lastReelMotionTime = float.NegativeInfinity;
+            return;
+        }
+
+        _reelLoopInstance.stop(FMOD.Studio.STOP_MODE.IMMEDIATE);
+        _isReelLoopPlaying = false;
+        _lastReelMotionTime = float.NegativeInfinity;
     }
 }

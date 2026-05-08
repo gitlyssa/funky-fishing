@@ -17,6 +17,8 @@ public class SceneLoading : MonoBehaviour
     [Header("Tension Overlay Trigger")]
     public bool driveOverlayFromBobberTension = false;
     public BobberArcCaster tensionSource;
+    [Header("Debug")]
+    public bool enableDebugKeyboardShortcuts = false;
     [Header("Rhythm UI Targets")]
     public string scoringCircleObjectName = "ScoringCircle";
 
@@ -31,6 +33,7 @@ public class SceneLoading : MonoBehaviour
     private readonly List<GameObject> rhythmRoots = new List<GameObject>();
     private GameObject scoringCircleObject;
     private bool hasLoggedMissingScoringCircle;
+    private bool isWheelAnimating = false;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetStatics()
@@ -54,21 +57,17 @@ public class SceneLoading : MonoBehaviour
 
     void Update()
     {
-        // press 1 to reload the scene, might break everything not sure
-        if (Keyboard.current.digit1Key.wasPressedThisFrame)
+        Keyboard keyboard = Keyboard.current;
+        if (enableDebugKeyboardShortcuts && keyboard != null)
         {
-            UnityEngine.SceneManagement.SceneManager.LoadScene(fishingSceneName);
-        }
+            if (keyboard.digit1Key.wasPressedThisFrame)
+                UnityEngine.SceneManagement.SceneManager.LoadScene(fishingSceneName);
 
-        // 3 to load overlay, 4 to unload
-        if (Keyboard.current.digit3Key.wasPressedThisFrame && !isRhythmVisible)
-        {
-            StartRhythmEncounter(ResolveFishForRhythmEncounter());
-        }
-        
-        if (Keyboard.current.digit4Key.wasPressedThisFrame && isRhythmVisible)
-        {
-            EndRhythmEncounter();
+            if (keyboard.digit3Key.wasPressedThisFrame && !isRhythmVisible)
+                StartRhythmEncounter(ResolveFishForRhythmEncounter());
+
+            if (keyboard.digit4Key.wasPressedThisFrame && isRhythmVisible)
+                EndRhythmEncounter();
         }
 
         UpdateTensionDrivenOverlay();
@@ -161,6 +160,12 @@ public class SceneLoading : MonoBehaviour
             return;
         }
 
+        if (VisualConductor.Instance != null)
+        {
+            VisualConductor.Instance.StopAndReset();
+            Debug.Log("Stopped Visual Conductor.");
+        }
+
         if (isRhythmLoaded)
         {
             StartCoroutine(UnloadRhythm());
@@ -171,8 +176,67 @@ public class SceneLoading : MonoBehaviour
     {
         if (!TryResolveScoringCircle(out GameObject scoringCircle))
             return;
+        TryResolveRhythmCameraRoot(out GameObject cameraRoot);
 
-        scoringCircle.SetActive(false);
+        StartCoroutine(JellyShrinkRoutine(scoringCircle, cameraRoot, 0.8f)); 
+    }
+
+    private IEnumerator JellyShrinkRoutine(GameObject target, GameObject cameraRoot, float duration)
+    {
+        float elapsed = 0f;
+        isWheelAnimating = true;
+        while (elapsed < duration)
+        {
+            target.SetActive(true);
+            cameraRoot?.SetActive(true);
+            elapsed += Time.deltaTime;
+            float t = elapsed / duration;
+            
+            float easeT = EaseInBack(t);
+            
+            float scale = Mathf.LerpUnclamped(1f, 0f, easeT);
+            
+            target.transform.localScale = new Vector3(scale, scale, scale);
+            
+            yield return null;
+        }
+        // SetRhythmOverlayVisible(false);
+        isWheelAnimating = false;
+        target.transform.localScale = Vector3.zero;
+        target.SetActive(false);
+        if (cameraRoot != null)
+        {
+            cameraRoot.SetActive(false);
+        }
+        
+    }
+
+    private bool TryResolveRhythmCameraRoot(out GameObject cameraRoot)
+    {
+        cameraRoot = null;
+        Scene rhythmScene = SceneManager.GetSceneByName(rhythmSceneName);
+        if (!rhythmScene.IsValid() || !rhythmScene.isLoaded) return false;
+
+        // Ensure we have our cached roots
+        if (rhythmRoots.Count == 0) CacheRhythmRoots(rhythmScene);
+
+        foreach (GameObject root in rhythmRoots)
+        {
+            if (root != null && root.GetComponentInChildren<Camera>(true) != null)
+            {
+                cameraRoot = root;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private float EaseInBack(float x)
+    {
+        float c1 = 1.70158f;
+        float c3 = c1 + 1f;
+        
+        return c3 * x * x * x - c1 * x * x;
     }
 
     private IEnumerator PreloadRhythmOverlay()
@@ -252,6 +316,11 @@ public class SceneLoading : MonoBehaviour
             MigratedFish = null;
         }
         
+        while (isWheelAnimating)
+        {
+            yield return null;
+        }
+        
         AsyncOperation op = UnityEngine.SceneManagement.SceneManager.UnloadSceneAsync(rhythmSceneName);
         if (op != null) yield return op;
 
@@ -268,8 +337,67 @@ public class SceneLoading : MonoBehaviour
         if (!TryResolveScoringCircle(out GameObject scoringCircle))
             return;
 
-        scoringCircle.SetActive(true);
+        StartCoroutine(JellyBounceRoutine(scoringCircle, 0.7f));
+        // StartCoroutine(SmoothGrowRoutine(scoringCircle, 0.8f)); 
     }
+
+    private IEnumerator JellyBounceRoutine(GameObject target, float duration)
+    {
+        target.transform.localScale = Vector3.zero;
+        target.SetActive(true);
+
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / duration;
+        
+            float scale = EaseOutBack(t);
+            target.transform.localScale = new Vector3(scale, scale, scale);
+            
+            yield return null;
+        }
+
+
+        target.transform.localScale = Vector3.one;
+    }
+
+    private float EaseOutBack(float x)
+    {
+        float c1 = 1.2f; 
+        float c3 = c1 + 1f;
+
+        return 1f + c3 * Mathf.Pow(x - 1f, 3f) + c1 * Mathf.Pow(x - 1f, 2f);
+    }
+
+    private IEnumerator SmoothGrowRoutine(GameObject target, float duration)
+    {
+        target.transform.localScale = Vector3.zero;
+        target.SetActive(true);
+
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / duration;
+            
+            float scale = EaseOutCubic(t);
+            target.transform.localScale = new Vector3(scale, scale, scale);
+            
+            yield return null;
+        }
+
+
+        target.transform.localScale = Vector3.one;
+    }
+
+    private float EaseOutCubic(float x)
+    {
+        return 1f - Mathf.Pow(1f - x, 3f);
+    }
+
 
     private bool TryResolveScoringCircle(out GameObject scoringCircle)
     {
@@ -387,10 +515,27 @@ public class SceneLoading : MonoBehaviour
         {
             CacheRhythmRoots(rhythmScene);
         }
-
+        GameObject scoringCircle = null;
+        TryResolveScoringCircle(out scoringCircle);
         foreach (GameObject root in rhythmRoots)
         {
+            
             if (root == null) continue;
+
+            bool isScoringCircleRoot = scoringCircle != null && 
+                                      (root == scoringCircle || scoringCircle.transform.IsChildOf(root.transform));
+            
+
+            if (isScoringCircleRoot)
+            {
+
+                if (visible) 
+                {
+                    root.SetActive(true);
+                }
+                continue; 
+            }
+
             if (visible)
             {
                 bool defaultActive = true;
@@ -402,7 +547,6 @@ public class SceneLoading : MonoBehaviour
                 root.SetActive(false);
             }
         }
-
         isRhythmVisible = visible;
     }
 
@@ -478,6 +622,11 @@ public class SceneLoading : MonoBehaviour
         RhythmConductor conductor = FindObjectOfType<RhythmConductor>();
         if (conductor != null)
             conductor.SetBeatmapFile(rhythmProfile.beatmapFile);
+
+        if (VisualConductor.Instance != null)
+        {
+            VisualConductor.Instance.LoadVisualScript(rhythmProfile.visualScriptFile);
+        }
 
         RhythmMusicPlayer musicPlayer = FindObjectOfType<RhythmMusicPlayer>();
         if (musicPlayer != null)

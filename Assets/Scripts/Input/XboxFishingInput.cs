@@ -5,8 +5,6 @@ using UnityEngine.InputSystem.Controls;
 [DefaultExecutionOrder(200)]
 public class XboxFishingInput : MonoBehaviour
 {
-    private static float gameplayInputBlockedUntilRealtime;
-
     public enum PadButton
     {
         A,
@@ -59,16 +57,14 @@ public class XboxFishingInput : MonoBehaviour
 
     public static void BlockGameplayInputForRealtimeSeconds(float seconds)
     {
-        float until = Time.unscaledTime + Mathf.Max(0f, seconds);
-        if (until > gameplayInputBlockedUntilRealtime)
-            gameplayInputBlockedUntilRealtime = until;
+        FishingGameplayInputGate.BlockGameplayInputForRealtimeSeconds(seconds);
     }
 
     void Update()
     {
-        bool blockForPause = suppressGameplayInputWhenPaused && Time.timeScale <= 0f;
-        bool blockForGracePeriod = Time.unscaledTime < gameplayInputBlockedUntilRealtime;
-        if (blockForPause || blockForGracePeriod)
+        bool blockForUi = suppressGameplayInputWhenPaused && FishingGameplayInputGate.IsSystemBlockActive();
+        bool blockForGracePeriod = FishingGameplayInputGate.IsRealtimeBlockActive();
+        if (blockForUi || blockForGracePeriod)
         {
             ReleaseGameplayOutputs();
             SyncTriggerStateToCurrentPad();
@@ -226,5 +222,58 @@ public class XboxFishingInput : MonoBehaviour
             case PadButton.Select: return pad.selectButton;
             default: return null;
         }
+    }
+}
+
+public static class FishingGameplayInputGate
+{
+    private static float gameplayInputBlockedUntilRealtime;
+    private static int lastSystemBlockFrame = -1;
+    private static bool lastSystemBlockResult;
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetStatics()
+    {
+        gameplayInputBlockedUntilRealtime = 0f;
+        lastSystemBlockFrame = -1;
+        lastSystemBlockResult = false;
+    }
+
+    public static void BlockGameplayInputForRealtimeSeconds(float seconds)
+    {
+        float until = Time.unscaledTime + Mathf.Max(0f, seconds);
+        if (until > gameplayInputBlockedUntilRealtime)
+            gameplayInputBlockedUntilRealtime = until;
+    }
+
+    public static bool IsRealtimeBlockActive()
+    {
+        return Time.unscaledTime < gameplayInputBlockedUntilRealtime;
+    }
+
+    public static bool IsSystemBlockActive()
+    {
+        if (lastSystemBlockFrame == Time.frameCount)
+            return lastSystemBlockResult;
+
+        lastSystemBlockFrame = Time.frameCount;
+        lastSystemBlockResult = EvaluateSystemBlock();
+        return lastSystemBlockResult;
+    }
+
+    public static bool IsBlocked()
+    {
+        return IsRealtimeBlockActive() || IsSystemBlockActive();
+    }
+
+    private static bool EvaluateSystemBlock()
+    {
+        if (Time.timeScale <= 0f)
+            return true;
+
+        if (FishCatchAnimation.IsAnyCatchScreenActive)
+            return true;
+
+        return PauseManager.IsAnyPauseUiOpen();
     }
 }

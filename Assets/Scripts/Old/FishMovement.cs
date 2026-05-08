@@ -1,4 +1,9 @@
+using System.IO;
 using UnityEngine;
+using UnityEngine.UI;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 [RequireComponent(typeof(Rigidbody))]
 public class FishMovement : MonoBehaviour
@@ -46,6 +51,15 @@ public class FishMovement : MonoBehaviour
     private const float StuckDistanceThreshold = 0.003f;
     private const float StuckSpeedThreshold = 0.08f;
     private const float MaxStillTime = 1.35f;
+    private const string NibbleIndicatorAssetPath = "Assets/Images/exclamation.png";
+    private const string NibbleIndicatorResourcePath = "Fishing/exclamation";
+    private const string NibbleIndicatorCanvasName = "FishNibbleIndicatorCanvas";
+    private const float NibbleIndicatorScreenOffsetY = 72f;
+    private const float NibbleIndicatorWorldOffsetY = 0.4f;
+    private const float NibbleIndicatorSize = 72f;
+
+    [Header("UI Assets")] 
+    [SerializeField] private Sprite nibbleSpriteAsset; 
 
     private Rigidbody rb;
     private Collider fishCollider;
@@ -86,6 +100,11 @@ public class FishMovement : MonoBehaviour
     private static bool s_nibblePullRestorePending;
     private static FishMovement s_recentNibblePullOwner;
     private static Transform s_recentNibblePullBobber;
+    private static Canvas s_nibbleIndicatorCanvas;
+    private static RectTransform s_nibbleIndicatorRect;
+    private static Image s_nibbleIndicatorImage;
+    private static Sprite s_nibbleIndicatorSprite;
+    private static Transform s_nibbleIndicatorBobber;
 
     private void Awake()
     {
@@ -96,6 +115,11 @@ public class FishMovement : MonoBehaviour
 
         rb.useGravity = false;
         rb.constraints = RigidbodyConstraints.FreezeRotation | RigidbodyConstraints.FreezePositionY;
+
+        if (s_nibbleIndicatorSprite == null && nibbleSpriteAsset != null)
+        {
+            s_nibbleIndicatorSprite = nibbleSpriteAsset;
+        }
     }
 
     private void Start()
@@ -149,6 +173,12 @@ public class FishMovement : MonoBehaviour
                 TickCooldownRoam();
                 break;
         }
+    }
+
+    private void LateUpdate()
+    {
+        if (s_nibblePullOwner == this && s_nibblePullActive)
+            UpdateNibbleIndicatorScreenPosition();
     }
 
     private void TickRoam(bool canApproach)
@@ -615,9 +645,10 @@ public class FishMovement : MonoBehaviour
         s_recentNibblePullOwner = this;
         s_recentNibblePullBobber = bobber;
 
-        FMODUnity.RuntimeManager.PlayOneShot("event:/Sfx/bite");
+        FunkyAudioSettings.PlayOneShot("event:/Sfx/bite", transform.position, FunkyAudioCategory.Sfx);
 
         s_nibblePullRestorePending = false;
+        ShowNibbleIndicator(bobber);
         UpdateBobberNibblePull();
     }
 
@@ -640,6 +671,7 @@ public class FishMovement : MonoBehaviour
         if (s_nibblePullOwner != this)
             return;
 
+        HideNibbleIndicator();
         s_recentNibblePullOwner = this;
         s_recentNibblePullBobber = bobber;
         s_nibblePullOwner = null;
@@ -681,6 +713,7 @@ public class FishMovement : MonoBehaviour
         if (owner == null)
             return false;
 
+        HideNibbleIndicator();
         fish = owner.gameObject;
         return fish != null && fish.activeInHierarchy;
     }
@@ -736,6 +769,7 @@ public class FishMovement : MonoBehaviour
         if (s_nibblePullBobber != bobberTransform)
             return;
 
+        HideNibbleIndicator();
         s_nibblePullOwner = null;
         s_nibblePullBobber = null;
         s_nibblePullActive = false;
@@ -758,6 +792,98 @@ public class FishMovement : MonoBehaviour
 
         Physics.IgnoreCollision(fishCollider, bobberCollider, ignore);
     }
+
+    private static void ShowNibbleIndicator(Transform bobberTransform)
+    {
+        if (bobberTransform == null)
+            return;
+
+        if (!EnsureNibbleIndicatorUi())
+            return;
+
+        s_nibbleIndicatorBobber = bobberTransform;
+        s_nibbleIndicatorImage.enabled = true;
+        s_nibbleIndicatorImage.sprite = s_nibbleIndicatorSprite;
+        s_nibbleIndicatorRect.sizeDelta = new Vector2(NibbleIndicatorSize, NibbleIndicatorSize);
+        UpdateNibbleIndicatorScreenPosition();
+    }
+
+    private static void HideNibbleIndicator()
+    {
+        s_nibbleIndicatorBobber = null;
+
+        if (s_nibbleIndicatorImage != null)
+            s_nibbleIndicatorImage.enabled = false;
+    }
+
+    private static void UpdateNibbleIndicatorScreenPosition()
+    {
+        if (s_nibbleIndicatorBobber == null || s_nibbleIndicatorRect == null || s_nibbleIndicatorImage == null)
+            return;
+
+        Camera cameraToUse = Camera.main;
+        if (cameraToUse == null)
+        {
+            s_nibbleIndicatorImage.enabled = false;
+            return;
+        }
+
+        Vector3 worldPos = s_nibbleIndicatorBobber.position + (Vector3.up * NibbleIndicatorWorldOffsetY);
+        Vector3 screenPos = cameraToUse.WorldToScreenPoint(worldPos);
+        bool visible = screenPos.z > 0f;
+        s_nibbleIndicatorImage.enabled = visible;
+        if (!visible)
+            return;
+
+        screenPos.y += NibbleIndicatorScreenOffsetY;
+        s_nibbleIndicatorRect.position = screenPos;
+    }
+
+    private static bool EnsureNibbleIndicatorUi()
+    {
+        if (s_nibbleIndicatorImage != null && s_nibbleIndicatorRect != null)
+            return true;
+
+
+        if (s_nibbleIndicatorSprite == null)
+        {
+            return false;
+        }
+
+        GameObject canvasGo = new GameObject(
+            NibbleIndicatorCanvasName,
+            typeof(RectTransform),
+            typeof(Canvas),
+            typeof(CanvasScaler));
+
+        s_nibbleIndicatorCanvas = canvasGo.GetComponent<Canvas>();
+        s_nibbleIndicatorCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        s_nibbleIndicatorCanvas.sortingOrder = 1200;
+        s_nibbleIndicatorCanvas.overrideSorting = true;
+
+        CanvasScaler scaler = canvasGo.GetComponent<CanvasScaler>();
+        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+        scaler.referenceResolution = new Vector2(1920f, 1080f);
+        scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+        scaler.matchWidthOrHeight = 0.5f;
+
+        GameObject indicatorGo = new GameObject("NibbleIndicator", typeof(RectTransform), typeof(Image));
+        indicatorGo.transform.SetParent(canvasGo.transform, false);
+        s_nibbleIndicatorRect = indicatorGo.GetComponent<RectTransform>();
+        s_nibbleIndicatorRect.anchorMin = new Vector2(0.5f, 0.5f);
+        s_nibbleIndicatorRect.anchorMax = new Vector2(0.5f, 0.5f);
+        s_nibbleIndicatorRect.pivot = new Vector2(0.5f, 0.5f);
+        s_nibbleIndicatorRect.sizeDelta = new Vector2(NibbleIndicatorSize, NibbleIndicatorSize);
+
+        s_nibbleIndicatorImage = indicatorGo.GetComponent<Image>();
+        s_nibbleIndicatorImage.raycastTarget = false;
+        s_nibbleIndicatorImage.preserveAspect = true;
+        s_nibbleIndicatorImage.sprite = s_nibbleIndicatorSprite;
+        s_nibbleIndicatorImage.enabled = false;
+        return true;
+    }
+
+
 
     private void OnCollisionEnter(Collision collision)
     {

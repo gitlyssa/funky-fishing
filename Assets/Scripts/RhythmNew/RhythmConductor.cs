@@ -50,6 +50,7 @@ public class RhythmConductor : MonoBehaviour
 
     [Header("Tutorial Practice (Runtime)")]
     [SerializeField] private bool tutorialUpPracticeActive;
+    [SerializeField] private bool tutorialReelsSuppressed;
     [SerializeField] private FlickDirection tutorialPracticeDirection = FlickDirection.Up;
     [SerializeField] private bool tutorialPracticeUseSequence;
     [SerializeField] private float tutorialPracticeBpm = 99f;
@@ -57,6 +58,7 @@ public class RhythmConductor : MonoBehaviour
     [SerializeField] private int tutorialPracticeGroupRestBeats = 2;
     [SerializeField] private int tutorialPracticeNoteBeatSpacing = 1;
     [SerializeField] private bool tutorialPracticeSpawnPaused;
+    [SerializeField] private bool tutorialPracticeClockAdvancesWhilePaused;
 
     private float tutorialBeatInterval = 60f / 99f;
     private float tutorialNextHitTime = -1f;
@@ -67,13 +69,15 @@ public class RhythmConductor : MonoBehaviour
     private float _overtimeClock = 0f;
     private bool _isUsingOvertime = false;
     public bool isOvertime => _isUsingOvertime;
+    
+    [SerializeField]private GameObject gameRing;
 
     [Header("Timing Ring Visuals")]
     public GameObject timingRingPrefab; 
     public float ringThickness = 0.05f;
 
     public Color perfectZoneColor = new Color(1f, 0.85f, 0f, 0.4f); // Shaded Gold (with alpha!)
-    public Color goodGuidelineColor = new Color(0.2f, 1f, 1f, 1f);   // Bright Cyan
+    public Color RingColour = new Color(0.2f, 1f, 1f, 1f);   //bright white cyan
 
     void Start()
     {
@@ -112,12 +116,15 @@ public class RhythmConductor : MonoBehaviour
 
         if (tutorialUpPracticeActive)
         {
-            if (tutorialPracticeSpawnPaused)
-                return;
+            if (!tutorialPracticeSpawnPaused || tutorialPracticeClockAdvancesWhilePaused)
+            {
+                tutorialPracticeClock += Time.deltaTime;
+                songTime = tutorialPracticeClock;
+            }
 
-            tutorialPracticeClock += Time.deltaTime;
-            songTime = tutorialPracticeClock;
-            UpdateTutorialPracticeSpawning();
+            if (!tutorialPracticeSpawnPaused)
+                UpdateTutorialPracticeSpawning();
+
             return;
         }
         else if (_isUsingOvertime) 
@@ -137,7 +144,10 @@ public class RhythmConductor : MonoBehaviour
             _chart.RemoveAt(0);
         }
 
-        if (activeReel == null && _reelQueue.Count > 0 && songTime >= _reelQueue[0].startTime - _reelQueue[0].leadInTime)
+        if (!tutorialReelsSuppressed &&
+            activeReel == null &&
+            _reelQueue.Count > 0 &&
+            songTime >= _reelQueue[0].startTime - _reelQueue[0].leadInTime)
         {
             SpawnReel(_reelQueue[0]);
             _reelQueue.RemoveAt(0);
@@ -213,6 +223,9 @@ public class RhythmConductor : MonoBehaviour
 
     public void SpawnFinalPlaytestReel()
     {
+        if (tutorialReelsSuppressed)
+            return;
+
         // We spawn it at the current songTime (which is the end of the song)
         ReelData finalReel = new ReelData
         {
@@ -224,6 +237,27 @@ public class RhythmConductor : MonoBehaviour
         
         SpawnReel(finalReel);
         Debug.Log("Final Playtest Reel Spawned!");
+    }
+
+    public void SetTutorialReelsSuppressed(bool suppressed)
+    {
+        tutorialReelsSuppressed = suppressed;
+
+        if (!suppressed)
+            return;
+
+        if (activeReel != null)
+        {
+            Destroy(activeReel.gameObject);
+            activeReel = null;
+        }
+
+        _reelQueue.Clear();
+    }
+
+    public bool AreTutorialReelsSuppressed()
+    {
+        return tutorialReelsSuppressed;
     }
 
     public void StartTutorialDirectionalPracticeMode(
@@ -246,6 +280,7 @@ public class RhythmConductor : MonoBehaviour
         tutorialPracticeClock = 0f;
         tutorialUpPracticeActive = true;
         tutorialPracticeSpawnPaused = false;
+        tutorialPracticeClockAdvancesWhilePaused = false;
 
         ClearActiveRhythmObjects();
         _chart.Clear();
@@ -296,6 +331,7 @@ public class RhythmConductor : MonoBehaviour
         tutorialPracticeClock = 0f;
         tutorialUpPracticeActive = true;
         tutorialPracticeSpawnPaused = false;
+        tutorialPracticeClockAdvancesWhilePaused = false;
 
         ClearActiveRhythmObjects();
         _chart.Clear();
@@ -306,6 +342,18 @@ public class RhythmConductor : MonoBehaviour
         songTime = tutorialPracticeClock;
     }
 
+    public void PrepareTutorialReelPracticeClock()
+    {
+        tutorialUpPracticeActive = true;
+        tutorialPracticeSpawnPaused = true;
+        tutorialPracticeClockAdvancesWhilePaused = true;
+        tutorialSpawnedInCurrentGroup = 0;
+        tutorialNextHitTime = -1f;
+        tutorialPracticeClock = 0f;
+        songTime = 0f;
+        ClearActiveRhythmObjects();
+    }
+
     public void StopTutorialUpPracticeMode(bool restoreBeatmapForReplay)
     {
         tutorialUpPracticeActive = false;
@@ -313,6 +361,7 @@ public class RhythmConductor : MonoBehaviour
         tutorialPracticeSequence = new FlickDirection[0];
         tutorialPracticeSequenceIndex = 0;
         tutorialPracticeSpawnPaused = false;
+        tutorialPracticeClockAdvancesWhilePaused = false;
         tutorialSpawnedInCurrentGroup = 0;
         tutorialNextHitTime = -1f;
         tutorialPracticeClock = 0f;
@@ -329,6 +378,7 @@ public class RhythmConductor : MonoBehaviour
         _reelQueue.Clear();
         _isUsingOvertime = false;
         _overtimeClock = 0f;    
+        tutorialPracticeClockAdvancesWhilePaused = false;
 
         foreach (NoteData note in _chartTemplate)
         {
@@ -493,6 +543,9 @@ public class RhythmConductor : MonoBehaviour
     public void SetTutorialUpPracticeSpawnPaused(bool paused)
     {
         tutorialPracticeSpawnPaused = paused;
+        if (!paused)
+            tutorialPracticeClockAdvancesWhilePaused = false;
+
         if (paused)
             ClearActiveRhythmObjects();
     }
@@ -518,10 +571,9 @@ public class RhythmConductor : MonoBehaviour
     {
         if (RhythmJudge.Instance == null) return;
 
-
-        SpawnStaticRing(hitRingRadius, Color.white, ringThickness * 0.5f, "Ring_AbsoluteCenter");
-
-        float pWindowSecs = RhythmJudge.Instance.PerfectWindow;
+    float ringSizeMult = 6f;
+    SpawnStaticRing(hitRingRadius + ringThickness * ringSizeMult/2, RingColour, ringThickness * ringSizeMult, "Ring_AbsoluteCenter");
+    float pWindowSecs = RhythmJudge.Instance.PerfectWindow;
     
     // t=0.0 at spawn, t=1.0 at target.
     float tStartPerf = 1f - (pWindowSecs / noteTravelTime); // Early Perfect
@@ -539,15 +591,6 @@ public class RhythmConductor : MonoBehaviour
     // Spawn the wide, shaded golden ring
     SpawnStaticRing(shadedCenterRadius, perfectZoneColor, shadedThickness, "Zone_Perfect_Shaded");
 
-    // Add a very thin border on the outside of the shaded zone for crispness
-    SpawnStaticRing(rStartPerf, new Color(1f, 0.9f, 0.5f, 0.8f), 0.02f, "Ring_Perfect_Border");
-
-        
-        float goodTimeOffset = RhythmJudge.Instance.GoodWindow;
-        float goodT = 1f - (goodTimeOffset / noteTravelTime);
-        float goodRadius = Mathf.Lerp(spawnRadius, hitRingRadius, noteScaleCurve.Evaluate(goodT));
-        SpawnStaticRing(goodRadius, goodGuidelineColor, ringThickness, "Ring_Good_Entry");
-
     }
 
     private void SpawnStaticRing(float radius, Color color, float thickness, string ringName)
@@ -555,8 +598,9 @@ public class RhythmConductor : MonoBehaviour
         GameObject ring = Instantiate(timingRingPrefab, transform);
         ring.name = ringName;
         ring.transform.localPosition = new Vector3(0, 0, 0.01f); 
-        ring.layer = gameObject.layer;
-
+        ring.layer = gameObject.layer;  
+        // attach the ring to the game ring
+        ring.transform.SetParent(gameRing.transform);
         DynamicArc arc = ring.GetComponent<DynamicArc>();
         if (arc != null)
         {

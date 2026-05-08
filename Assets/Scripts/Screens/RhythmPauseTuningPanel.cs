@@ -12,6 +12,11 @@ using UnityEngine.UI;
 [RequireComponent(typeof(PauseManager))]
 public class RhythmPauseTuningPanel : MonoBehaviour
 {
+    private const string TuningFontResourcePath = "Fonts & Materials/LiberationSans SDF";
+    private static TMP_FontAsset s_tuningFontAsset;
+
+    public const float GeneralSensitivityDefault = 0.4f;
+
     private enum TuningField
     {
         UpEnterDps,
@@ -29,6 +34,7 @@ public class RhythmPauseTuningPanel : MonoBehaviour
     {
         public TuningField Field;
         public string Label;
+        public string Description;
         public float Min;
         public float Max;
         public int Decimals;
@@ -83,12 +89,18 @@ public class RhythmPauseTuningPanel : MonoBehaviour
 
     private PauseManager _pauseManager;
     private RectTransform _panelRoot;
+    private RectTransform _scrollRoot;
+    private RectTransform _actionsRow;
     private Button _openButton;
     private Button _backButton;
     private Selectable _firstTuningSelectable;
     private TextMeshProUGUI _targetLabel;
     private TextMeshProUGUI _statusLabel;
     private TextMeshProUGUI _pathLabel;
+    private RectTransform _infoPopupOverlay;
+    private TextMeshProUGUI _infoPopupTitle;
+    private TextMeshProUGUI _infoPopupBody;
+    private Button _infoPopupCloseButton;
     private readonly List<SliderRow> _rows = new List<SliderRow>();
 
     private bool _built;
@@ -97,35 +109,49 @@ public class RhythmPauseTuningPanel : MonoBehaviour
     private bool _targetIsSwing;
     private bool _hasTarget;
     private bool _syncForced;
+    private bool _useExternalHostLayout;
+    private bool _cachedValuesAreAuthoritative;
+    private UnityEngine.Object _lastResolvedTuningTarget;
+    private bool _lastResolvedTargetIsSwing;
+    private TuningSaveData _cachedSaveData;
 
     private static readonly FieldSpec[] Specs =
     {
-        new FieldSpec { Field = TuningField.UpEnterDps, Label = "Up Enter DPS", Min = 140f, Max = 520f, Decimals = 0, DefaultValue = 260f },
-        new FieldSpec { Field = TuningField.UpExitDps, Label = "Up Exit DPS", Min = 80f, Max = 360f, Decimals = 0, DefaultValue = 180f },
-        new FieldSpec { Field = TuningField.SideEnterDps, Label = "Side Enter DPS", Min = 140f, Max = 520f, Decimals = 0, DefaultValue = 260f },
-        new FieldSpec { Field = TuningField.SideExitDps, Label = "Side Exit DPS", Min = 80f, Max = 360f, Decimals = 0, DefaultValue = 180f },
-        new FieldSpec { Field = TuningField.UpPriorityBias, Label = "Up Priority Bias", Min = 0.95f, Max = 1.25f, Decimals = 2, DefaultValue = 0.9969385266304016f },
-        new FieldSpec { Field = TuningField.DirectionRearmDelay, Label = "Direction Rearm Delay", Min = 0f, Max = 0.18f, Decimals = 3, DefaultValue = 0.015034792013466359f },
-        new FieldSpec { Field = TuningField.SideNeutralRearmDps, Label = "Side Neutral Rearm DPS", Min = 35f, Max = 110f, Decimals = 0, DefaultValue = 60.18131637573242f },
-        new FieldSpec { Field = TuningField.SideNeutralHoldTime, Label = "Side Neutral Hold Time", Min = 0f, Max = 0.10f, Decimals = 3, DefaultValue = 0.010351191274821759f },
-        new FieldSpec { Field = TuningField.GyroSmooth, Label = "Gyro Smooth", Min = 8f, Max = 45f, Decimals = 1, DefaultValue = 24.986251831054689f }
+        new FieldSpec { Field = TuningField.UpEnterDps, Label = "Up Enter DPS", Description = "Upward speed needed before an up input starts.", Min = 140f, Max = 520f, Decimals = 0, DefaultValue = 260f },
+        new FieldSpec { Field = TuningField.UpExitDps, Label = "Up Exit DPS", Description = "How far upward speed must drop before the up input ends.", Min = 80f, Max = 360f, Decimals = 0, DefaultValue = 180f },
+        new FieldSpec { Field = TuningField.SideEnterDps, Label = "Side Enter DPS", Description = "Sideways speed needed before a left or right input starts.", Min = 140f, Max = 520f, Decimals = 0, DefaultValue = 260f },
+        new FieldSpec { Field = TuningField.SideExitDps, Label = "Side Exit DPS", Description = "How far sideways speed must drop before the side input ends.", Min = 80f, Max = 360f, Decimals = 0, DefaultValue = 180f },
+        new FieldSpec { Field = TuningField.UpPriorityBias, Label = "Up Priority Bias", Description = "Bias that favors up over side when both directions are close.", Min = 0.95f, Max = 1.25f, Decimals = 2, DefaultValue = 0.9969385266304016f },
+        new FieldSpec { Field = TuningField.DirectionRearmDelay, Label = "Direction Rearm Delay", Description = "Small delay before the same direction can trigger again.", Min = 0f, Max = 0.18f, Decimals = 3, DefaultValue = 0.015034792013466359f },
+        new FieldSpec { Field = TuningField.SideNeutralRearmDps, Label = "Side Neutral Rearm DPS", Description = "Side movement must settle below this speed before rearming.", Min = 35f, Max = 110f, Decimals = 0, DefaultValue = 60.18131637573242f },
+        new FieldSpec { Field = TuningField.SideNeutralHoldTime, Label = "Side Neutral Hold Time", Description = "How long side movement must stay neutral before rearming.", Min = 0f, Max = 0.10f, Decimals = 3, DefaultValue = 0.010351191274821759f },
+        new FieldSpec { Field = TuningField.GyroSmooth, Label = "Gyro Smooth", Description = "Higher values smooth motion more but add more latency.", Min = 8f, Max = 45f, Decimals = 1, DefaultValue = 24.986251831054689f }
     };
 
     private void Awake()
     {
         _pauseManager = GetComponent<PauseManager>();
+        _cachedSaveData = BuildDefaultSaveData();
     }
 
     private void Start()
     {
         BuildUiIfNeeded();
-        AdjustOpenButtonPlacement();
-        AdjustPanelToViewport();
+        if (!_useExternalHostLayout)
+        {
+            AdjustOpenButtonPlacement();
+            AdjustPanelToViewport();
+        }
         ResolveTargets();
         if (autoLoadOnStart)
             TryLoadPersistentFile(showStatusWhenMissing: false);
         RefreshUiFromTarget();
         CloseTuningPanelInternal(selectOpenButton: false);
+    }
+
+    private void OnDisable()
+    {
+        HideInfoPopup();
     }
 
     private void Update()
@@ -143,21 +169,125 @@ public class RhythmPauseTuningPanel : MonoBehaviour
         }
 
         ResolveTargets();
-        AdjustOpenButtonPlacement();
-        AdjustPanelToViewport();
-        SyncOpenButtonVisibility();
+        if (!_useExternalHostLayout)
+        {
+            AdjustOpenButtonPlacement();
+            AdjustPanelToViewport();
+            SyncOpenButtonVisibility();
+        }
 
         if (!_wasPauseOpen)
         {
             CloseTuningPanelInternal(selectOpenButton: false);
             RefreshUiFromTarget();
-            SyncOpenButtonVisibility();
+            if (!_useExternalHostLayout)
+                SyncOpenButtonVisibility();
         }
 
         _wasPauseOpen = true;
     }
 
     public bool IsTuningPanelOpen() => _isTuningOpen;
+
+    public void ApplyGeneralSensitivityPreset(float normalizedValue, bool persist = true)
+    {
+        float clamped = Mathf.Clamp01(normalizedValue);
+        TuningSaveData data = BuildDefaultSaveData();
+        float enterDps = EvaluateGeneralSensitivityEnterDps(clamped);
+        float exitDps = EvaluateGeneralSensitivityExitDps(clamped);
+
+        data.upEnterDps = enterDps;
+        data.sideEnterDps = enterDps;
+        data.upExitDps = exitDps;
+        data.sideExitDps = exitDps;
+        data.upPriorityBias = 1.0f;
+        data.directionRearmDelay = 0.015f;
+        data.sideNeutralRearmDps = 60f;
+        data.sideNeutralHoldTime = 0.010f;
+        data.gyroSmooth = 25f;
+        data.savedUtc = DateTime.UtcNow.ToString("o");
+
+        _cachedSaveData = SanitizeSaveData(data);
+        _cachedValuesAreAuthoritative = true;
+
+        if (_hasTarget)
+            ApplySaveData(_cachedSaveData);
+
+        RefreshUiFromTarget();
+        if (persist)
+            SaveCurrentToPersistentFile();
+    }
+
+    public static float EvaluateGeneralSensitivityEnterDps(float normalizedValue)
+    {
+        float clamped = Mathf.Clamp01(normalizedValue);
+        if (clamped <= GeneralSensitivityDefault)
+            return Mathf.Lerp(200f, 260f, clamped / GeneralSensitivityDefault);
+
+        return Mathf.Lerp(260f, 350f, (clamped - GeneralSensitivityDefault) / (1f - GeneralSensitivityDefault));
+    }
+
+    public static float EvaluateGeneralSensitivityExitDps(float normalizedValue)
+    {
+        float clamped = Mathf.Clamp01(normalizedValue);
+        if (clamped <= GeneralSensitivityDefault)
+            return 180f;
+
+        return Mathf.Lerp(180f, 270f, (clamped - GeneralSensitivityDefault) / (1f - GeneralSensitivityDefault));
+    }
+
+    public void PrepareForUnifiedOptions(Transform hostParent, Action onBack)
+    {
+        BuildUiIfNeeded();
+        if (_panelRoot == null || hostParent == null)
+            return;
+
+        _useExternalHostLayout = true;
+
+        if (_openButton != null)
+        {
+            Destroy(_openButton.gameObject);
+            _openButton = null;
+        }
+
+        _panelRoot.SetParent(hostParent, false);
+        Stretch(_panelRoot);
+
+        if (_scrollRoot != null)
+        {
+            _scrollRoot.offsetMin = new Vector2(10f, 12f);
+            _scrollRoot.offsetMax = new Vector2(-10f, -46f);
+        }
+
+        if (_actionsRow != null)
+            _actionsRow.gameObject.SetActive(false);
+
+        if (_targetLabel != null && _targetLabel.transform.parent is RectTransform targetBox)
+            targetBox.gameObject.SetActive(false);
+
+        if (_pathLabel != null && _pathLabel.transform.parent is RectTransform pathBox)
+            pathBox.gameObject.SetActive(false);
+
+        if (_statusLabel != null && _statusLabel.transform.parent is RectTransform statusBox)
+            statusBox.gameObject.SetActive(false);
+
+        if (_backButton != null)
+        {
+            _backButton.onClick.RemoveAllListeners();
+            _backButton.onClick.AddListener(() =>
+            {
+                FunkyAudioSettings.PlayUiConfirm();
+                onBack?.Invoke();
+            });
+        }
+
+        CloseTuningPanelInternal(selectOpenButton: false);
+    }
+
+    public void CloseForUnifiedOptions()
+    {
+        CloseTuningPanelInternal(selectOpenButton: false);
+    }
 
     public void OpenTuningPanel()
     {
@@ -205,6 +335,7 @@ public class RhythmPauseTuningPanel : MonoBehaviour
     private void CloseTuningPanelInternal(bool selectOpenButton)
     {
         _isTuningOpen = false;
+        HideInfoPopup();
 
         if (_panelRoot != null)
             _panelRoot.gameObject.SetActive(false);
@@ -233,6 +364,12 @@ public class RhythmPauseTuningPanel : MonoBehaviour
 
     public void SyncOpenButtonVisibility()
     {
+        if (_useExternalHostLayout)
+        {
+            SetOpenButtonActive(false);
+            return;
+        }
+
         bool pauseOpen = _pauseManager != null &&
             _pauseManager.PausePanel != null &&
             _pauseManager.PausePanel.activeInHierarchy;
@@ -248,6 +385,9 @@ public class RhythmPauseTuningPanel : MonoBehaviour
 
     private void AdjustOpenButtonPlacement()
     {
+        if (_useExternalHostLayout)
+            return;
+
         if (_openButton == null)
             return;
 
@@ -277,6 +417,9 @@ public class RhythmPauseTuningPanel : MonoBehaviour
 
     private void AdjustPanelToViewport()
     {
+        if (_useExternalHostLayout)
+            return;
+
         if (_panelRoot == null || _pauseManager == null || _pauseManager.PausePanel == null)
             return;
 
@@ -325,6 +468,7 @@ public class RhythmPauseTuningPanel : MonoBehaviour
         {
             _hasTarget = true;
             _targetIsSwing = true;
+            HandleTargetChanged(directionalSwingInput, true);
             UpdateTargetLabel("Target: JoyConDirectionalSwingInput (sync source)");
             return;
         }
@@ -333,6 +477,7 @@ public class RhythmPauseTuningPanel : MonoBehaviour
         {
             _hasTarget = true;
             _targetIsSwing = false;
+            HandleTargetChanged(directionalRhythmProvider, false);
             UpdateTargetLabel("Target: JoyConDirectionalRhythmProvider");
             return;
         }
@@ -341,10 +486,12 @@ public class RhythmPauseTuningPanel : MonoBehaviour
         {
             _hasTarget = true;
             _targetIsSwing = true;
+            HandleTargetChanged(directionalSwingInput, true);
             UpdateTargetLabel("Target: JoyConDirectionalSwingInput");
             return;
         }
 
+        HandleTargetChanged(null, false);
         UpdateTargetLabel("Target: not found in scene");
     }
 
@@ -373,7 +520,11 @@ public class RhythmPauseTuningPanel : MonoBehaviour
 
         _openButton = go.GetComponent<Button>();
         _openButton.targetGraphic = image;
-        _openButton.onClick.AddListener(OpenTuningPanel);
+        _openButton.onClick.AddListener(() =>
+        {
+            FunkyAudioSettings.PlayUiConfirm();
+            OpenTuningPanel();
+        });
 
         TextMeshProUGUI label = CreateText(go.transform, "Label", "Rhythm Tuning", 13f, FontStyles.Bold, TextAlignmentOptions.Center);
         Stretch(label.rectTransform);
@@ -405,6 +556,7 @@ public class RhythmPauseTuningPanel : MonoBehaviour
         CreateSliderScrollArea();
         CreateStatusLabel();
         CreateActionButtons();
+        CreateInfoPopup();
     }
 
     private void CreateHeader()
@@ -453,6 +605,7 @@ public class RhythmPauseTuningPanel : MonoBehaviour
     private void CreateSliderScrollArea()
     {
         RectTransform scrollRoot = CreateRect(_panelRoot, "SliderScrollRoot", new Vector2(0f, 0f), new Vector2(1f, 1f), new Vector2(10f, 90f), new Vector2(-10f, -70f));
+        _scrollRoot = scrollRoot;
         Image scrollBg = scrollRoot.gameObject.AddComponent<Image>();
         scrollBg.color = new Color(0.08f, 0.08f, 0.1f, 1f);
 
@@ -552,14 +705,33 @@ public class RhythmPauseTuningPanel : MonoBehaviour
         header.childAlignment = TextAnchor.MiddleLeft;
         header.childControlWidth = true;
         header.childControlHeight = true;
-        header.childForceExpandWidth = true;
+        header.childForceExpandWidth = false;
         header.childForceExpandHeight = false;
 
-        TextMeshProUGUI name = CreateText(headerGo.transform, "Name", spec.Label, 13f, FontStyles.Normal, TextAlignmentOptions.Left);
+        GameObject labelGroupGo = new GameObject("LabelGroup", typeof(RectTransform), typeof(HorizontalLayoutGroup), typeof(LayoutElement));
+        labelGroupGo.transform.SetParent(headerGo.transform, false);
+
+        HorizontalLayoutGroup labelGroup = labelGroupGo.GetComponent<HorizontalLayoutGroup>();
+        labelGroup.spacing = 3f;
+        labelGroup.padding = new RectOffset(0, 0, 0, 0);
+        labelGroup.childAlignment = TextAnchor.MiddleLeft;
+        labelGroup.childControlWidth = true;
+        labelGroup.childControlHeight = true;
+        labelGroup.childForceExpandWidth = false;
+        labelGroup.childForceExpandHeight = false;
+
+        LayoutElement labelGroupLayout = labelGroupGo.GetComponent<LayoutElement>();
+        labelGroupLayout.flexibleWidth = 1f;
+
+        TextMeshProUGUI name = CreateText(labelGroupGo.transform, "Name", spec.Label, 13f, FontStyles.Normal, TextAlignmentOptions.Left);
         name.color = new Color(0.95f, 0.95f, 0.95f, 1f);
+
+        CreateInfoButton(labelGroupGo.transform, spec);
 
         TextMeshProUGUI value = CreateText(headerGo.transform, "Value", "-", 13f, FontStyles.Bold, TextAlignmentOptions.Right);
         value.color = new Color(0.95f, 0.87f, 0.45f, 1f);
+        LayoutElement valueLayout = value.gameObject.AddComponent<LayoutElement>();
+        valueLayout.preferredWidth = 72f;
 
         Slider slider = CreateSlider(rowGo.transform);
         slider.minValue = spec.Min;
@@ -579,6 +751,120 @@ public class RhythmPauseTuningPanel : MonoBehaviour
             if (autoSaveOnChange)
                 SaveCurrentToPersistentFile();
         });
+    }
+
+    private void CreateInfoButton(Transform parent, FieldSpec spec)
+    {
+        GameObject go = new GameObject(spec.Field + "_InfoButton", typeof(RectTransform), typeof(Image), typeof(Button), typeof(LayoutElement));
+        go.transform.SetParent(parent, false);
+
+        LayoutElement layout = go.GetComponent<LayoutElement>();
+        layout.preferredWidth = 12f;
+        layout.preferredHeight = 12f;
+        layout.minWidth = 12f;
+        layout.minHeight = 12f;
+
+        Image image = go.GetComponent<Image>();
+        image.color = new Color(0.18f, 0.26f, 0.38f, 0.95f);
+
+        Button button = go.GetComponent<Button>();
+        button.targetGraphic = image;
+        button.onClick.AddListener(() =>
+        {
+            FunkyAudioSettings.PlayUiConfirm();
+            ShowInfoPopup(spec.Label, spec.Description);
+        });
+
+        RectTransform rect = go.GetComponent<RectTransform>();
+        rect.sizeDelta = new Vector2(12f, 12f);
+
+        TextMeshProUGUI label = CreateText(go.transform, "Label", "i", 7f, FontStyles.Bold, TextAlignmentOptions.Center);
+        label.color = new Color(0.92f, 0.96f, 1f, 1f);
+        Stretch(label.rectTransform);
+    }
+
+    private void CreateInfoPopup()
+    {
+        _infoPopupOverlay = CreateRect(_panelRoot, "InfoPopupOverlay", Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+        Image overlayImage = _infoPopupOverlay.gameObject.AddComponent<Image>();
+        overlayImage.color = new Color(0f, 0f, 0f, 0.68f);
+
+        Button overlayButton = _infoPopupOverlay.gameObject.AddComponent<Button>();
+        overlayButton.targetGraphic = overlayImage;
+        overlayButton.onClick.AddListener(() =>
+        {
+            FunkyAudioSettings.PlayUiConfirm();
+            HideInfoPopup();
+        });
+
+        RectTransform card = CreateRect(_infoPopupOverlay, "InfoPopupCard", new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(-170f, -96f), new Vector2(170f, 96f));
+        Image cardImage = card.gameObject.AddComponent<Image>();
+        cardImage.color = new Color(0.1f, 0.12f, 0.16f, 0.98f);
+
+        VerticalLayoutGroup layout = card.gameObject.AddComponent<VerticalLayoutGroup>();
+        layout.spacing = 10f;
+        layout.padding = new RectOffset(14, 14, 14, 14);
+        layout.childAlignment = TextAnchor.UpperLeft;
+        layout.childControlWidth = true;
+        layout.childControlHeight = false;
+        layout.childForceExpandWidth = true;
+        layout.childForceExpandHeight = false;
+
+        GameObject titleGo = new GameObject("TitleLayout", typeof(RectTransform), typeof(LayoutElement));
+        titleGo.transform.SetParent(card, false);
+        LayoutElement titleLayout = titleGo.GetComponent<LayoutElement>();
+        titleLayout.preferredHeight = 24f;
+        _infoPopupTitle = CreateText(titleGo.transform, "Title", "", 14f, FontStyles.Bold, TextAlignmentOptions.Left);
+        _infoPopupTitle.color = new Color(1f, 0.95f, 0.72f, 1f);
+        Stretch(_infoPopupTitle.rectTransform);
+
+        GameObject bodyGo = new GameObject("BodyLayout", typeof(RectTransform), typeof(LayoutElement));
+        bodyGo.transform.SetParent(card, false);
+        LayoutElement bodyLayout = bodyGo.GetComponent<LayoutElement>();
+        bodyLayout.flexibleHeight = 1f;
+        bodyLayout.preferredHeight = 84f;
+        _infoPopupBody = CreateText(bodyGo.transform, "Body", "", 12f, FontStyles.Normal, TextAlignmentOptions.TopLeft);
+        _infoPopupBody.color = new Color(0.92f, 0.94f, 0.98f, 1f);
+        _infoPopupBody.textWrappingMode = TextWrappingModes.Normal;
+        Stretch(_infoPopupBody.rectTransform);
+
+        GameObject buttonsGo = new GameObject("ButtonsRow", typeof(RectTransform), typeof(HorizontalLayoutGroup), typeof(LayoutElement));
+        buttonsGo.transform.SetParent(card, false);
+        HorizontalLayoutGroup buttonsLayout = buttonsGo.GetComponent<HorizontalLayoutGroup>();
+        buttonsLayout.childAlignment = TextAnchor.MiddleRight;
+        buttonsLayout.childControlWidth = false;
+        buttonsLayout.childControlHeight = true;
+        buttonsLayout.childForceExpandWidth = false;
+        buttonsLayout.childForceExpandHeight = false;
+        LayoutElement buttonsRowLayout = buttonsGo.GetComponent<LayoutElement>();
+        buttonsRowLayout.preferredHeight = 30f;
+
+        _infoPopupCloseButton = CreateButton(buttonsGo.transform, "CloseButton", "Close", HideInfoPopup, new Color(0.24f, 0.18f, 0.18f, 1f), 11f);
+        RectTransform closeRect = _infoPopupCloseButton.transform as RectTransform;
+        if (closeRect != null)
+            closeRect.sizeDelta = new Vector2(84f, 30f);
+
+        _infoPopupOverlay.gameObject.SetActive(false);
+    }
+
+    private void ShowInfoPopup(string title, string description)
+    {
+        if (_infoPopupOverlay == null)
+            return;
+
+        _infoPopupTitle.text = title;
+        _infoPopupBody.text = description;
+        _infoPopupOverlay.gameObject.SetActive(true);
+        _infoPopupOverlay.SetAsLastSibling();
+
+        if (_infoPopupCloseButton != null && EventSystem.current != null)
+            EventSystem.current.SetSelectedGameObject(_infoPopupCloseButton.gameObject);
+    }
+
+    private void HideInfoPopup()
+    {
+        if (_infoPopupOverlay != null)
+            _infoPopupOverlay.gameObject.SetActive(false);
     }
 
     private Slider CreateSlider(Transform parent)
@@ -649,6 +935,7 @@ public class RhythmPauseTuningPanel : MonoBehaviour
     private void CreateActionButtons()
     {
         RectTransform row = CreateRect(_panelRoot, "ActionsRow", new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(10f, 10f), new Vector2(-10f, 40f));
+        _actionsRow = row;
         HorizontalLayoutGroup h = row.gameObject.AddComponent<HorizontalLayoutGroup>();
         h.spacing = 4f;
         h.padding = new RectOffset(0, 0, 0, 0);
@@ -676,7 +963,11 @@ public class RhythmPauseTuningPanel : MonoBehaviour
 
         Button button = go.GetComponent<Button>();
         button.targetGraphic = image;
-        button.onClick.AddListener(onClick);
+        button.onClick.AddListener(() =>
+        {
+            FunkyAudioSettings.PlayUiConfirm();
+            onClick?.Invoke();
+        });
 
         TextMeshProUGUI label = CreateText(go.transform, "Label", text, fontSize, FontStyles.Bold, TextAlignmentOptions.Center);
         Stretch(label.rectTransform);
@@ -700,6 +991,12 @@ public class RhythmPauseTuningPanel : MonoBehaviour
         GameObject go = new GameObject(name, typeof(RectTransform), typeof(TextMeshProUGUI));
         go.transform.SetParent(parent, false);
         TextMeshProUGUI tmp = go.GetComponent<TextMeshProUGUI>();
+        if (s_tuningFontAsset == null)
+            s_tuningFontAsset = Resources.Load<TMP_FontAsset>(TuningFontResourcePath);
+
+        if (s_tuningFontAsset != null)
+            tmp.font = s_tuningFontAsset;
+
         tmp.text = text;
         tmp.fontSize = size;
         tmp.fontStyle = style;
@@ -720,7 +1017,7 @@ public class RhythmPauseTuningPanel : MonoBehaviour
 
     private void RefreshUiFromTarget()
     {
-        if (!_built || !_hasTarget)
+        if (!_built)
             return;
 
         for (int i = 0; i < _rows.Count; i++)
@@ -734,11 +1031,11 @@ public class RhythmPauseTuningPanel : MonoBehaviour
 
     private void ResetToDefaults()
     {
-        if (!_hasTarget)
-            return;
+        _cachedSaveData = BuildDefaultSaveData();
+        _cachedValuesAreAuthoritative = true;
 
-        for (int i = 0; i < Specs.Length; i++)
-            ApplyFieldValue(Specs[i], Specs[i].DefaultValue);
+        if (_hasTarget)
+            ApplySaveData(_cachedSaveData);
 
         RefreshUiFromTarget();
         if (autoSaveOnChange)
@@ -747,13 +1044,7 @@ public class RhythmPauseTuningPanel : MonoBehaviour
 
     private void SaveCurrentToPersistentFile()
     {
-        if (!_hasTarget)
-        {
-            SetStatus("Status: Save skipped (no tuning target found).");
-            return;
-        }
-
-        TuningSaveData data = BuildSaveDataFromTarget();
+        TuningSaveData data = BuildSaveDataFromCurrentState();
         string path = GetSavePath();
 
         try
@@ -770,12 +1061,6 @@ public class RhythmPauseTuningPanel : MonoBehaviour
 
     private void TryLoadPersistentFile(bool showStatusWhenMissing)
     {
-        if (!_hasTarget)
-        {
-            SetStatus("Status: Load skipped (no tuning target found).");
-            return;
-        }
-
         string path = GetSavePath();
         if (!File.Exists(path))
         {
@@ -794,7 +1079,10 @@ public class RhythmPauseTuningPanel : MonoBehaviour
                 return;
             }
 
-            ApplySaveData(data);
+            _cachedSaveData = SanitizeSaveData(data);
+            _cachedValuesAreAuthoritative = true;
+            if (_hasTarget)
+                ApplySaveData(_cachedSaveData);
             RefreshUiFromTarget();
             SetStatus("Status: Loaded.");
         }
@@ -846,6 +1134,30 @@ public class RhythmPauseTuningPanel : MonoBehaviour
             sideNeutralHoldTime = ReadField(TuningField.SideNeutralHoldTime),
             gyroSmooth = ReadField(TuningField.GyroSmooth),
             savedUtc = DateTime.UtcNow.ToString("o")
+        };
+    }
+
+    private TuningSaveData BuildSaveDataFromCurrentState()
+    {
+        TuningSaveData data = _hasTarget ? BuildSaveDataFromTarget() : CopySaveData(_cachedSaveData);
+        data.savedUtc = DateTime.UtcNow.ToString("o");
+        return data;
+    }
+
+    private TuningSaveData BuildDefaultSaveData()
+    {
+        return new TuningSaveData
+        {
+            upEnterDps = FindSpec(TuningField.UpEnterDps).DefaultValue,
+            upExitDps = FindSpec(TuningField.UpExitDps).DefaultValue,
+            sideEnterDps = FindSpec(TuningField.SideEnterDps).DefaultValue,
+            sideExitDps = FindSpec(TuningField.SideExitDps).DefaultValue,
+            upPriorityBias = FindSpec(TuningField.UpPriorityBias).DefaultValue,
+            directionRearmDelay = FindSpec(TuningField.DirectionRearmDelay).DefaultValue,
+            sideNeutralRearmDps = FindSpec(TuningField.SideNeutralRearmDps).DefaultValue,
+            sideNeutralHoldTime = FindSpec(TuningField.SideNeutralHoldTime).DefaultValue,
+            gyroSmooth = FindSpec(TuningField.GyroSmooth).DefaultValue,
+            savedUtc = string.Empty
         };
     }
 
@@ -934,13 +1246,13 @@ public class RhythmPauseTuningPanel : MonoBehaviour
         if (!_targetIsSwing && directionalRhythmProvider != null)
             return GetFromProvider(spec.Field);
 
-        return spec.DefaultValue;
+        return ReadCachedField(spec.Field);
     }
 
     private void ApplyFieldValue(FieldSpec spec, float value)
     {
-        if (!_hasTarget)
-            return;
+        WriteCachedField(spec.Field, value);
+        _cachedValuesAreAuthoritative = true;
 
         float clamped = Mathf.Clamp(value, spec.Min, spec.Max);
         if (_targetIsSwing && directionalSwingInput != null)
@@ -1028,6 +1340,101 @@ public class RhythmPauseTuningPanel : MonoBehaviour
     {
         if (_targetLabel != null)
             _targetLabel.text = text;
+    }
+
+    private void HandleTargetChanged(UnityEngine.Object activeTarget, bool targetIsSwing)
+    {
+        if (_lastResolvedTuningTarget == activeTarget && _lastResolvedTargetIsSwing == targetIsSwing)
+            return;
+
+        _lastResolvedTuningTarget = activeTarget;
+        _lastResolvedTargetIsSwing = targetIsSwing;
+
+        if (activeTarget == null)
+            return;
+
+        if (_cachedValuesAreAuthoritative)
+        {
+            ApplySaveData(_cachedSaveData);
+            return;
+        }
+
+        _cachedSaveData = BuildSaveDataFromTarget();
+    }
+
+    private float ReadCachedField(TuningField field)
+    {
+        switch (field)
+        {
+            case TuningField.UpEnterDps: return _cachedSaveData.upEnterDps;
+            case TuningField.UpExitDps: return _cachedSaveData.upExitDps;
+            case TuningField.SideEnterDps: return _cachedSaveData.sideEnterDps;
+            case TuningField.SideExitDps: return _cachedSaveData.sideExitDps;
+            case TuningField.UpPriorityBias: return _cachedSaveData.upPriorityBias;
+            case TuningField.DirectionRearmDelay: return _cachedSaveData.directionRearmDelay;
+            case TuningField.SideNeutralRearmDps: return _cachedSaveData.sideNeutralRearmDps;
+            case TuningField.SideNeutralHoldTime: return _cachedSaveData.sideNeutralHoldTime;
+            case TuningField.GyroSmooth: return _cachedSaveData.gyroSmooth;
+            default: return FindSpec(field).DefaultValue;
+        }
+    }
+
+    private void WriteCachedField(TuningField field, float value)
+    {
+        FieldSpec spec = FindSpec(field);
+        float clamped = Mathf.Clamp(value, spec.Min, spec.Max);
+
+        switch (field)
+        {
+            case TuningField.UpEnterDps: _cachedSaveData.upEnterDps = clamped; break;
+            case TuningField.UpExitDps: _cachedSaveData.upExitDps = clamped; break;
+            case TuningField.SideEnterDps: _cachedSaveData.sideEnterDps = clamped; break;
+            case TuningField.SideExitDps: _cachedSaveData.sideExitDps = clamped; break;
+            case TuningField.UpPriorityBias: _cachedSaveData.upPriorityBias = clamped; break;
+            case TuningField.DirectionRearmDelay: _cachedSaveData.directionRearmDelay = clamped; break;
+            case TuningField.SideNeutralRearmDps: _cachedSaveData.sideNeutralRearmDps = clamped; break;
+            case TuningField.SideNeutralHoldTime: _cachedSaveData.sideNeutralHoldTime = clamped; break;
+            case TuningField.GyroSmooth: _cachedSaveData.gyroSmooth = clamped; break;
+        }
+    }
+
+    private TuningSaveData SanitizeSaveData(TuningSaveData data)
+    {
+        TuningSaveData sanitized = BuildDefaultSaveData();
+        if (data == null)
+            return sanitized;
+
+        sanitized.upEnterDps = Mathf.Clamp(data.upEnterDps, FindSpec(TuningField.UpEnterDps).Min, FindSpec(TuningField.UpEnterDps).Max);
+        sanitized.upExitDps = Mathf.Clamp(data.upExitDps, FindSpec(TuningField.UpExitDps).Min, FindSpec(TuningField.UpExitDps).Max);
+        sanitized.sideEnterDps = Mathf.Clamp(data.sideEnterDps, FindSpec(TuningField.SideEnterDps).Min, FindSpec(TuningField.SideEnterDps).Max);
+        sanitized.sideExitDps = Mathf.Clamp(data.sideExitDps, FindSpec(TuningField.SideExitDps).Min, FindSpec(TuningField.SideExitDps).Max);
+        sanitized.upPriorityBias = Mathf.Clamp(data.upPriorityBias, FindSpec(TuningField.UpPriorityBias).Min, FindSpec(TuningField.UpPriorityBias).Max);
+        sanitized.directionRearmDelay = Mathf.Clamp(data.directionRearmDelay, FindSpec(TuningField.DirectionRearmDelay).Min, FindSpec(TuningField.DirectionRearmDelay).Max);
+        sanitized.sideNeutralRearmDps = Mathf.Clamp(data.sideNeutralRearmDps, FindSpec(TuningField.SideNeutralRearmDps).Min, FindSpec(TuningField.SideNeutralRearmDps).Max);
+        sanitized.sideNeutralHoldTime = Mathf.Clamp(data.sideNeutralHoldTime, FindSpec(TuningField.SideNeutralHoldTime).Min, FindSpec(TuningField.SideNeutralHoldTime).Max);
+        sanitized.gyroSmooth = Mathf.Clamp(data.gyroSmooth, FindSpec(TuningField.GyroSmooth).Min, FindSpec(TuningField.GyroSmooth).Max);
+        sanitized.savedUtc = data.savedUtc ?? string.Empty;
+        return sanitized;
+    }
+
+    private static TuningSaveData CopySaveData(TuningSaveData source)
+    {
+        if (source == null)
+            return null;
+
+        return new TuningSaveData
+        {
+            upEnterDps = source.upEnterDps,
+            upExitDps = source.upExitDps,
+            sideEnterDps = source.sideEnterDps,
+            sideExitDps = source.sideExitDps,
+            upPriorityBias = source.upPriorityBias,
+            directionRearmDelay = source.directionRearmDelay,
+            sideNeutralRearmDps = source.sideNeutralRearmDps,
+            sideNeutralHoldTime = source.sideNeutralHoldTime,
+            gyroSmooth = source.gyroSmooth,
+            savedUtc = source.savedUtc
+        };
     }
 }
 

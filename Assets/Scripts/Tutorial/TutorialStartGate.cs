@@ -13,6 +13,13 @@ public class TutorialStartGate : MonoBehaviour
     private static bool sceneHookRegistered;
     private static TutorialStartGate activeInstance;
 
+    private enum ControllerScheme
+    {
+        None,
+        Switch,
+        XBox
+    }
+
     private enum TutorialFlowState
     {
         StartupGate,
@@ -38,6 +45,7 @@ public class TutorialStartGate : MonoBehaviour
     [SerializeField, Range(1f, 2f)] private float catchHintDelayAfterSpawnSeconds = 1.5f;
     [SerializeField, Min(0.01f)] private float targetMoveDistanceThreshold = 0.3f;
     [SerializeField, Min(1)] private int tutorialCatchFishSpawnCount = 3;
+    [SerializeField] private bool skipCatchAndReelTutorialSection = false;
 
     [Header("Copy")]
     [SerializeField, TextArea(3, 8)] private string welcomeMessage =
@@ -93,14 +101,27 @@ public class TutorialStartGate : MonoBehaviour
     private RectTransform castTargetTutorialImageRect;
     private Image castTargetTutorialImage;
     private Image gateImage;
+    private GameObject controllerSelectUi;
     private GameObject welcomeTutorialUi;
     private GameObject bobberTutorialUi;
     private GameObject castTutorialUi;
     private GameObject yankTutorialUi;
     private GameObject catchTutorialUi;
+    private GameObject bobberTutorialUiSwitch;
+    private GameObject castTutorialUiSwitch;
+    private GameObject yankTutorialUiSwitch;
+    private GameObject catchTutorialUiSwitch;
+    private GameObject bobberTutorialUiXBox;
+    private GameObject castTutorialUiXBox;
+    private GameObject yankTutorialUiXBox;
+    private GameObject catchTutorialUiXBox;
+    private Button switchControllerButton;
+    private Button xBoxControllerButton;
     private bool gateActive;
+    private bool controllerSelectActive;
     private int gateStepIndex;
     private TutorialFlowState flowState;
+    private ControllerScheme selectedControllerScheme = ControllerScheme.Switch;
     private PondManager pondManager;
     private CursorCastTargeting castTargeting;
     private BobberArcCaster bobberArcCaster;
@@ -118,7 +139,6 @@ public class TutorialStartGate : MonoBehaviour
     private bool loggedMissingCastTargetTutorialImage;
     private bool loggedMissingCastTutorialImage;
     private bool loggedMissingYankTutorialImage;
-    private bool cachedCursorVisible;
     private CursorLockMode cachedCursorLockMode;
     private bool cursorStateCached;
     private readonly List<PauseManager> disabledPauseManagers = new List<PauseManager>();
@@ -185,7 +205,7 @@ public class TutorialStartGate : MonoBehaviour
         ResolveBobberTutorialUi();
         BuildGateUi();
         flowState = TutorialFlowState.StartupGate;
-        ActivateGate(0);
+        ShowControllerSelect();
     }
 
     private void Update()
@@ -199,17 +219,88 @@ public class TutorialStartGate : MonoBehaviour
 
         EnsureNoFishBeforeCatchPhase();
 
+        if (controllerSelectActive)
+        {
+            Cursor.lockState = CursorLockMode.None;
+            return;
+        }
+
         if (!gateActive)
         {
+            EnsurePauseManagersEnabled();
             UpdatePostGateFlow();
             return;
         }
 
-        Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
+
+        if (PauseManager.IsAnyPauseUiOpen())
+            return;
+
+        if (IsInteractiveGameplayGate(gateStepIndex))
+            EnsurePauseManagersEnabled();
+
+        if (gateStepIndex == 1)
+        {
+            if (flowState != TutorialFlowState.AwaitCastingTargetMove)
+                BeginAwaitCastingTargetMove();
+
+            if (HasMovedCastingTarget())
+            {
+                DismissGate();
+                flowState = TutorialFlowState.AwaitCastHintDelay;
+                showCastHintAtUnscaledTime = Time.unscaledTime + castHintDelaySeconds;
+            }
+
+            return;
+        }
+
+        if (gateStepIndex == 2)
+        {
+            if (flowState != TutorialFlowState.AwaitSuccessfulCast)
+                BeginAwaitSuccessfulCast();
+
+            if (HasSuccessfullyCast())
+            {
+                DismissGate();
+                flowState = TutorialFlowState.AwaitYankHintDelay;
+                showYankHintAtUnscaledTime = Time.unscaledTime + yankHintDelayAfterLandSeconds;
+            }
+
+            return;
+        }
+
+        if (gateStepIndex == 3)
+        {
+            if (flowState != TutorialFlowState.AwaitSuccessfulYank)
+                BeginAwaitSuccessfulYank();
+
+            if (HasSuccessfullyYanked())
+            {
+                DismissGate();
+                if (SpawnSingleTutorialFish())
+                {
+                    flowState = TutorialFlowState.AwaitCatchHintDelay;
+                    showCatchHintAtUnscaledTime = Time.unscaledTime + catchHintDelayAfterSpawnSeconds;
+                }
+            }
+
+            return;
+        }
 
         if (WasConfirmPressedThisFrame())
             AdvanceGateOrDismiss();
+    }
+
+    private void EnsurePauseManagersEnabled()
+    {
+        PauseManager[] pauseManagers = FindObjectsOfType<PauseManager>(true);
+        for (int i = 0; i < pauseManagers.Length; i++)
+        {
+            PauseManager manager = pauseManagers[i];
+            if (manager != null && !manager.enabled)
+                manager.enabled = true;
+        }
     }
 
     private void OnDestroy()
@@ -219,6 +310,8 @@ public class TutorialStartGate : MonoBehaviour
 
         if (welcomeTutorialUi != null)
             welcomeTutorialUi.SetActive(false);
+        if (controllerSelectUi != null)
+            controllerSelectUi.SetActive(false);
         if (bobberTutorialUi != null)
             bobberTutorialUi.SetActive(false);
         if (castTutorialUi != null)
@@ -235,7 +328,6 @@ public class TutorialStartGate : MonoBehaviour
 
         if (cursorStateCached)
         {
-            Cursor.visible = cachedCursorVisible;
             Cursor.lockState = cachedCursorLockMode;
             cursorStateCached = false;
         }
@@ -264,6 +356,11 @@ public class TutorialStartGate : MonoBehaviour
         return activeInstance != null && activeInstance.gateActive;
     }
 
+    public static bool IsXBoxControllerSelected()
+    {
+        return activeInstance != null && activeInstance.selectedControllerScheme == ControllerScheme.XBox;
+    }
+
     private bool IsTutorialScene()
     {
         Scene tutorialScene = SceneManager.GetSceneByName(tutorialSceneName);
@@ -275,13 +372,15 @@ public class TutorialStartGate : MonoBehaviour
     private void ActivateGate(int stepIndex)
     {
         CacheCursorState();
-        Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
 
-        Time.timeScale = 0f;
+        Time.timeScale = IsInteractiveGameplayGate(stepIndex) ? 1f : 0f;
         gateActive = true;
         gateStepIndex = stepIndex;
-        DisablePauseManagers();
+        if (IsInteractiveGameplayGate(stepIndex))
+            RestorePauseManagers();
+        else
+            DisablePauseManagers();
         RefreshGateText();
 
         if (gateCanvas != null)
@@ -313,7 +412,6 @@ public class TutorialStartGate : MonoBehaviour
 
         if (cursorStateCached)
         {
-            Cursor.visible = cachedCursorVisible;
             Cursor.lockState = cachedCursorLockMode;
             cursorStateCached = false;
         }
@@ -337,41 +435,43 @@ public class TutorialStartGate : MonoBehaviour
 
     private void CacheCursorState()
     {
-        cachedCursorVisible = Cursor.visible;
         cachedCursorLockMode = Cursor.lockState;
         cursorStateCached = true;
+    }
+
+    private bool IsInteractiveGameplayGate(int stepIndex)
+    {
+        return stepIndex == 1 || stepIndex == 2 || stepIndex == 3;
     }
 
     private void AdvanceGateOrDismiss()
     {
         if (gateStepIndex == 0)
         {
+            FunkyAudioSettings.PlayUiConfirm();
             gateStepIndex = 1;
+            BeginAwaitCastingTargetMove();
+            Time.timeScale = 1f;
             RefreshGateText();
             return;
         }
 
         if (gateStepIndex == 1)
         {
-            DismissGate();
-            BeginAwaitCastingTargetMove();
             return;
         }
 
         if (gateStepIndex == 2)
         {
-            DismissGate();
-            BeginAwaitSuccessfulCast();
             return;
         }
 
         if (gateStepIndex == 3)
         {
-            DismissGate();
-            BeginAwaitSuccessfulYank();
             return;
         }
 
+        FunkyAudioSettings.PlayUiConfirm();
         DismissGate();
         flowState = TutorialFlowState.Complete;
     }
@@ -441,6 +541,24 @@ public class TutorialStartGate : MonoBehaviour
         if (canvasObject == null)
             return;
 
+        controllerSelectUi = FindTutorialUi(canvasObject.transform, "ControllerSelect");
+        if (controllerSelectUi != null)
+        {
+            controllerSelectUi.SetActive(false);
+            switchControllerButton = FindButton(controllerSelectUi.transform, "SwitchSelect");
+            xBoxControllerButton = FindButton(controllerSelectUi.transform, "XBoxSelect");
+            if (switchControllerButton != null)
+            {
+                switchControllerButton.onClick.RemoveListener(SelectSwitchController);
+                switchControllerButton.onClick.AddListener(SelectSwitchController);
+            }
+            if (xBoxControllerButton != null)
+            {
+                xBoxControllerButton.onClick.RemoveListener(SelectXBoxController);
+                xBoxControllerButton.onClick.AddListener(SelectXBoxController);
+            }
+        }
+
         Transform welcomeTutorialTransform = canvasObject.transform.Find("WelcomeTutorial");
         if (welcomeTutorialTransform != null)
         {
@@ -448,33 +566,106 @@ public class TutorialStartGate : MonoBehaviour
             welcomeTutorialUi.SetActive(false);
         }
 
-        Transform bobberTutorialTransform = canvasObject.transform.Find("BobberTutorial");
-        if (bobberTutorialTransform != null)
+        bobberTutorialUiSwitch = FindTutorialUi(canvasObject.transform, "BobberTutorial");
+        castTutorialUiSwitch = FindTutorialUi(canvasObject.transform, "CastTutorial");
+        yankTutorialUiSwitch = FindTutorialUi(canvasObject.transform, "YankTutorial");
+        catchTutorialUiSwitch = FindTutorialUi(canvasObject.transform, "CatchTutorial");
+        bobberTutorialUiXBox = FindTutorialUi(canvasObject.transform, "BobberTutorialXbox");
+        castTutorialUiXBox = FindTutorialUi(canvasObject.transform, "CastTutorialXbox");
+        yankTutorialUiXBox = FindTutorialUi(canvasObject.transform, "YankTutorialXbox");
+        catchTutorialUiXBox = FindTutorialUi(canvasObject.transform, "CatchTutorialXbox");
+
+        SetTutorialUiActive(bobberTutorialUiSwitch, false);
+        SetTutorialUiActive(castTutorialUiSwitch, false);
+        SetTutorialUiActive(yankTutorialUiSwitch, false);
+        SetTutorialUiActive(catchTutorialUiSwitch, false);
+        SetTutorialUiActive(bobberTutorialUiXBox, false);
+        SetTutorialUiActive(castTutorialUiXBox, false);
+        SetTutorialUiActive(yankTutorialUiXBox, false);
+        SetTutorialUiActive(catchTutorialUiXBox, false);
+
+        ApplyControllerSpecificTutorialUi();
+    }
+
+    private void ShowControllerSelect()
+    {
+        if (controllerSelectUi == null)
         {
-            bobberTutorialUi = bobberTutorialTransform.gameObject;
-            bobberTutorialUi.SetActive(false);
+            ActivateGate(0);
+            return;
         }
 
-        Transform castTutorialTransform = canvasObject.transform.Find("CastTutorial");
-        if (castTutorialTransform != null)
-        {
-            castTutorialUi = castTutorialTransform.gameObject;
-            castTutorialUi.SetActive(false);
-        }
+        CacheCursorState();
+        Cursor.lockState = CursorLockMode.None;
+        Time.timeScale = 0f;
+        controllerSelectActive = true;
+        DisablePauseManagers();
+        controllerSelectUi.SetActive(true);
+    }
 
-        Transform yankTutorialTransform = canvasObject.transform.Find("YankTutorial");
-        if (yankTutorialTransform != null)
-        {
-            yankTutorialUi = yankTutorialTransform.gameObject;
-            yankTutorialUi.SetActive(false);
-        }
+    private void HideControllerSelect()
+    {
+        if (!controllerSelectActive)
+            return;
 
-        Transform catchTutorialTransform = canvasObject.transform.Find("CatchTutorial");
-        if (catchTutorialTransform != null)
+        controllerSelectActive = false;
+        if (controllerSelectUi != null)
+            controllerSelectUi.SetActive(false);
+        RestorePauseManagers();
+
+        if (cursorStateCached)
         {
-            catchTutorialUi = catchTutorialTransform.gameObject;
-            catchTutorialUi.SetActive(false);
+            Cursor.lockState = cachedCursorLockMode;
+            cursorStateCached = false;
         }
+    }
+
+    private void SelectSwitchController()
+    {
+        FunkyAudioSettings.PlayUiConfirm();
+        selectedControllerScheme = ControllerScheme.Switch;
+        FinishControllerSelection();
+    }
+
+    private void SelectXBoxController()
+    {
+        FunkyAudioSettings.PlayUiConfirm();
+        selectedControllerScheme = ControllerScheme.XBox;
+        FinishControllerSelection();
+    }
+
+    private void FinishControllerSelection()
+    {
+        ApplyControllerSpecificTutorialUi();
+        HideControllerSelect();
+        ActivateGate(0);
+    }
+
+    private void ApplyControllerSpecificTutorialUi()
+    {
+        bool useXBox = selectedControllerScheme == ControllerScheme.XBox;
+        bobberTutorialUi = useXBox && bobberTutorialUiXBox != null ? bobberTutorialUiXBox : bobberTutorialUiSwitch;
+        castTutorialUi = useXBox && castTutorialUiXBox != null ? castTutorialUiXBox : castTutorialUiSwitch;
+        yankTutorialUi = useXBox && yankTutorialUiXBox != null ? yankTutorialUiXBox : yankTutorialUiSwitch;
+        catchTutorialUi = useXBox && catchTutorialUiXBox != null ? catchTutorialUiXBox : catchTutorialUiSwitch;
+    }
+
+    private static GameObject FindTutorialUi(Transform parent, string childName)
+    {
+        Transform match = FindChildRecursive(parent, childName);
+        return match != null ? match.gameObject : null;
+    }
+
+    private static void SetTutorialUiActive(GameObject target, bool active)
+    {
+        if (target != null)
+            target.SetActive(active);
+    }
+
+    private static Button FindButton(Transform parent, string childName)
+    {
+        Transform match = FindChildRecursive(parent, childName);
+        return match != null ? match.GetComponent<Button>() : null;
     }
 
     private static GameObject FindSceneGameObject(Scene scene, string objectName)
@@ -516,6 +707,15 @@ public class TutorialStartGate : MonoBehaviour
 
     private void UpdatePostGateFlow()
     {
+        if (skipCatchAndReelTutorialSection &&
+            (flowState == TutorialFlowState.AwaitCatchHintDelay ||
+             flowState == TutorialFlowState.CatchHintGate))
+        {
+            flowState = TutorialFlowState.Complete;
+            showCatchHintAtUnscaledTime = -1f;
+            return;
+        }
+
         if (flowState == TutorialFlowState.AwaitCastingTargetMove)
         {
             if (HasMovedCastingTarget())
@@ -560,6 +760,13 @@ public class TutorialStartGate : MonoBehaviour
         {
             if (HasSuccessfullyYanked())
             {
+                if (skipCatchAndReelTutorialSection)
+                {
+                    flowState = TutorialFlowState.Complete;
+                    showCatchHintAtUnscaledTime = -1f;
+                    return;
+                }
+
                 if (SpawnSingleTutorialFish())
                 {
                     flowState = TutorialFlowState.AwaitCatchHintDelay;
@@ -849,6 +1056,8 @@ public class TutorialStartGate : MonoBehaviour
         gateImage = imageObject.GetComponent<Image>();
         gateImage.preserveAspect = true;
         gateImage.enabled = false;
+
+        gateCanvas.enabled = false;
     }
 
     private Sprite GetStepOneTutorialSprite()

@@ -1,11 +1,14 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+[DefaultExecutionOrder(10000)]
 public class AutoCursorVisibility : MonoBehaviour
 {
     [SerializeField, Min(0f)] private float mouseMoveThreshold = 0.5f;
     [SerializeField, Min(0f)] private float stickActiveThreshold = 0.2f;
     [SerializeField, Min(0f)] private float triggerActiveThreshold = 0.2f;
+
+    private bool _cursorShouldBeVisible = true;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void EnsureInstance()
@@ -18,14 +21,24 @@ public class AutoCursorVisibility : MonoBehaviour
         go.AddComponent<AutoCursorVisibility>();
     }
 
+    private void Awake()
+    {
+        _cursorShouldBeVisible = Cursor.visible;
+    }
+
     private void Update()
     {
         bool usedController = IsGamepadUsedThisFrame() || IsJoyConUsedThisFrame();
         if (usedController)
-            SetCursorVisible(false);
+            _cursorShouldBeVisible = false;
 
         if (IsMouseUsedThisFrame())
-            SetCursorVisible(true);
+            _cursorShouldBeVisible = true;
+    }
+
+    private void LateUpdate()
+    {
+        ApplyCursorState(_cursorShouldBeVisible);
     }
 
     private bool IsMouseUsedThisFrame()
@@ -36,58 +49,88 @@ public class AutoCursorVisibility : MonoBehaviour
 
         float moveSq = mouse.delta.ReadValue().sqrMagnitude;
         float thresholdSq = mouseMoveThreshold * mouseMoveThreshold;
-        if (moveSq > thresholdSq)
-            return true;
-
-        if (mouse.leftButton.wasPressedThisFrame ||
-            mouse.rightButton.wasPressedThisFrame ||
-            mouse.middleButton.wasPressedThisFrame)
-            return true;
-
-        return mouse.scroll.ReadValue().sqrMagnitude > 0.0001f;
+        return moveSq > thresholdSq;
     }
 
     private bool IsGamepadUsedThisFrame()
     {
-        Gamepad pad = Gamepad.current;
-        if (pad == null)
+        if (Gamepad.all.Count == 0)
             return false;
 
-        if (pad.leftStick.ReadValue().sqrMagnitude > (stickActiveThreshold * stickActiveThreshold))
-            return true;
+        float stickThresholdSq = stickActiveThreshold * stickActiveThreshold;
+        for (int i = 0; i < Gamepad.all.Count; i++)
+        {
+            Gamepad pad = Gamepad.all[i];
+            if (pad == null)
+                continue;
 
-        if (pad.rightStick.ReadValue().sqrMagnitude > (stickActiveThreshold * stickActiveThreshold))
-            return true;
+            if (pad.leftStick.ReadValue().sqrMagnitude > stickThresholdSq)
+                return true;
 
-        if (pad.dpad.ReadValue().sqrMagnitude > 0.001f)
-            return true;
+            if (pad.rightStick.ReadValue().sqrMagnitude > stickThresholdSq)
+                return true;
 
-        if (pad.leftTrigger.ReadValue() > triggerActiveThreshold || pad.rightTrigger.ReadValue() > triggerActiveThreshold)
-            return true;
+            if (pad.dpad.ReadValue().sqrMagnitude > 0.001f)
+                return true;
 
-        return pad.buttonSouth.wasPressedThisFrame ||
-               pad.buttonNorth.wasPressedThisFrame ||
-               pad.buttonWest.wasPressedThisFrame ||
-               pad.buttonEast.wasPressedThisFrame ||
-               pad.leftShoulder.wasPressedThisFrame ||
-               pad.rightShoulder.wasPressedThisFrame ||
-               pad.startButton.wasPressedThisFrame ||
-               pad.selectButton.wasPressedThisFrame;
+            if (pad.leftTrigger.ReadValue() > triggerActiveThreshold || pad.rightTrigger.ReadValue() > triggerActiveThreshold)
+                return true;
+
+            if (pad.buttonSouth.isPressed ||
+                pad.buttonNorth.isPressed ||
+                pad.buttonWest.isPressed ||
+                pad.buttonEast.isPressed ||
+                pad.leftShoulder.isPressed ||
+                pad.rightShoulder.isPressed ||
+                pad.startButton.isPressed ||
+                pad.selectButton.isPressed)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private bool IsJoyConUsedThisFrame()
     {
-        if (!JoyConMenuInput.AnyConnected)
+        int[] handles = JoyConConnectionService.GetConnectedHandles();
+        if (handles == null || handles.Length == 0)
             return false;
 
-        if (JoyConMenuInput.SubmitPressedThisFrame || JoyConMenuInput.PausePressedThisFrame)
-            return true;
+        float stickThresholdSq = stickActiveThreshold * stickActiveThreshold;
+        for (int i = 0; i < handles.Length; i++)
+        {
+            int handle = handles[i];
+            if (!JoyConConnectionService.IsHandleConnected(handle))
+                continue;
 
-        Vector2 stick = JoyConMenuInput.NavigationStick;
-        return stick.sqrMagnitude > (stickActiveThreshold * stickActiveThreshold);
+            JSL.JOY_SHOCK_STATE state;
+            try
+            {
+                state = JSL.JslGetSimpleState(handle);
+            }
+            catch
+            {
+                continue;
+            }
+
+            if (state.buttons != 0)
+                return true;
+
+            if (state.lTrigger > triggerActiveThreshold || state.rTrigger > triggerActiveThreshold)
+                return true;
+
+            Vector2 left = new Vector2(state.stickLX, state.stickLY);
+            Vector2 right = new Vector2(state.stickRX, state.stickRY);
+            if (left.sqrMagnitude > stickThresholdSq || right.sqrMagnitude > stickThresholdSq)
+                return true;
+        }
+
+        return false;
     }
 
-    private static void SetCursorVisible(bool visible)
+    private static void ApplyCursorState(bool visible)
     {
         if (Cursor.visible == visible)
             return;

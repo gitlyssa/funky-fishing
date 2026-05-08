@@ -1,9 +1,14 @@
 using System.Collections.Generic;
+using System.IO;
 using TMPro;
+using FMODUnity;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 public class RhythmTutorialCoach : MonoBehaviour
 {
@@ -18,8 +23,20 @@ public class RhythmTutorialCoach : MonoBehaviour
         DirectionPracticeActive,
         SequenceInfoGate,
         SequencePracticeActive,
+        ReelInfoGate,
+        ReelPracticeActive,
         SuccessGate,
         Complete
+    }
+
+    private enum PendingAdvanceAction
+    {
+        None,
+        NextDirection,
+        SequenceInfo,
+        ReelInfo,
+        ReelRetry,
+        SuccessGate
     }
 
     [Header("Scene Scope")]
@@ -35,6 +52,19 @@ public class RhythmTutorialCoach : MonoBehaviour
     [SerializeField, Min(1)] private int tutorialNoteSpacingBeats = 2;
     [SerializeField, Min(1)] private int tutorialSequenceNoteSpacingBeats = 1;
     [SerializeField, Min(0f)] private float resumeInputBlockSeconds = 0.3f;
+
+    [Header("Reel Tutorial")]
+    [SerializeField, TextArea(3, 8)] private string reelTutorialMessage =
+        "Last step:\n\n" +
+        "When a reel note appears, rotate the reel input in the shown direction until the meter is filled.\n\n" +
+        "Press confirm to start.";
+    [SerializeField, Min(0.1f)] private float reelTutorialLeadInSeconds = 0.75f;
+    [SerializeField, Min(0.5f)] private float reelTutorialDurationSeconds = 4f;
+    [SerializeField] private float reelTutorialGoalDegrees = -720f;
+
+    [Header("Left Step Override")]
+    [SerializeField] private string leftPracticeOverrideBeatmapAssetPath = "Assets/FMOD/FunkyFishing/TutorialMus_beatmap.csv";
+    [SerializeField] private string leftPracticeOverrideMusicEventPath = "event:/Music/TutorialMus";
 
     [Header("Copy")]
     [SerializeField, TextArea(3, 8)] private string howToPlayMessage =
@@ -78,7 +108,7 @@ public class RhythmTutorialCoach : MonoBehaviour
     [SerializeField] private int fontSize = 40;
     [SerializeField] private int minFontSize = 24;
     [SerializeField] private Vector2 progressOffset = new Vector2(-24f, -24f);
-    [SerializeField] private int progressFontSize = 30;
+    [SerializeField] private int progressFontSize = 60;
 
     [Header("Direction Tutorial Images")]
     [SerializeField] private Vector2 directionTutorialImageMaxSize = new Vector2(560f, 460f);
@@ -98,6 +128,7 @@ public class RhythmTutorialCoach : MonoBehaviour
     private int currentDirectionStepIndex;
     private int consecutiveSuccessfulNotes;
     private int sequenceProgress;
+    private PendingAdvanceAction pendingAdvanceAction;
 
     private static readonly FlickDirection[] DirectionSteps =
     {
@@ -134,10 +165,10 @@ public class RhythmTutorialCoach : MonoBehaviour
     private GameObject leftPracticeTutorialUi;
     private GameObject rightPracticeTutorialUi;
     private GameObject sequenceTutorialUi;
+    private GameObject reelTutorialUi;
     private GameObject endTutorialUi;
 
     private bool cursorStateCached;
-    private bool cachedCursorVisible;
     private CursorLockMode cachedCursorLockMode;
     private readonly List<PauseManager> disabledPauseManagers = new List<PauseManager>();
     private bool conflictingHudSuppressed;
@@ -206,17 +237,24 @@ public class RhythmTutorialCoach : MonoBehaviour
     private void OnEnable()
     {
         RhythmJudge.OnDetailedNoteJudged += HandleDetailedNoteJudged;
+        RhythmJudge.OnReelResolved += HandleReelResolved;
     }
 
     private void OnDisable()
     {
         RhythmJudge.OnDetailedNoteJudged -= HandleDetailedNoteJudged;
+        RhythmJudge.OnReelResolved -= HandleReelResolved;
     }
 
     private void OnDestroy()
     {
         if (activeInstance == this)
             activeInstance = null;
+
+        if (conductor != null)
+            conductor.SetTutorialReelsSuppressed(false);
+        if (musicPlayer != null)
+            musicPlayer.SetTutorialPlaybackSuppressed(false);
 
         StopPracticeMode();
         HideAllSceneTutorialUi();
@@ -239,6 +277,8 @@ public class RhythmTutorialCoach : MonoBehaviour
         ResolveRhythmReferences();
         bool rhythmVisible = IsRhythmVisible();
 
+        ProcessPendingAdvanceAction();
+
         if (rhythmVisible && flowState == FlowState.WaitingForRhythm)
         {
             BeginIntro();
@@ -250,21 +290,44 @@ public class RhythmTutorialCoach : MonoBehaviour
         wasRhythmVisible = rhythmVisible;
 
         if (!gateActive)
+        {
+            EnsurePauseManagersEnabled();
             return;
+        }
 
-        Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
+
+        if (PauseManager.IsAnyPauseUiOpen())
+            return;
 
         if (WasConfirmPressedThisFrame())
             AdvanceGate();
     }
 
+    private void EnsurePauseManagersEnabled()
+    {
+        PauseManager[] pauseManagers = FindObjectsOfType<PauseManager>(true);
+        for (int i = 0; i < pauseManagers.Length; i++)
+        {
+            PauseManager manager = pauseManagers[i];
+            if (manager != null && !manager.enabled)
+                manager.enabled = true;
+        }
+    }
+
     private void BeginIntro()
     {
+        ResolveRhythmReferences();
+        if (conductor != null)
+            conductor.SetTutorialReelsSuppressed(true);
+        if (musicPlayer != null)
+            musicPlayer.SetTutorialPlaybackSuppressed(true);
+
         currentDirectionStepIndex = 0;
         consecutiveSuccessfulNotes = 0;
         sequenceProgress = 0;
         practiceModeInitialized = false;
+        pendingAdvanceAction = PendingAdvanceAction.None;
         SuppressConflictingHud();
         flowState = FlowState.IntroHowToPlayGate;
         PauseForGate();
@@ -292,6 +355,9 @@ public class RhythmTutorialCoach : MonoBehaviour
         {
             SetGateVisible(false);
             CloseOverlayGateWithoutPause();
+            if (musicPlayer != null)
+                musicPlayer.SetTutorialPlaybackSuppressed(false);
+            ApplyLeftPracticeRhythmOverrideIfNeeded();
             BeginActivePractice();
             return;
         }
@@ -301,6 +367,14 @@ public class RhythmTutorialCoach : MonoBehaviour
             SetGateVisible(false);
             CloseOverlayGateWithoutPause();
             BeginSequencePractice();
+            return;
+        }
+
+        if (flowState == FlowState.ReelInfoGate)
+        {
+            SetGateVisible(false);
+            CloseOverlayGateWithoutPause();
+            BeginReelPractice();
             return;
         }
 
@@ -344,6 +418,7 @@ public class RhythmTutorialCoach : MonoBehaviour
 
         InitializePracticeModeIfNeeded();
         flowState = FlowState.DirectionPracticeActive;
+        RestorePauseManagers();
         if (conductor != null)
             conductor.SetTutorialUpPracticeSpawnPaused(false);
         RefreshProgress();
@@ -357,6 +432,7 @@ public class RhythmTutorialCoach : MonoBehaviour
 
         sequenceProgress = 0;
         flowState = FlowState.SequencePracticeActive;
+        RestorePauseManagers();
 
         if (conductor != null)
             conductor.StartTutorialSequencePracticeMode(
@@ -375,6 +451,54 @@ public class RhythmTutorialCoach : MonoBehaviour
         SetProgressVisible(true);
     }
 
+    private void ApplyLeftPracticeRhythmOverrideIfNeeded()
+    {
+        if (CurrentTargetDirection() != FlickDirection.Up)
+            return;
+
+        ResolveRhythmReferences();
+
+        if (conductor != null)
+        {
+            TextAsset overrideBeatmap = LoadLeftPracticeOverrideBeatmap();
+            if (overrideBeatmap != null)
+                conductor.SetBeatmapFile(overrideBeatmap);
+            else
+                Debug.LogWarning(
+                    $"RhythmTutorialCoach: Could not load left practice override beatmap at '{leftPracticeOverrideBeatmapAssetPath}'.");
+        }
+
+        if (musicPlayer != null)
+        {
+            EventReference overrideEvent = RuntimeManager.PathToEventReference(leftPracticeOverrideMusicEventPath);
+            if (!overrideEvent.IsNull)
+                musicPlayer.SetMusicEvent(overrideEvent);
+            else
+                Debug.LogWarning(
+                    $"RhythmTutorialCoach: Could not resolve left practice override music event '{leftPracticeOverrideMusicEventPath}'.");
+        }
+    }
+
+    private TextAsset LoadLeftPracticeOverrideBeatmap()
+    {
+#if UNITY_EDITOR
+        TextAsset editorAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(leftPracticeOverrideBeatmapAssetPath);
+        if (editorAsset != null)
+            return editorAsset;
+#endif
+
+        string relativePath = leftPracticeOverrideBeatmapAssetPath;
+        const string assetsPrefix = "Assets/";
+        if (relativePath.StartsWith(assetsPrefix))
+            relativePath = relativePath.Substring(assetsPrefix.Length);
+
+        string absolutePath = Path.Combine(Application.dataPath, relativePath.Replace('/', Path.DirectorySeparatorChar));
+        if (!File.Exists(absolutePath))
+            return null;
+
+        return new TextAsset(File.ReadAllText(absolutePath));
+    }
+
     private void StopPracticeMode()
     {
         if (conductor != null)
@@ -387,7 +511,8 @@ public class RhythmTutorialCoach : MonoBehaviour
     private void EnterSuccessGate()
     {
         if (flowState != FlowState.DirectionPracticeActive &&
-            flowState != FlowState.SequencePracticeActive)
+            flowState != FlowState.SequencePracticeActive &&
+            flowState != FlowState.ReelPracticeActive)
             return;
 
         if (conductor != null)
@@ -403,7 +528,7 @@ public class RhythmTutorialCoach : MonoBehaviour
     {
         if (currentDirectionStepIndex >= DirectionSteps.Length - 1)
         {
-            EnterSequenceInfoGate();
+            QueuePendingAdvanceAction(PendingAdvanceAction.SequenceInfo);
             return;
         }
 
@@ -450,10 +575,49 @@ public class RhythmTutorialCoach : MonoBehaviour
         RefreshProgress();
     }
 
+    private void EnterReelInfoGate()
+    {
+        if (conductor != null)
+            conductor.SetTutorialUpPracticeSpawnPaused(true);
+
+        flowState = FlowState.ReelInfoGate;
+        OpenOverlayGateWithoutPause();
+        SetGateMessage(reelTutorialMessage);
+        SetProgressVisible(false);
+        SetGateVisible(true);
+    }
+
+    private void BeginReelPractice()
+    {
+        if (flowState == FlowState.Complete)
+            return;
+
+        pendingAdvanceAction = PendingAdvanceAction.None;
+        flowState = FlowState.ReelPracticeActive;
+        SetProgressVisible(false);
+        RestorePauseManagers();
+
+        if (conductor == null)
+            return;
+
+        conductor.PrepareTutorialReelPracticeClock();
+
+        ReelData tutorialReel = new ReelData
+        {
+            startTime = reelTutorialLeadInSeconds,
+            duration = reelTutorialDurationSeconds,
+            goalDegrees = reelTutorialGoalDegrees,
+            leadInTime = reelTutorialLeadInSeconds
+        };
+
+        conductor.SpawnReel(tutorialReel);
+    }
+
     private void HandleDetailedNoteJudged(
         RhythmJudge.JudgeRating rating,
         RhythmArcNote.NoteType noteType,
-        FlickDirection direction)
+        FlickDirection direction,
+        float timingDelta)
     {
         if (flowState != FlowState.DirectionPracticeActive && flowState != FlowState.SequencePracticeActive)
             return;
@@ -471,7 +635,7 @@ public class RhythmTutorialCoach : MonoBehaviour
 
             RefreshProgress();
             if (consecutiveSuccessfulNotes >= requiredSuccessfulUpNotes)
-                EnterNextDirectionInfoGate();
+                QueuePendingAdvanceAction(PendingAdvanceAction.NextDirection);
             return;
         }
 
@@ -480,10 +644,14 @@ public class RhythmTutorialCoach : MonoBehaviour
 
     private void HandleRhythmEncounterEnded()
     {
+        if (flowState == FlowState.SuccessGate || pendingAdvanceAction == PendingAdvanceAction.SuccessGate)
+            return;
+
         StopPracticeMode();
         HideAllSceneTutorialUi();
         RestoreConflictingHud();
         SetProgressVisible(false);
+        RestorePauseManagers();
 
         if (gateActive)
         {
@@ -509,7 +677,6 @@ public class RhythmTutorialCoach : MonoBehaviour
     private void PauseForGate()
     {
         CacheCursorState();
-        Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
 
         DisablePauseManagers();
@@ -534,7 +701,6 @@ public class RhythmTutorialCoach : MonoBehaviour
     private void OpenOverlayGateWithoutPause()
     {
         CacheCursorState();
-        Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
         DisablePauseManagers();
         gateActive = true;
@@ -641,7 +807,7 @@ public class RhythmTutorialCoach : MonoBehaviour
         progressRect.anchorMax = new Vector2(1f, 1f);
         progressRect.pivot = new Vector2(1f, 1f);
         progressRect.anchoredPosition = progressOffset;
-        progressRect.sizeDelta = new Vector2(500f, 90f);
+        progressRect.sizeDelta = new Vector2(900f, 160f);
 
         progressText = progressGo.GetComponent<TextMeshProUGUI>();
         if (TMP_Settings.defaultFontAsset != null)
@@ -956,11 +1122,31 @@ public class RhythmTutorialCoach : MonoBehaviour
         if (canvasObject == null)
             return;
 
-        rhythmStartTutorialUi = FindTutorialUi(canvasObject.transform, "RhythmStartTutorial");
-        upPracticeTutorialUi = FindTutorialUi(canvasObject.transform, "UpPracticeTutorial");
-        leftPracticeTutorialUi = FindTutorialUi(canvasObject.transform, "LeftPracticeTutorial");
-        rightPracticeTutorialUi = FindTutorialUi(canvasObject.transform, "RightPracticeTutorial");
-        sequenceTutorialUi = FindTutorialUi(canvasObject.transform, "SequenceTutorial");
+        bool useXBoxTutorialUi = TutorialStartGate.IsXBoxControllerSelected();
+        rhythmStartTutorialUi = FindTutorialUiWithFallback(
+            canvasObject.transform,
+            useXBoxTutorialUi ? FindTutorialUiAny(canvasObject.transform, "RhythmStartTutorialXbox", "RhythmStartTutorialXBox") : FindTutorialUi(canvasObject.transform, "RhythmStartTutorial"),
+            "RhythmStartTutorial");
+        upPracticeTutorialUi = FindTutorialUiWithFallback(
+            canvasObject.transform,
+            useXBoxTutorialUi ? FindTutorialUiAny(canvasObject.transform, "UpPracticeTutorialXbox", "UpPracticeTutorialXBox") : FindTutorialUi(canvasObject.transform, "UpPracticeTutorial"),
+            "UpPracticeTutorial");
+        leftPracticeTutorialUi = FindTutorialUiWithFallback(
+            canvasObject.transform,
+            useXBoxTutorialUi ? FindTutorialUiAny(canvasObject.transform, "LeftPracticeTutorialXbox", "LeftPracticeTutorialXBox") : FindTutorialUi(canvasObject.transform, "LeftPracticeTutorial"),
+            "LeftPracticeTutorial");
+        rightPracticeTutorialUi = FindTutorialUiWithFallback(
+            canvasObject.transform,
+            useXBoxTutorialUi ? FindTutorialUiAny(canvasObject.transform, "RightPracticeTutorialXbox", "RightPracticeTutorialXBox") : FindTutorialUi(canvasObject.transform, "RightPracticeTutorial"),
+            "RightPracticeTutorial");
+        sequenceTutorialUi = FindTutorialUiWithFallback(
+            canvasObject.transform,
+            useXBoxTutorialUi ? FindTutorialUiAny(canvasObject.transform, "SequenceTutorialXbox", "SequenceTutorialXBox") : FindTutorialUi(canvasObject.transform, "SequenceTutorial"),
+            "SequenceTutorial");
+        reelTutorialUi = FindTutorialUiWithFallback(
+            canvasObject.transform,
+            useXBoxTutorialUi ? FindTutorialUiAny(canvasObject.transform, "ReelTutorialXbox", "ReelTutorialXBox") : FindTutorialUi(canvasObject.transform, "ReelTutorial"),
+            "ReelTutorial");
         endTutorialUi = FindTutorialUi(canvasObject.transform, "EndTutorial");
 
         HideAllSceneTutorialUi();
@@ -970,6 +1156,29 @@ public class RhythmTutorialCoach : MonoBehaviour
     {
         Transform child = canvasTransform.Find(childName);
         return child != null ? child.gameObject : null;
+    }
+
+    private static GameObject FindTutorialUiWithFallback(
+        Transform canvasTransform,
+        GameObject preferred,
+        string fallbackChildName)
+    {
+        if (preferred != null)
+            return preferred;
+
+        return FindTutorialUi(canvasTransform, fallbackChildName);
+    }
+
+    private static GameObject FindTutorialUiAny(Transform canvasTransform, params string[] childNames)
+    {
+        for (int i = 0; i < childNames.Length; i++)
+        {
+            GameObject match = FindTutorialUi(canvasTransform, childNames[i]);
+            if (match != null)
+                return match;
+        }
+
+        return null;
     }
 
     private static GameObject FindSceneGameObject(Scene scene, string objectName)
@@ -1007,11 +1216,13 @@ public class RhythmTutorialCoach : MonoBehaviour
         SetTutorialUiActive(leftPracticeTutorialUi, false);
         SetTutorialUiActive(rightPracticeTutorialUi, false);
         SetTutorialUiActive(sequenceTutorialUi, false);
+        SetTutorialUiActive(reelTutorialUi, false);
         SetTutorialUiActive(endTutorialUi, false);
     }
 
     private bool UpdateSceneTutorialUiVisibility()
     {
+        ResolveSceneTutorialUi();
         HideAllSceneTutorialUi();
 
         GameObject tutorialUiToShow = null;
@@ -1040,6 +1251,10 @@ public class RhythmTutorialCoach : MonoBehaviour
 
             case FlowState.SequenceInfoGate:
                 tutorialUiToShow = sequenceTutorialUi;
+                break;
+
+            case FlowState.ReelInfoGate:
+                tutorialUiToShow = reelTutorialUi;
                 break;
 
             case FlowState.SuccessGate:
@@ -1090,7 +1305,65 @@ public class RhythmTutorialCoach : MonoBehaviour
 
         RefreshProgress();
         if (sequenceProgress >= FinalSequenceStep.Length)
-            EnterSuccessGate();
+            QueuePendingAdvanceAction(PendingAdvanceAction.ReelInfo);
+    }
+
+    private void HandleReelResolved(bool cleared)
+    {
+        if (flowState != FlowState.ReelPracticeActive)
+            return;
+
+        if (cleared)
+        {
+            QueuePendingAdvanceAction(PendingAdvanceAction.SuccessGate);
+            return;
+        }
+
+        QueuePendingAdvanceAction(PendingAdvanceAction.ReelRetry);
+    }
+
+    private void QueuePendingAdvanceAction(PendingAdvanceAction action)
+    {
+        if (pendingAdvanceAction == PendingAdvanceAction.SuccessGate)
+            return;
+
+        if (pendingAdvanceAction == PendingAdvanceAction.SequenceInfo &&
+            action == PendingAdvanceAction.NextDirection)
+            return;
+
+        if (pendingAdvanceAction == PendingAdvanceAction.ReelRetry &&
+            action != PendingAdvanceAction.SuccessGate)
+            return;
+
+        pendingAdvanceAction = action;
+    }
+
+    private void ProcessPendingAdvanceAction()
+    {
+        if (pendingAdvanceAction == PendingAdvanceAction.None || gateActive)
+            return;
+
+        PendingAdvanceAction action = pendingAdvanceAction;
+        pendingAdvanceAction = PendingAdvanceAction.None;
+
+        switch (action)
+        {
+            case PendingAdvanceAction.NextDirection:
+                EnterNextDirectionInfoGate();
+                break;
+            case PendingAdvanceAction.SequenceInfo:
+                EnterSequenceInfoGate();
+                break;
+            case PendingAdvanceAction.ReelInfo:
+                EnterReelInfoGate();
+                break;
+            case PendingAdvanceAction.ReelRetry:
+                BeginReelPractice();
+                break;
+            case PendingAdvanceAction.SuccessGate:
+                EnterSuccessGate();
+                break;
+        }
     }
 
     private bool IsRhythmVisible()
@@ -1127,7 +1400,10 @@ public class RhythmTutorialCoach : MonoBehaviour
         ResolveRhythmReferences();
 
         if (rhythmPerformanceHud != null)
+        {
+            rhythmPerformanceHud.SetJudgementFeedbackOnlyEnabled(true);
             rhythmPerformanceHud.SetHudEnabled(false);
+        }
         if (fishingSessionHud != null)
             fishingSessionHud.SetHudEnabled(false);
 
@@ -1140,7 +1416,10 @@ public class RhythmTutorialCoach : MonoBehaviour
             return;
 
         if (rhythmPerformanceHud != null)
+        {
             rhythmPerformanceHud.SetHudEnabled(true);
+            rhythmPerformanceHud.SetJudgementFeedbackOnlyEnabled(false);
+        }
         if (fishingSessionHud != null)
             fishingSessionHud.SetHudEnabled(true);
 
@@ -1196,7 +1475,6 @@ public class RhythmTutorialCoach : MonoBehaviour
         if (cursorStateCached)
             return;
 
-        cachedCursorVisible = Cursor.visible;
         cachedCursorLockMode = Cursor.lockState;
         cursorStateCached = true;
     }
@@ -1206,7 +1484,6 @@ public class RhythmTutorialCoach : MonoBehaviour
         if (!cursorStateCached)
             return;
 
-        Cursor.visible = cachedCursorVisible;
         Cursor.lockState = cachedCursorLockMode;
         cursorStateCached = false;
     }

@@ -125,6 +125,14 @@ public class JoyConGestureDetector : MonoBehaviour
             Connect();
         }
 
+        if (FishingGameplayInputGate.IsBlocked())
+        {
+            ResetTransientGestureState();
+            return;
+        }
+
+        SyncStateWithCaster();
+
         if (Time.time < _cooldownUntil) return;
 
         if (_state == State.Cooldown)
@@ -175,6 +183,15 @@ public class JoyConGestureDetector : MonoBehaviour
         }
     }
 
+    private void ResetTransientGestureState()
+    {
+        _state = State.Idle;
+        _castTime = -999f;
+        _cooldownUntil = -999f;
+        _castPolarity = 1;
+        _filtersByHandle.Clear();
+    }
+
     private bool ProcessHandle(int handle, float dt)
     {
         IMU_STATE imu;
@@ -215,41 +232,39 @@ public class JoyConGestureDetector : MonoBehaviour
         float forwardLin = forwardSign * GetAxis(state.linAccel, forwardAxis);
         float swingGyro = gyroSign * GetAxis(state.gyro, swingGyroAxis);
 
-        switch (_state)
+        bool canAttemptYank = CanAttemptYank();
+        if (canAttemptYank && Time.time - _castTime >= minTimeBetweenCastAndYank)
         {
-            case State.Idle:
-                if (requireBumperOrTriggerHold && !IsGestureModifierHeld(simpleState))
-                    break;
+            int yankPolarity = GetMatchingYankPolarity(forwardLin, swingGyro);
+            if (yankPolarity != 0)
+            {
+                if (logTriggers) Debug.Log($"YANK! handle={handle} lin={forwardLin:F2}g gyro={swingGyro:F0}dps polarity={yankPolarity}");
+                LastTriggerHandle = handle;
+                onYank?.Invoke();
+                _castPolarity = yankPolarity;
+                _castTime = -999f;
+                _state = State.Cooldown;
+                _cooldownUntil = Time.time + cooldownAfterTrigger;
+                return true;
+            }
+        }
 
-                if (TryDetectCast(forwardLin, swingGyro, out int castPolarity))
-                {
-                    if (logTriggers) Debug.Log($"CAST! handle={handle} lin={forwardLin:F2}g gyro={swingGyro:F0}dps polarity={castPolarity}");
-                    LastTriggerHandle = handle;
-                    onCast?.Invoke();
-                    _castPolarity = castPolarity;
-                    _castTime = Time.time;
-                    _state = State.Casted;
-                    _cooldownUntil = Time.time + cooldownAfterTrigger;
-                    return true;
-                }
-                break;
+        if (_state != State.Idle)
+            return false;
 
-            case State.Casted:
-                if (Time.time - _castTime < minTimeBetweenCastAndYank) return false;
+        if (requireBumperOrTriggerHold && !IsGestureModifierHeld(simpleState))
+            return false;
 
-                if (IsYank(forwardLin, swingGyro))
-                {
-                    if (ShouldBlockYank())
-                        return false;
-
-                    if (logTriggers) Debug.Log($"YANK! handle={handle} lin={forwardLin:F2}g gyro={swingGyro:F0}dps polarity={_castPolarity}");
-                    LastTriggerHandle = handle;
-                    onYank?.Invoke();
-                    _state = State.Cooldown;
-                    _cooldownUntil = Time.time + cooldownAfterTrigger;
-                    return true;
-                }
-                break;
+        if (TryDetectCast(forwardLin, swingGyro, out int castPolarity))
+        {
+            if (logTriggers) Debug.Log($"CAST! handle={handle} lin={forwardLin:F2}g gyro={swingGyro:F0}dps polarity={castPolarity}");
+            LastTriggerHandle = handle;
+            onCast?.Invoke();
+            _castPolarity = castPolarity;
+            _castTime = Time.time;
+            _state = State.Casted;
+            _cooldownUntil = Time.time + cooldownAfterTrigger;
+            return true;
         }
 
         return false;
@@ -273,12 +288,51 @@ public class JoyConGestureDetector : MonoBehaviour
         return false;
     }
 
-    private bool IsYank(float forwardLin, float swingGyro)
+    private bool IsYankForPolarity(float forwardLin, float swingGyro, int polarity)
     {
-        // Match yank direction to opposite of the cast direction we accepted.
-        float signedForward = forwardLin * _castPolarity;
-        float signedGyro = swingGyro * _castPolarity;
+        float signedForward = forwardLin * polarity;
+        float signedGyro = swingGyro * polarity;
         return signedForward < -yankBackLinG && signedGyro < -yankGyroDps;
+    }
+
+    private int GetMatchingYankPolarity(float forwardLin, float swingGyro)
+    {
+        if (_state == State.Casted && IsYankForPolarity(forwardLin, swingGyro, _castPolarity))
+            return _castPolarity;
+
+        if (IsYankForPolarity(forwardLin, swingGyro, 1))
+            return 1;
+
+        if (autoMirrorForOtherHand && IsYankForPolarity(forwardLin, swingGyro, -1))
+            return -1;
+
+        return 0;
+    }
+
+    private bool CanAttemptYank()
+    {
+        if (ShouldBlockYank())
+            return false;
+
+        if (caster == null)
+            return _state == State.Casted;
+
+        return caster.CurrentState == BobberArcCaster.State.Landed ||
+               caster.CurrentState == BobberArcCaster.State.Tension;
+    }
+
+    private void SyncStateWithCaster()
+    {
+        if (caster == null)
+            return;
+
+        if (caster.CurrentState == BobberArcCaster.State.Idle &&
+            _state == State.Casted &&
+            Time.time >= _cooldownUntil)
+        {
+            _state = State.Idle;
+            _castTime = -999f;
+        }
     }
 
     private bool ShouldBlockYank()

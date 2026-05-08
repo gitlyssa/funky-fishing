@@ -1,5 +1,59 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-7736516469385645638
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Sfx/ui1
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Sfx/ui1
+  Guid:
+    Data1: -1104803391
+    Data2: 1309476805
+    Data3: 1467559865
+    Data4: 318537816
+  Banks:
+  - {fileID: -2648038191006552393}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 943
+--- !u!114 &-7220261677402820425
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Music/JeremieMusic1
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Music/JeremieMusic1
+  Guid:
+    Data1: 958105527
+    Data2: 1235333334
+    Data3: -705264733
+    Data4: -964123362
+  Banks:
+  - {fileID: -2648038191006552393}
+  IsStream: 1
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 21535
 --- !u!114 &-5875265738577587281
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -69,10 +123,10 @@ MonoBehaviour:
   Path: Assets/FMOD/Desktop/Master.strings.bank
   Name: Master.strings
   StudioPath: bank:/Master.strings
-  lastModified: 639080840323150906
+  lastModified: 639105967169943604
   FileSizes:
   - Name: 
-    Value: 1166
+    Value: 1324
   Exists: 1
 --- !u!114 &-2648038191006552393
 MonoBehaviour:
@@ -89,7 +143,7 @@ MonoBehaviour:
   Path: Assets/FMOD/Desktop/Master.bank
   Name: Master
   StudioPath: bank:/Master
-  lastModified: 639080840323074540
+  lastModified: 639105967169867078
   FileSizes: []
   Exists: 1
 --- !u!114 &-2567683884387202836
@@ -119,6 +173,33 @@ MonoBehaviour:
   MinDistance: 1
   MaxDistance: 20
   Length: 21818
+--- !u!114 &-1338222309852876353
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Sfx/reel
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Sfx/reel
+  Guid:
+    Data1: -571558819
+    Data2: 1166440785
+    Data3: -44763713
+    Data4: 841467529
+  Banks:
+  - {fileID: -2648038191006552393}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 0
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 407
 --- !u!114 &-235916971953375120
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -172,13 +253,17 @@ MonoBehaviour:
   - {fileID: -235916971953375120}
   - {fileID: -3363737237843273750}
   - {fileID: 612667523792534380}
+  - {fileID: -1338222309852876353}
+  - {fileID: -7736516469385645638}
+  - {fileID: 6622591643614089894}
+  - {fileID: -7220261677402820425}
   EditorParameters: []
   MasterBanks:
   - {fileID: -2648038191006552393}
   StringsBanks:
   - {fileID: -3217896682293650524}
   cacheVersion: 131858
-  cacheTime: 639080840323150906
+  cacheTime: 639105967169943604
   SerializableEventsDict:
   - key: event:/Music/TestMusic
     index: 0
@@ -198,6 +283,16 @@ MonoBehaviour:
     index: 7
   - key: event:/Sfx/okay
     index: 8
+  - key: event:/Music/Fish2
+    index: 9
+  - key: event:/Sfx/reel
+    index: 10
+  - key: event:/Sfx/ui1
+    index: 11
+  - key: event:/Music/JeremieMusic2
+    index: 12
+  - key: event:/Music/JeremieMusic1
+    index: 13
 --- !u!114 &612667523792534380
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -387,3 +482,30 @@ MonoBehaviour:
   MinDistance: 1
   MaxDistance: 20
   Length: 27260
+--- !u!114 &6622591643614089894
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Music/JeremieMusic2
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Music/JeremieMusic2
+  Guid:
+    Data1: 975855441
+    Data2: 1245270139
+    Data3: 1382679210
+    Data4: 484455495
+  Banks:
+  - {fileID: -2648038191006552393}
+  IsStream: 1
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 28233

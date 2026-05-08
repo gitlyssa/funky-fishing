@@ -61,8 +61,20 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -3658592028782763165, guid: ab3ef57f42bd3ff4fbd7f84da5294381, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 75
+      objectReference: {fileID: 0}
+    - target: {fileID: -3658592028782763165, guid: ab3ef57f42bd3ff4fbd7f84da5294381, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 75
+      objectReference: {fileID: 0}
+    - target: {fileID: -3658592028782763165, guid: ab3ef57f42bd3ff4fbd7f84da5294381, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 75
+      objectReference: {fileID: 0}
+    - target: {fileID: -3658592028782763165, guid: ab3ef57f42bd3ff4fbd7f84da5294381, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.5
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -3658592028782763165, guid: ab3ef57f42bd3ff4fbd7f84da5294381, type: 3}
       propertyPath: m_LocalRotation.w
@@ -88,9 +100,13 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.y
       value: 270
       objectReference: {fileID: 0}
+    - target: {fileID: -3658592028782763165, guid: ab3ef57f42bd3ff4fbd7f84da5294381, type: 3}
+      propertyPath: m_ConstrainProportionsScale
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: ab3ef57f42bd3ff4fbd7f84da5294381, type: 3}
       propertyPath: m_Name
-      value: BassBass3
+      value: Bass Bass
       objectReference: {fileID: 0}
     - target: {fileID: 3677871804177914180, guid: ab3ef57f42bd3ff4fbd7f84da5294381, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
@@ -169,7 +185,7 @@ MonoBehaviour:
   directionChangeInterval: 1.8
   pondEdgeBuffer: 0.75
   enableBobberInteraction: 1
-  engageRadius: 2.2
+  engageRadius: 3.3
   contactDistance: 0.4
   nibblesPerCycle: 4
   nibbleFrequency: 2.2
@@ -188,6 +204,7 @@ MonoBehaviour:
   nibbleBobberPullDownSpeed: 18
   nibbleBobberReturnSpeed: 10
   pondManager: {fileID: 0}
+  nibbleSpriteAsset: {fileID: 21300000, guid: e66b51dfa690d82449c4a62f7050ca9e, type: 3}
 --- !u!136 &-819829424105272448
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -207,9 +224,9 @@ CapsuleCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Radius: 1.5
-  m_Height: 8
-  m_Direction: 0
+  m_Radius: 1.2
+  m_Height: 6
+  m_Direction: 2
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &6701775032043722891
 MonoBehaviour:
@@ -225,9 +242,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RhythmProfile
   musicEvent:
     Guid:
-      Data1: -1233211620
-      Data2: 1195024357
-      Data3: -255170375
-      Data4: -1468407509
-    Path: event:/Music/TestMusic
-  beatmapFile: {fileID: 4900000, guid: 25b757f6b3492014a97aa410cb828ed1, type: 3}
+      Data1: 975855441
+      Data2: 1245270139
+      Data3: 1382679210
+      Data4: 484455495
+    Path: event:/Music/JeremieMusic2
+  beatmapFile: {fileID: 4900000, guid: c66b28d8c65a45644847bfd43de417d8, type: 3}
+  visualScriptFile: {fileID: 4900000, guid: 81dda62e34251fa4ebb4051d8368334f, type: 3}

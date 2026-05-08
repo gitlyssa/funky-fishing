@@ -80,7 +80,7 @@ MonoBehaviour:
   directionChangeInterval: 2.5
   pondEdgeBuffer: 0.75
   enableBobberInteraction: 1
-  engageRadius: 2.2
+  engageRadius: 3.3
   contactDistance: 0.4
   nibblesPerCycle: 4
   nibbleFrequency: 2.2
@@ -99,6 +99,7 @@ MonoBehaviour:
   nibbleBobberPullDownSpeed: 18
   nibbleBobberReturnSpeed: 10
   pondManager: {fileID: 0}
+  nibbleSpriteAsset: {fileID: 21300000, guid: e66b51dfa690d82449c4a62f7050ca9e, type: 3}
 --- !u!136 &2725616706174294822
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -142,6 +143,7 @@ MonoBehaviour:
       Data4: 21482842
     Path: event:/Music/Fish2
   beatmapFile: {fileID: 4900000, guid: 351f536584ebbbf479bc5fa7e44736bc, type: 3}
+  visualScriptFile: {fileID: 4900000, guid: 96b45abb788433e4d82048f87368bb6c, type: 3}
 --- !u!1001 &4692308055997896240
 PrefabInstance:
   m_ObjectHideFlags: 0
